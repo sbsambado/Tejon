@@ -1,0 +1,551 @@
+---
+title: "Tejon Tick drags"
+author: "sbsambado"
+date: "9/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+```
+
+```{r make data frames}
+alldrag <- read.csv("~/Desktop/tejon_all_tick_drags_09022020.csv")
+
+alldrag$Month <- factor(alldrag$Month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+# break up by site, no other filter
+intermediate <- filter(alldrag, Site == 'Intermediate')
+mesic <- filter(alldrag, Site == 'Mesic')
+arid <- filter(alldrag, Site == 'Arid')
+
+
+## try to make data frame long
+
+
+```
+
+
+```{r EDA SUPER basic plots}
+plot(Total_ticks ~ Site,
+     data = alldrag,
+     main = 'tot ticks ~ site')
+plot(Total_ticks ~ Plot,
+     data = alldrag,
+     main = 'tot ticks ~ plot')
+plot(Total_ticks ~ Month,
+     data = alldrag,
+     main = 'tot ticks ~ month')
+boxplot(Total_ticks ~ Year,
+     data = alldrag,
+     main = 'tot ticks ~ year')
+boxplot(Total_ticks ~ Block,
+     data = alldrag,
+     main = 'tot ticks ~ block')
+
+```
+
+
+
+```{r EDA by month by site}
+# By month (all ticks)
+
+a <- ggplot(data = arid, 
+       aes(x = Month,y = Total_ticks),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point() +
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Arid')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+i<- ggplot(data = intermediate, 
+       aes(x = Month,y = Total_ticks),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Intermediate')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+
+m <-ggplot(data = mesic, 
+       aes(x = Month,y = Total_ticks),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Mesic')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+# final graph
+month <-ggarrange(m + rremove('xlab'),i + rremove('xlab'),a, nrow = 3)
+
+annotate_figure(month,
+                top = text_grob('Total Ticks by Month',
+                                face = 'bold', size = 16,
+                                color = 'red'))
+
+
+# By month (I. pacificus)
+
+apac <- ggplot(data = arid, 
+       aes(x = Month,y = I_pacificus),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point() +
+  theme_classic()+
+  xlab('Month') + ylab('Total I. pacificus')+
+  ggtitle('Arid')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+ipac <- ggplot(data = intermediate, 
+       aes(x = Month,y = I_pacificus),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total I. pacificus')+
+  ggtitle('Intermediate')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+
+mpac <-ggplot(data = mesic, 
+       aes(x = Month,y = I_pacificus),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total I. pacificus')+
+  ggtitle('Mesic')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+# final graph
+monthpac <-ggarrange(mpac + rremove('xlab'),ipac + rremove('xlab'),apac, nrow = 3)
+
+annotate_figure(monthpac,
+                top = text_grob('Total I. pacificus by Month',
+                                face = 'bold', size = 16,
+                                color = 'red'))
+
+# ggarrange(month,monthpac, ncol = 2)
+
+
+# By month (D. occidentalis)
+
+adeoc <- ggplot(data = arid, 
+       aes(x = Month,y = D_occidentalis),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point() +
+  theme_classic()+
+  xlab('Month') + ylab('Total D. occidentalis')+
+  ggtitle('Arid')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+ideoc <- ggplot(data = intermediate, 
+       aes(x = Month,y = D_occidentalis),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total D. occidentalis')+
+  ggtitle('Intermediate')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+
+mdeoc <-ggplot(data = mesic, 
+       aes(x = Month,y = D_occidentalis),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total D. occidentalis')+
+  ggtitle('Mesic')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+# final graph
+monthdeoc <-ggarrange(mdeoc + rremove('xlab'),ideoc + rremove('xlab'),adeoc, nrow = 3)
+
+annotate_figure(monthdeoc,
+                top = text_grob('Total D. occidentalis by Month',
+                                face = 'bold', size = 16,
+                                color = 'red'))
+```
+
+
+
+```{r EDA site by plot}
+
+mplot <-ggplot(data = mesic, 
+       aes(x = Plot,y = Total_ticks),
+       group = Plot, color = Plot)+
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Mesic')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+iplot <-ggplot(data = intermediate, 
+       aes(x = Plot,y = Total_ticks),
+       group = Plot, color = Plot)+
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Intermediate')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+
+aplot <-ggplot(data = arid, 
+       aes(x = Plot,y = Total_ticks),
+       group = Plot, color = Plot)+
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Arid')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+# final graph
+monthplot <-ggarrange(mplot + rremove('xlab'),iplot + rremove('xlab'),aplot, ncol = 3)
+
+annotate_figure(monthplot,
+                top = text_grob('Total Ticks by Plot',
+                                face = 'bold', size = 16,
+                                color = 'red'))
+### seems like there's a difference for open plots for arid and intermediate
+
+```
+
+
+```{r EDA by year}
+
+myear <-ggplot(data = mesic, 
+       aes(x = Year,y = Total_ticks),
+       group = Plot, color = Plot)+
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Year') + ylab('Total Ticks')+
+  ggtitle('Mesic')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+iyear <-ggplot(data = intermediate, 
+       aes(x = Year,y = Total_ticks),
+       group = Plot, color = Plot)+
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Year') + ylab('Total Ticks')+
+  ggtitle('Intermediate')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+
+ayear <-ggplot(data = arid, 
+       aes(x = Year,y = Total_ticks),
+       group = Plot, color = Plot)+
+  geom_line()+
+  geom_point()+
+  theme_classic()+
+  xlab('Year') + ylab('Total Ticks')+
+  ggtitle('Arid')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+
+# final graph
+yearplot <-ggarrange(myear + rremove('xlab'),iyear + rremove('xlab'),ayear, nrow = 3)
+
+annotate_figure(yearplot,
+                top = text_grob('Total Ticks by Year',
+                                face = 'bold', size = 16,
+                                color = 'red'))
+#seems like there's a difference between 2016 and 201 across sites
+
+```
+
+```{r basic stats}
+
+########### basic #############
+summary(alldrag$Total_ticks)
+max(alldrag$Total_ticks)
+summary(alldrag$Total_ticks)
+sd(alldrag$Total_ticks)
+mean(alldrag$Total_ticks)
+
+total <- count(alldrag$Total_ticks)
+plot(total)
+table(alldrag$Total_ticks)
+
+# ^ need to transform data from wide to long
+
+
+
+########## what is the distribution?  #########
+hist(alldrag$Total_ticks, breaks = 5,
+     xlab = 'Total ticks')
+par(mfrow = c(3,1))
+hist(alldrag$Total_ticks[alldrag$Site == 'Arid'],
+     xlab = 'Total ticks', main = 'Arid')
+hist(alldrag$Total_ticks[alldrag$Site == 'Intermediate'],
+     xlab = 'Total ticks', main = 'Intermediate')
+hist(alldrag$Total_ticks[alldrag$Site == 'Mesic'],
+     xlab = 'Total ticks', main = 'Mesic')
+
+# ^^^^^^ Possion distribution, not surprised
+
+
+########## # can we log transform? ########### 
+
+alldrag$log_total_ticks <- log(alldrag$Total_ticks + 1)
+#view(alldrag)
+
+hist(alldrag$log_total_ticks,
+     xlab = 'Total ticks')
+par(mfrow = c(3,1))
+hist(alldrag$log_total_ticks[alldrag$Site == 'Arid'],
+     xlab = 'Total ticks', main = 'Arid')
+hist(alldrag$log_total_ticks[alldrag$Site == 'Intermediate'],
+     xlab = 'Total ticks', main = 'Intermediate')
+hist(alldrag$log_total_ticks[alldrag$Site == 'Mesic'],
+     xlab = 'Total ticks', main = 'Mesic')
+
+## ^^^ helped with mesic distrubution but not much else
+
+
+
+
+######### is there a trend with total ticks across the years? ######### 
+plot(alldrag$Total_ticks ~ alldrag$Year)
+fit<-lm(alldrag$Total_ticks ~ alldrag$Year)
+abline(fit, col = 'green', lwd = 3)
+
+## ^^ very very small linear increase
+
+
+
+########### how common are certain tick counts?  ############## 
+
+## cumulative density function plot of abundance of ticks ######### 
+emp_cdf <- ecdf(alldrag$Total_ticks)
+plot(emp_cdf, 
+     col = 'red')
+
+## ^^ most total tick counts are less than 10, 80% are < 9 ticks total
+
+
+
+########### is there a difference of total ticks between mesic and arid? ########### 
+
+####### shapiro-wilk test
+
+# H0 : data are normal
+# p < 0.5 data are not normal
+
+shapiro.test(alldrag$Total_ticks) # severly not normal
+qqPlot(alldrag$Total_ticks) # data is not normal, do not run a t-test, like maybe CTL but no
+
+
+####### lavene's test
+# H0 : variance between 2 groups are equal
+# if you reject lavene's test use Welch's t-test
+
+
+# let's create two groups, arid or mesic
+
+aridd <- subset(alldrag, Site == 'Arid')
+mesicc <- subset(alldrag, Site == 'Mesic')
+
+t.test(aridd$Total_ticks, mesicc$Total_ticks)
+
+## ^ p = 0.0008068, p < 0.05, 95% does not contain 0, therefore we reject our H0 and say there is a significant difference between the groups
+
+
+
+######################  let's run nonparametric tests ###################### 
+
+hist(alldrag$Total_ticks[alldrag$Site=='Arid'])
+hist(alldrag$Total_ticks[alldrag$Site=='Mesic'])
+
+
+# need to make subset of arid and mesic
+# wilcox.test(Total_ticks ~ Site, data = alldrag)
+
+
+
+######################  ANOVA for all three sites/ months/ years ###################### 
+
+############### ##########  SITE  ############ ########## ### 
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Site, 
+        data = alldrag)
+## ^ lots of outliers
+
+with(alldrag, hist(Total_ticks[Site == 'Arid']))
+with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+
+site1 <- aov(Total_ticks ~ Site, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(site1)
+
+# check residuals
+res = site1$residuals
+shapiro.test(res) # p << 0.05 so data not normal
+hist(res)
+leveneTest(Total_ticks ~ Site, 
+        data = alldrag) # p << 0.05 so variances are not equal
+
+summary(site1)
+# Fvalue = 39.52
+# p < 2e-16 , reject H0 and conclude that 1 site is significantly different
+
+TukeyHSD(site1)
+
+# let's do this in a visual way
+Post_hoc <-glht(site1, linfct = mcp(Site = 'Tukey'))
+summary(Post_hoc)
+
+confint(Post_hoc) # pairwise test
+cld(Post_hoc) # arid & mesic = a ; intermediate = b , so intermediate is different than arid & mesic
+plot(Post_hoc) # plot 95% CIs
+
+#### ^^^^ Intermediate is significantly different than mesic and arid!
+
+
+################### ########## # MONTH  ############# ########## #######
+
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Month, 
+        data = alldrag)
+## ^ lots of outliers
+
+#with(alldrag, hist(Total_ticks[Site == 'Arid']))
+#with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+#with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+
+month1 <- aov(Total_ticks ~ Month, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(month1)
+
+# check residuals
+resm = month1$residuals
+shapiro.test(resm) # p << 0.05 so data not normal
+hist(resm)
+leveneTest(Total_ticks ~ Month, 
+        data = alldrag) # p << 0.05 so variances are not equal
+
+summary(month1)
+# Fvalue = 39.52
+# p < 2e-16 , reject H0 and conclude that 1 site is significantly different
+
+TukeyHSD(month1)
+
+par(mfrow = c(1,1))
+# let's do this in a visual way
+Post_hocm <-glht(month1, linfct = mcp(Month = 'Tukey'))
+summary(Post_hocm)
+
+confint(Post_hocm) # pairwise test
+cld(Post_hocm) # different letters are different from each other
+plot(Post_hocm) # plot 95% CIs
+
+#### ^^^^ Months (May?) is significantly different!
+
+
+########## ########## ########## YEAR  #################### ########## 
+
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Year, 
+        data = alldrag)
+## ^ lots of outliers
+
+#with(alldrag, hist(Total_ticks[Site == 'Arid']))
+#with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+#with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+
+year1 <- aov(Total_ticks ~ Year, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(year1)
+
+# check residuals
+resy = year1$residuals
+shapiro.test(resy) # p << 0.05 so data not normal
+hist(resy)
+#leveneTest(Total_ticks ~ Year, 
+        #data = alldrag) # p << 0.05 so variances are not equal
+
+summary(year1)
+# Fvalue = 8.588
+# p < 0.00344 , reject H0 and conclude that 1 site is significantly different
+
+TukeyHSD(year1)
+
+# let's do this in a visual way
+Post_hocy <-glht(year1, linfct = mcp(Year = 'Tukey'))
+summary(Post_hocy)
+
+confint(Post_hocy) # pairwise test
+cld(Post_hocy) # different letters are different from each other
+plot(Post_hocy) # plot 95% CIs
+
+#### ^^^^ Intermediate is significantly different than mesic and arid!
+```
+
+
+```{r EDA}
+
+ggplot(data = arid, 
+       aes(x = Year,y = Total_ticks),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point()
+
+
+
+alldragsummary <- alldrag %>%
+  group_by(Site) 
+
+#view(alldragsummary)
+ggplot(data = alldragsummary, 
+       aes(x = Site,y = Total_ticks),
+       group = Plot, color = Plot) +
+  geom_boxplot()
+
+ggplot(data = alldragsummary, 
+       aes(x = Year,y = Total_ticks),
+       group = Plot, color = Plot) +
+  geom_line()+
+  geom_point()
+
+
+```
+
