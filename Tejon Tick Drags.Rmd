@@ -968,11 +968,26 @@ library(splines)
 
 ```{r EDA trash}
 
+library(lubridate)
+
+time <- c("2019-12-01', '2016-03-01")
+ymd(time)
+
+
+plot()
+
+ggplot(data = alldrag, 
+        aes(x = Month,y = Total_ticks),
+        group = Plot, color = Plot) +
+   geom_line() +
+   geom_point()+
+   facet_wrap(~ Year, nrow = 4)
+
 ggplot(data = arid, 
-       aes(x = Year,y = Total_ticks),
+       aes(y = Total_ticks),
        group = Plot, color = Plot) +
-  geom_line()+
-  geom_point()
+  geom_histogram() +
+  facet_wrap(~ Year, nrow = 4)
 
 
 
@@ -992,5 +1007,13 @@ ggplot(data = alldragsummary,
   geom_point()
 
 
+library(broom)
+install.packages('rstatix')
+library(rstatix)
+
+alldrag %>%
+  anova_test(Total_ticks ~ Plot) # p = 8.33e-12
+
+# look at this https://www.datanovia.com/en/lessons/ancova-in-r/
 ```
 
