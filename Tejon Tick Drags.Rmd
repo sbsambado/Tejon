@@ -16,6 +16,18 @@ library(gridExtra)
 library(plyr)
 library(car)
 library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+
 ```
 
 ```{r make data frames}
@@ -386,12 +398,33 @@ hist(alldrag$Total_ticks[alldrag$Site=='Mesic'])
 
 # need to make subset of arid and mesic
 # wilcox.test(Total_ticks ~ Site, data = alldrag)
+```
+
+
+##ANOVAS
+-check to see if CTL will allow me to run ANOVAS since assumptions are not met
+
+Tukey test is a single-step multiple comparison procedure and statistical test. It is a post-hoc analysis, which means that it is used in conjunction with an ANOVA
+
+Tukey-Krame allows to find means of a factor that are significantly different from each other, comparing all possible pairs of means with a t-test like method
+
+
+Factor(s)
+  1. Site
+    levels = Arid, Intermediate, Mesic
+  2. Plot
+    levels = Open, Partial, Total
+  3. Year
+    levels = 2016, 2017, 2018, 2019
+  4. Month (probably less ideal way to do this)
+    levels = January through December 
+```{r ANOVA}
+######################  ANOVA for sites/ plots/ years/ months ###################### 
 
 
 
-######################  ANOVA for all three sites/ months/ years ###################### 
 
-############### ##########  SITE  ############ ########## ### 
+############### ####################  SITE  ############ #######################
 # H0 : all group means are equal
 # HA : at least 1 mean is not equal
 
@@ -403,7 +436,7 @@ with(alldrag, hist(Total_ticks[Site == 'Arid']))
 with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
 with(alldrag, hist(Total_ticks[Site == 'Mesic']))
 
-
+# run an ANOVA
 site1 <- aov(Total_ticks ~ Site, 
         data = alldrag)
 par(mfrow = c(2,2))
@@ -420,18 +453,130 @@ summary(site1)
 # Fvalue = 39.52
 # p < 2e-16 , reject H0 and conclude that 1 site is significantly different
 
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
 TukeyHSD(site1)
 
 # let's do this in a visual way
 Post_hoc <-glht(site1, linfct = mcp(Site = 'Tukey'))
 summary(Post_hoc)
 
+############### ^ intermediate is significantly different (p < 0.001)
+
+
 confint(Post_hoc) # pairwise test
 cld(Post_hoc) # arid & mesic = a ; intermediate = b , so intermediate is different than arid & mesic
 plot(Post_hoc) # plot 95% CIs
 
-#### ^^^^ Intermediate is significantly different than mesic and arid!
+############ ^^^^ the mean of total tick counts is significantly different in Intermediate than Mesic and Arid!
+# Intermediate has a different letter & CIs don't overlap with 0 & p-values are significant
 
+
+
+######################################## PLOT  ########################################  
+
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Year, 
+        data = alldrag)
+## ^ lots of outliers
+
+#with(alldrag, hist(Total_ticks[Site == 'Arid']))
+#with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+#with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+
+plot1 <- aov(Total_ticks ~ Plot, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(plot1)
+
+# check residuals
+resp = year1$residuals
+shapiro.test(resp) # p << 0.05 so data not normal
+hist(resp)
+#leveneTest(Total_ticks ~ Year, 
+        #data = alldrag) # p << 0.05 so variances are not equal
+
+
+summary(plot1)
+# Fvalue = 25.98 
+# p < 8.33e-12  , reject H0 and conclude that 1 plot is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(plot1)
+
+# let's do this in a visual way
+Post_hocp <-glht(plot1, linfct = mcp(Plot = 'Tukey'))
+summary(Post_hocp)
+
+confint(Post_hocp) # pairwise test
+cld(Post_hocp) # different letters are different from each other open is different than partial & total!
+plot(Post_hocp) # plot 95% CIs
+
+########################  ^^^^ Open is significantly different
+
+# Open has a different letter & CIs don't overlap with 0 & p-values are significant
+
+################################################## YEAR  ######################################## 
+
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Year, 
+        data = alldrag)
+## ^ lots of outliers
+
+#with(alldrag, hist(Total_ticks[Site == 'Arid']))
+#with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+#with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+
+year1 <- aov(Total_ticks ~ Year, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(year1)
+
+# check residuals
+resy = year1$residuals
+shapiro.test(resy) # p << 0.05 so data not normal
+hist(resy)
+#leveneTest(Total_ticks ~ Year, 
+        #data = alldrag) # p << 0.05 so variances are not equal
+
+summary(year1)
+# Fvalue = 21.63
+# p  = 8.33e-12, p < 0.001 reject H0 and conclude that 1 site is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+
+# need to transform year into factor to run TukeyHSD
+class(alldrag$Year) # integer
+alldrag$Year = as.factor(alldrag$Year)
+class(alldrag$Year) #factor
+
+TukeyHSD(year1)
+
+# let's do this in a visual way
+Post_hocy <-glht(year1, linfct = mcp(Year = 'Tukey'))
+summary(Post_hocy)
+
+confint(Post_hocy) # pairwise test
+cld(Post_hocy)c # different letters are different from each other
+plot(Post_hocy) # plot 95% CIs
+
+#### ^^^^ 2017 & 2018 similar 'c', 2016 different 'a', 2019 different 'b'
+
+# 2016, 2019, 2017 & 2018 has a different letter & CIs don't overlap with 0 & p-values are significant
 
 ################### ########## # MONTH  ############# ########## #######
 
@@ -460,9 +605,13 @@ leveneTest(Total_ticks ~ Month,
         data = alldrag) # p << 0.05 so variances are not equal
 
 summary(month1)
-# Fvalue = 39.52
-# p < 2e-16 , reject H0 and conclude that 1 site is significantly different
+# Fvalue = 24.85
+# p < 2e-16 , reject H0 and conclude that 1 month is significantly different
 
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
 TukeyHSD(month1)
 
 par(mfrow = c(1,1))
@@ -474,54 +623,350 @@ confint(Post_hocm) # pairwise test
 cld(Post_hocm) # different letters are different from each other
 plot(Post_hocm) # plot 95% CIs
 
-#### ^^^^ Months (May?) is significantly different!
+#### ^^^^ Months (May?) is significantly different, this is kinda  poor way of analyzing months, maybe group by season but that doesn't say much either
 
 
-########## ########## ########## YEAR  #################### ########## 
 
-# H0 : all group means are equal
-# HA : at least 1 mean is not equal
+########### Try making these nicer plots ######
 
-boxplot(Total_ticks ~ Year, 
-        data = alldrag)
-## ^ lots of outliers
+plot(Post_hoc)
+plot(Post_hocy)
+plot(Post_hocp)
+plot(Post_hocm)
 
-#with(alldrag, hist(Total_ticks[Site == 'Arid']))
-#with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
-#with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+# Site
+ggplot(data = alldrag,
+       aes(x = Site, y = Total_ticks,
+           fill = Site))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('red4','red', 'salmon'))+
+  theme_classic()+
+  xlab('Site') + ylab('Total Ticks')+
+  ggtitle('Total Ticks by Site')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = 1.8,
+           size = 9, color = 'red') +
+  annotate('text', label = 'b', 
+           x = 2, y = 5,
+           size = 9, color = 'red') +
+    annotate('text', label = 'a', 
+           x = 3, y = 2.5,
+           size = 9, color = 'red')
+
+# Plot
+ggplot(data = alldrag,
+       aes(x = Plot, y = Total_ticks,
+           fill = Plot))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('lightblue4','lightblue3','lightblue'))+
+  theme_classic()+
+  xlab('Plot') + ylab('Total Ticks')+
+  ggtitle('Total Ticks by Plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = 1.6,
+           size = 9, color = 'red') +
+  annotate('text', label = 'b', 
+           x = 2, y = 3.4,
+           size = 9, color = 'red') +
+    annotate('text', label = 'b', 
+           x = 3, y = 4.3,
+           size = 9, color = 'red')
 
 
-year1 <- aov(Total_ticks ~ Year, 
-        data = alldrag)
-par(mfrow = c(2,2))
-plot(year1)
 
-# check residuals
-resy = year1$residuals
-shapiro.test(resy) # p << 0.05 so data not normal
-hist(resy)
-#leveneTest(Total_ticks ~ Year, 
-        #data = alldrag) # p << 0.05 so variances are not equal
+# ## Example code of making tukey plots nice, couldn't get it to work
 
-summary(year1)
-# Fvalue = 8.588
-# p < 0.00344 , reject H0 and conclude that 1 site is significantly different
+# generate_label_df <- function(HSD, flev){
+#  # Extract labels and factor levels from Tukey post-hoc 
+#  Tukey.levels <- HSD[[flev]][,4]
+#  Tukey.labels <- multcompLetters(Tukey.levels)['Letters']
+#  plot.labels <- names(Tukey.labels[['Letters']])
+# 
+#  # Get highest quantile for Tukey's 5 number summary and add a bit of space to buffer between    
+#  # upper quantile and label placement
+#     boxplot.df <- ddply(d, flev, function (x) max(fivenum(x$y)) + 0.2)
+# 
+#  # Create a data frame out of the factor levels and Tukey's homogenous group letters
+#   plot.levels <- data.frame(plot.labels, labels = Tukey.labels[['Letters']],
+#      stringsAsFactors = FALSE)
+# 
+#  # Merge it with the labels
+#    labels.df <- merge(plot.levels, boxplot.df, by.x = 'plot.labels', by.y = flev, sort = FALSE)
+# 
+# return(labels.df)
+# }
 
-TukeyHSD(year1)
+# modelfake <- lm(alldrag$Total_ticks ~ alldrag$Site)
+# ANOVA = aov(modelfake)
+# TUKEY <- TukeyHSD(x = ANOVA, 'alldrag$Site', conf.level = 0.95)
+# 
+# generate <- function(TUKEY, variable) {
+#   Tukey.levels <- TUKEY[[variable]][,3]
+#   Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
+# 
+#   Tukey.labels$treatment = rownames(Tukey.labels)
+#   Tukey.labels = Tukey.labels[order(Tukey.labels$treatment) , ]
+#   return(Tukey.labels)
+# }
+# 
+# LABELS <- generate_label_df(TUKEY, 'alldrag$Site')
+# 
+# my_colors <-c(
+#   rgb(143, 199, 74, maxColorValue = 255),
+#   rgb(242, 104, 34, maxColorValue = 255),
+#   rgb(111, 145, 202, maxColorValue = 255)
+# )
+# 
+# g <- boxplot(alldrag$Total_ticks ~ alldrag$Site,
+#              col = my_colors[as.numeric(LABELS[,1])],
+#              ylab = 'Total Ticks', xlab = 'Site')
+# over <- 0.1*max(g$Site[nrow(g$Site),])
+# text( c(1:nlevels(alldrag$Site)), a$stats[nrow(g$stats),] + over, LABELS[,1],
+#       col = my_colors[as.numeric(LABELS[,1])])
+# # 
 
-# let's do this in a visual way
-Post_hocy <-glht(year1, linfct = mcp(Year = 'Tukey'))
-summary(Post_hocy)
-
-confint(Post_hocy) # pairwise test
-cld(Post_hocy) # different letters are different from each other
-plot(Post_hocy) # plot 95% CIs
-
-#### ^^^^ Intermediate is significantly different than mesic and arid!
 ```
 
 
-```{r EDA}
+
+```{r correlation and linear regression}
+
+## don't have two numeric variables to compare to so can't do correlation on this dataset, maybe later when I have temp data
+
+# check for linearity, I know I shouldn't have categorical variables in there
+plot.drag <-data.frame(alldrag[,2:3],alldrag[,5:6])
+pairs.panels(plot.drag, density = TRUE, cor = FALSE, lm = TRUE)
+
+#################### run linear regression models ##########################
+
+####### Total_ticks ~ PLOT #######
+drag.lm <- lm(Total_ticks ~ Plot, data = alldrag)
+summary(drag.lm)
+# intercept (b0) : 1.1247  ; pvalue = 8.89e-06 [Plot Open]
+# plot partial (b1) : 1.7097 ; pvalue = 1.82e-06
+# plot total (b2) : 2.5183 ; pvalue = 2.62e-12
+### ^^ for every one unit increase in plot Total, there is a corresponding 2.5183 increase in number of ticks
+### my linear model is Yi = 1.1247 + 2.5183Xi
+
+# r^2 = Multiple R-squared = 0.0359	; Adjusted R-squared = 0.0346
+## ^^ 3.59% of the variation in the total number of ticks (Y) can be explained by the plot type (X)
+
+
+
+####### Total_ticks ~ SITE #######
+dragsite.lm <- lm(Total_ticks ~ Site, data = alldrag)
+summary(dragsite.lm)
+# intercept (b0) : 1.2444   ; pvalue = 1.08e-06 [Site Arid]
+# site intermediate (b1) : 3.0155 ; pvalue = < 2e-16
+# site mesic (b2) : 0.7705 ; pvalue = 0.0305
+### ^^ for every one unit increase in site Arid, there is a corresponding 2.5183 increase in number of ticks
+### my linear model is Yi = 1.2444 + 3.0155Xi
+
+# r^2 = Multiple R-squared =  0.05373	; Adjusted R-squared = 0.05237 
+## ^^ 5.37% of the variation in the total number of ticks (Y) can be explained by the site type (X)
+```
+
+*ANCOVA* includes a categorical (group) variable as well as a continuous (regression) variable in the set of predictors. One key assumption of ANCOVA is that within each group, the slope (relationship between continuous predictor and response) is the same.
+
+A variable that doesn't have a linear relationship with your response, but may be affecting its value, can be included as a *random* or *block* effect. This is a way of accounting for confounding variables, or groups that are outside your experimental design but still could affect the value of your response. *To include random effects in your model, you will need to use the function lme() instead of lm()*. The syntax of a model with random effects is lme(y~x1 + x2, random = ~1|g1, data = dataset). These models will often fail to run if your dataset includes NA values, so be sure to clean the dataset using na.omit() first.
+
+
+y = total ticks
+x = year, site, plot, month?
+```{r Multiple Regression and Model Selection}
+
+str(alldrag$Total_ticks) # Y should be numeric & continuous
+alldrag$Total_ticks <- as.numeric(alldrag$Total_ticks)
+
+str(alldrag$Year) # X categorical values are a factor
+str(alldrag$Site) # X categorical values are a factor
+str(alldrag$Plot) # X categorical values are a factor
+str(alldrag$Month) # X categorical values are a factor
+
+# check whether any of the variables exhibit significant collinearity (cor > 0.50)
+pairs.panels(alldrag[,2:6], lm = TRUE, cor = T)
+
+
+## fit model with 1 predictor and build from there
+
+fit_1sitevar <- lm(Total_ticks ~ Site, 
+               data = alldrag)
+
+fit_1plotvar <- lm(Total_ticks ~ Plot, 
+               data = alldrag)
+
+fit_1yearvar <- lm(Total_ticks ~ Plot, 
+               data = alldrag)
+
+fit_2var <- lm(Total_ticks ~ Site + Year, 
+               data = alldrag)
+
+fit_3var <- lm(Total_ticks ~ Site + Year + Plot, 
+               data = alldrag)
+
+fit_4var <- lm(Total_ticks ~ Site + Year + Plot + Month, 
+               data = alldrag)
+
+
+#mixed_effects <- lme(Total_ticks ~ Site, random = ~1|Year, 
+               #data = na.omit(alldrag))
+
+plot(fit_1var)
+plot(fit_2var)
+plot(fit_3var)
+plot(fit_4var)
+
+# calculate AIC of each model
+
+result <- AIC(fit_1sitevar,fit_1plotvar,fit_1yearvar, fit_2var, fit_3var, fit_4var)
+
+# add other metrics to table
+models <- list(fit_1sitevar,fit_1plotvar,fit_1yearvar, fit_2var, fit_3var, fit_4var) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+result$BIC <- sapply(models, BIC) # add column for BIC
+
+model_summary <- lapply(models, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(models)) {
+  result$rsq[i] <- model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result$adj_rsq[i] <- model_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+result$variables <- c('Site', 'Plot', 'Year','Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+alldragmodels <-kable(result, digits = 2, align = 'c') %>%
+  kable_styling()
+
+## ^^  best model incorporated all variables (year, month, site, plot)
+# fit 4 can explain 29% of the variation in the model
+# for 1 variable, Site is better predictor, but not by much
+  
+
+
+
+
+################## Now asses fit ##################
+
+training <- sample(1:nrow(alldrag), 15, replace = F) # pick 15 random rows from df to reserve as test data
+drag_train <- alldrag[-training,] # leave out rows of training data
+drag_test <- alldrag[training,] # use them to create a set of test data
+
+fit_4_train <- lm(Total_ticks ~ Site + Year + Plot + Month, 
+               data = drag_train) # fit final model using just training set
+
+prediction <- predict(fit_4_train, drag_test) # use fitted model to predict values for test data
+
+plot(drag_test$Total_ticks, pch = 1, col = 'black',
+     main = 'Model Assessment') # actual test data values
+points(prediction, pch = 20, col = 'red')
+legend('topleft', legend = c('Actual', 'Training'),
+       col = c('black','red'), lty = 1:2, cex = 0.8, pch = 20)
+
+
+
+
+###### use stepwise model selection
+fullmodel <- lm(Total_ticks ~ Site + Year + Plot + Month, 
+               data = alldrag)
+nullmodel <- lm(Total_ticks~1, data = alldrag)
+
+#  choose appropriate combinations of predictor variables by stepwise model selection
+# start with full model and elimates variables one by one
+# when AIC can't be reduced any more by taking away variables or putting them back, you have the final optimized model
+
+stepAIC(fullmodel, scope = c(upper = fullmodel, lower = nullmodel), direction = 'both')
+
+```
+
+```{r GLM Poisson}
+
+# choosing Poisson due to count data and high number of 0s, will probs have to do a 0 inflated model glm.nb
+
+summary(alldrag$Total_ticks)
+
+binfit <- glm(Total_ticks ~ Site + Year + Plot + Month, 
+               data = alldrag,
+              family = 'poisson')
+
+### normal x
+
+### total ~ site
+ggplot(alldrag, aes(x = Site, y = Total_ticks, color = as.factor(Plot))) +
+  geom_point() +
+  geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+#boxplot
+sitebp <- ggplot(alldrag, aes(x = Site, y = Total_ticks, color = as.factor(Plot))) +
+  geom_boxplot() +
+  geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+### total ~ year
+
+ggplot(alldrag, aes(x = Year, y = Total_ticks, color = as.factor(Plot))) +
+  geom_boxplot() +
+  geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+# boxplot
+yearbp <- ggplot(alldrag, aes(x = Year, y = Total_ticks, color = as.factor(Plot))) +
+  geom_boxplot() +
+  geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+
+### total ~ plot
+# point
+ggplot(alldrag, aes(x = Plot, y = Total_ticks, color = as.factor(Site))) +
+  geom_point() +
+  geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+# boxplot
+plotbp <- ggplot(alldrag, aes(x = Plot, y = Total_ticks, color = as.factor(Site))) +
+  geom_boxplot() +
+  geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+ggarrange(sitebp, plotbp, yearbp, nrow = 3)
+  
+# ### not normal x
+# ggplot(alldrag, aes(y = Site, x = Total_ticks, color = as.factor(Plot))) +
+#   geom_point() +
+#   geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+# 
+# ggplot(alldrag, aes(y = Year, x = Total_ticks, color = as.factor(Plot))) +
+#   geom_point() +
+#   geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+# 
+# ggplot(alldrag, aes(y = Plot, x = Total_ticks, color = as.factor(Site))) +
+#   geom_point() +
+#   geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+
+```
+
+
+```{r PCA has to be all numeric}
+library(grid)
+library(gridExtra)
+
+
+```
+
+```{r Regression Splines needs numeric data}
+
+library(caret)
+library(splines)
+
+
+```
+
+
+```{r EDA trash}
 
 ggplot(data = arid, 
        aes(x = Year,y = Total_ticks),
