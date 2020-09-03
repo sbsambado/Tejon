@@ -793,6 +793,7 @@ pairs.panels(alldrag[,2:6], lm = TRUE, cor = T)
 
 ## fit model with 1 predictor and build from there
 
+
 fit_1sitevar <- lm(Total_ticks ~ Site, 
                data = alldrag)
 

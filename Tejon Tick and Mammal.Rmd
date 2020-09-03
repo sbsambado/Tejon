@@ -1,0 +1,388 @@
+---
+title: "Tejon Tick and Mammal"
+author: "sbsambado"
+date: "9/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+fullcombo <- read_csv("~/Desktop/tejon_tickmammal_09032020.csv")
+
+#count[,c(-1,-2,-9,-10)]
+
+combo <- fullcombo[,c(-7, -8, -9, -10)]
+
+combo$site <- factor(combo$site, 
+                        levels = c('Arid','Intermediate','Mesic'))
+
+combo$plot <- factor(combo$plot, 
+                        levels = c('Open','Partial','Total'))
+combo$month <- factor(combo$month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+combo$year = as.factor(combo$year)
+combo$plot = as.factor(combo$plot)
+combo$site = as.factor(combo$site)
+combo$month = as.factor(combo$month)
+combo$block = as.integer(combo$block)
+
+Combo <-as.data.frame(combo)
+combo <- Combo
+str(combo)
+str(alldrag)
+
+```
+
+```{r best fit mammal models}
+
+#l <- sapply(combo, function(x) is.factor(x))
+
+
+fit__1yearvar <- lm(total_mammal ~ year, 
+               data = combo)
+
+fit__1sitevar <- lm(total_mammal ~ site, 
+               data = combo)
+
+fit__1plotvar <- lm(total_mammal ~ plot, 
+               data = combo)
+
+fit__2var <- lm(total_mammal ~ site + year, 
+               data = combo)
+
+fit__3var <- lm(total_mammal ~ site + year + plot, 
+               data = combo)
+
+fit__4var <- lm(total_mammal ~ site + year + plot + month, 
+               data = combo)
+
+
+#mixed_effects <- lme(Total_ticks ~ Site, random = ~1|Year, 
+               #data = na.omit(alldrag))
+
+# plot(fit_1var)
+# plot(fit_2var)
+# plot(fit_3var)
+# plot(fit_4var)
+
+# calculate AIC of each model
+
+resultm <- AIC(fit__1yearvar,fit__1sitevar,fit__1plotvar, fit__2var, fit__3var, fit__4var)
+
+# add other metrics to table
+modelsm <- list(fit__1yearvar,fit__1sitevar,fit__1plotvar, fit__2var, fit__3var, fit__4var) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+resultm$BIC <- sapply(modelsm, BIC) # add column for BIC
+
+model_summarym <- lapply(modelsm, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(modelsm)) {
+  resultm$rsq[i] <- model_summarym[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  resultm$adj_rsq[i] <- model_summarym[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+resultm$variables <- c('Year','Site', 'Plot', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+mammalmodels <-kable(resultm, digits = 2, align = 'c') %>%
+  kable_styling()
+
+alldragmodels
+```
+
+```{r combo models}
+combo1 <- lm(total_ticks ~ year, 
+               data = combo)
+
+combo2 <- lm(total_ticks ~ site, 
+               data = combo)
+
+combo3 <- lm(total_ticks ~ plot, 
+               data = combo)
+
+combo4 <- lm(total_ticks ~ site + year, 
+               data = combo)
+
+combo5 <- lm(total_ticks ~ site + year + plot, 
+               data = combo)
+
+combo6 <- lm(total_ticks ~ site + year + plot + month, 
+               data = combo)
+
+combo7 <- lm(total_ticks ~ shan_mammal, 
+               data = combo)
+
+combo8 <- lm(total_ticks ~ rich_mammal, 
+               data = combo)
+
+combo9 <- lm(total_ticks ~ total_mammal, 
+               data = combo)
+
+combo10 <- lm(total_ticks ~ shan_mammal + rich_mammal, 
+               data = combo)
+
+combo11 <- lm(total_ticks ~ shan_mammal + rich_mammal + total_mammal, 
+               data = combo)
+
+combo12 <- lm(total_ticks ~ site + year + plot + month + shan_mammal, 
+               data = combo)
+
+combo13 <- lm(total_ticks ~ site + year + plot + month + shan_mammal + rich_mammal, 
+               data = combo)
+
+combo14 <- lm(total_ticks ~ site + year + plot + month + shan_mammal + rich_mammal + total_mammal, 
+               data = combo)
+
+
+
+
+#mixed_effects <- lme(Total_ticks ~ Site, random = ~1|Year, 
+               #data = na.omit(alldrag))
+
+# plot(fit_1var)
+# plot(fit_2var)
+# plot(fit_3var)
+# plot(fit_4var)
+
+# calculate AIC of each model
+
+resultcombo <- AIC(combo1,combo2,combo3,combo4,combo5,combo6,
+               combo7,combo8,combo9,combo10,combo11,combo12,
+               combo13,combo14)
+
+# add other metrics to table
+modelscombo <- list(combo1,combo2,combo3,combo4,combo5,combo6,
+               combo7,combo8,combo9,combo10,combo11,combo12,
+               combo13,combo14) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+resultcombo$BIC <- sapply(modelscombo, BIC) # add column for BIC
+
+model_summarycombo <- lapply(modelscombo, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(modelscombo)) {
+  resultcombo$rsq[i] <- model_summarycombo[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  resultcombo$adj_rsq[i] <- model_summarycombo[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+resultcombo$variables <- c('Year','Site', 'Plot', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month', 'Shan', 'Rich', 'Total', 'Shan + Rich','Shan + Rich + Total', '5', '6','7')
+
+combomodels <-kable(resultcombo, digits = 2, align = 'c') %>%
+  kable_styling()
+
+min(resultcombo$AIC)
+
+```
+
+```{r glm}
+combo1g <- glm(total_ticks ~ year, 
+               data = combo,
+             family = 'poisson')
+
+combo2g <- glm(total_ticks ~ site, 
+               data = combo,
+              family = 'poisson')
+
+combo3g <- glm(total_ticks ~ plot, 
+               data = combo,
+              family = 'poisson')
+
+combo4g <- glm(total_ticks ~ site + year, 
+               data = combo,
+              family = 'poisson')
+
+combo5g <- glm(total_ticks ~ site + year + plot, 
+               data = combo,
+              family = 'poisson')
+
+combo6g <- glm(total_ticks ~ site + year + plot + month, 
+               data = combo,
+              family = 'poisson')
+
+combo7g <- glm(total_ticks ~ shan_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo8g <- glm(total_ticks ~ rich_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo9g <- glm(total_ticks ~ total_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo10g <- glm(total_ticks ~ shan_mammal + rich_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo11g <- glm(total_ticks ~ shan_mammal + rich_mammal + total_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo12g <- glm(total_ticks ~ site + year + plot + month + shan_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo13g <- glm(total_ticks ~ site + year + plot + month + shan_mammal + rich_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo14g <- glm(total_ticks ~ site + year + plot + month + shan_mammal + rich_mammal + total_mammal, 
+               data = combo,
+              family = 'poisson')
+
+
+
+
+#mixed_effects <- lme(Total_ticks ~ Site, random = ~1|Year, 
+               #data = na.omit(alldrag))
+
+# plot(fit_1var)
+# plot(fit_2var)
+# plot(fit_3var)
+# plot(fit_4var)
+
+# calculate AIC of each model
+
+resultcombog <- AIC(combo1g,combo2g,combo3g,combo4g,combo5g,combo6g,
+               combo7g,combo8g,combo9g,combo10g,combo11g,combo12g,
+               combo13g,combo14g)
+
+# add other metrics to table
+modelscombog <- list(combo1g,combo2g,combo3g,combo4g,combo5g,combo6g,
+               combo7g,combo8g,combo9g,combo10g,combo11g,combo12g,
+               combo13g,combo14g) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+resultcombog$BIC <- sapply(modelscombog, BIC) # add column for BIC
+
+model_summarycombog <- lapply(modelscombog, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(modelscombog)) {
+  resultcombog$rsq[i] <- model_summarycombog[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  resultcombog$adj_rsq[i] <- model_summarycombog[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+resultcombog$variables <- c('Year','Site', 'Plot', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month', 'Shan', 'Rich', 'Total', 'Shan + Rich','Shan + Rich + Total', '5', '6','7')
+
+combomodelsg <-kable(resultcombog, digits = 2, align = 'c') %>%
+  kable_styling()
+
+min(resultcombog$AIC)
+
+```
+
+```{r figures}
+### total ~ plot
+# point
+ggplot(combo, aes(x = plot, y = total_mammal, color = as.factor(site))) +
+  geom_point() +
+  geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+# boxplot
+plotbp <- ggplot(combo, aes(x = plot, y = total_mammal, color = as.factor(site))) +
+  geom_boxplot() +
+  geom_smooth(method = 'glm', method.args = list(family = 'poisson'))
+
+```
+
+```{r zero inflated models}
+library(pscl)
+library(lmtest)
+
+###### straight up ticks
+# zero inflated poisson
+fldown <- formula(total_ticks ~ site + plot | year)
+ZIP_round_down <- zeroinfl(fldown, dist = 'poisson',
+                           link = 'logit',
+                           data = combo)
+summary(ZIP_round_down)
+
+# zero adjusted poisson and negative binomial (hurdle models)
+H1downA <- hurdle(fldown, dist = "poisson", link = "logit",data = combo)
+H1downB <- hurdle(fldown, dist = "negbin", link = "logit",data = combo)
+lrtest(H1downA,H1downB)
+# Negative binomial version much more significant
+
+summary(H1downB)
+
+###### straight up mammals
+# zero inflated poisson
+fldownmam <- formula(total_ticks ~ site + plot + total_mammal | year)
+ZIP_round_downmam <- zeroinfl(fldown, dist = 'poisson',
+                           link = 'logit',
+                           data = combo)
+summary(ZIP_round_downmam)
+
+# zero adjusted poisson and negative binomial (hurdle models)
+H1downAmam <- hurdle(fldownmam, dist = "poisson", link = "logit",data = combo)
+H1downBmam <- hurdle(fldownmam, dist = "negbin", link = "logit",data = combo)
+lrtest(H1downAmam,H1downBmam)
+# Negative binomial version much more significant
+
+summary(H1downBmam)
+library(jtools)
+summ(H1downB)
+```
+```{r visualizations for model}
+# other ways to visualize
+summ(combo14)
+install.packages('ggstance')
+install.packages('broom.mixed')
+library(broom.mixed)
+library(ggstance)
+plot_summs(combo1, scale = TRUE, plot.distributions = TRUE, inner_ci_level = .9)
+plot_summs(combo2, scale = TRUE, plot.distributions = TRUE, inner_ci_level = .9)
+plot_summs(combo3, scale = TRUE, plot.distributions = TRUE, inner_ci_level = .9)
+
+plot_summs(combo1, combo2, combo3)
+# look into effect_plot()
+jtools::plot_summs(combo1)
+plot_summs(combo1)
+
+
+## fit multiple models
+fit1 <- glm(total_ticks ~ site, data = combo, 
+            family = 'poisson')
+fit2 <- glm(total_ticks ~ plot, data = combo, 
+            family = 'poisson')
+plot_summs(fit1, fit2)
+
+## fit multiple models with distribution
+plot_summs(fit1, fit2, scale = TRUE, plot.distribution = TRUE)
+
+## fit multiple models with names
+plot_summs(fit1, fit2, scale = TRUE, model.names = c('site', 'plot'))
+
+
+## export this out to word
+install.packages('huxtable')
+library(huxtable)
+export_summs(fit1, fit2, scale = TRUE)
+
+## with confidence intervals instead of standard errors
+export_summs(fit1, fit2, scale = TRUE,
+            error_format = "[{conf.low}, {conf.high}]")
+
+##  save as word doc
+export_summs(fit1, fit2, scale = TRUE, 
+             to.file = "docx",
+             file.name = "test.docx")
+```
+
