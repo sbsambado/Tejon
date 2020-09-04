@@ -774,10 +774,250 @@ seventeen <- ggplot(data = alldrag,
 
 ```
 
+##What are good predictors (X) of total tick abundance (Y)?
+
+Ran *generalized linear models* because data breaks assumptions of normality. Used family poisson because of count data.
+
+Object *'tickmodels'* is table of df, AIC, BIC, variables used in glm models
+- lowest AIC: all 4 variables (Site, Year, Plot, Month)
+- lowest AIC within single predictors = Year
+  Year AIC = 10496
+  Site AIC = 10665
+  Plot AIC = 10871
+
+tick1 - tick7 glm models
+
+Graph
+  eighteen = kable table with df, AIC, BIC, variables
+  nineteen = table with p values
+
+```{r glm for tick data}
+
+tick1 <- glm(Total_ticks ~ Year, 
+               data = alldrag,
+             family = 'poisson')
+
+tick2 <- glm(Total_ticks ~ Site, 
+               data = alldrag,
+              family = 'poisson')
+
+tick3 <- glm(Total_ticks ~ Plot, 
+               data = alldrag,
+              family = 'poisson')
+
+tick4 <- glm(Total_ticks ~ Month, 
+               data = alldrag,
+              family = 'poisson')
+
+tick5 <- glm(Total_ticks ~ Site + Year, 
+               data = alldrag,
+              family = 'poisson')
+
+tick6 <- glm(Total_ticks ~ Site + Year + Plot, 
+               data = alldrag,
+              family = 'poisson')
+
+tick7 <- glm(Total_ticks ~ Site + Year + Plot + Month, 
+               data = alldrag,
+              family = 'poisson')
+
+
+# calculate AIC of each model
+
+tickresults <- AIC(tick1, tick2, tick3,
+                    tick4, tick5, tick6,
+                   tick7)
+
+# add other metrics to table
+tickmodels <- list(tick1, tick2, tick3,
+                    tick4, tick5, tick6,
+                   tick7) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+tickresults$BIC <- sapply(tickmodels, BIC) # add column for BIC
+
+tick_model_summary <- lapply(tickmodels, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(tickmodels)) {
+  tickresults$rsq[i] <- tick_model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  tickresults$adj_rsq[i] <- tick_model_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+tickresults$variables <- c('Year','Site', 'Plot', 'Month', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+# make a nice table!
+tickmodels <-kable(tickresults, digits = 2, align = 'c') %>%
+  kable_styling()
+
+eighteen <-tickmodels
+
+nineteen <- export_summs(tick1, tick2, tick3, scale = TRUE)
+#min(tickresults$AIC)
+
+```
+
+
+Ran *generalized linear mixed-effect models* because data breaks assumptions of normality. Used family poisson because of count data. *Incorporating mixed-effects.*
+
+Object *'tick_glmm_models'* is table of df, AIC, BIC, variables used in glmm models
+- lowest AIC: all 4 variables (Site, Year, Plot, Month) *[same as glm models]*
+- lowest AIC within single predictors = Year *[same as glm models]*
+  Year AIC = 9958 *[lower AIC than glm models]*
+  Site AIC = 10127 *[lower AIC than glm models]*
+  Plot AIC = 10333 *[lower AIC than glm models]*
+
+tick8 - tick14 glm models
+
+Graph
+  twenty = kable table with df, AIC, BIC, variables
+  twentyone = table with p values
+
+```{r glmm tick models}
+
+tick8 <- glmer(Total_ticks ~ Year + (1|Block), 
+               data = alldrag,
+             family = poisson(link = 'log'))
+
+tick9 <- glmer(Total_ticks ~ Site + (1|Block), 
+               data = alldrag,
+              family = poisson(link = 'log'))
+
+tick10 <- glmer(Total_ticks ~ Plot + (1|Block), 
+               data = alldrag,
+              family = poisson(link = 'log'))
+
+tick11 <- glmer(Total_ticks ~ Month + (1|Block), 
+               data = alldrag,
+              family = poisson(link = 'log'))
+
+tick12 <- glmer(Total_ticks ~ Site + Year + (1|Block), 
+               data = alldrag,
+              family = poisson(link = 'log'))
+
+tick13 <- glmer(Total_ticks ~ Site + Year + Plot + (1|Block), 
+               data = alldrag,
+              family = poisson(link = 'log'))
+
+tick14 <- glmer(Total_ticks ~ Site + Year + Plot + Month + (1|Block), 
+               data = alldrag,
+              family = poisson(link = 'log'))
+
+
+# calculate AIC of each model
+
+tick_glmm_results <- AIC(tick8, tick9, tick10,
+                    tick11, tick12, tick13,
+                   tick14)
+
+# add other metrics to table
+tick_glmm_models <- list(tick8, tick9, tick10,
+                    tick11, tick12, tick13,
+                   tick14) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+tick_glmm_results$BIC <- sapply(tick_glmm_models, BIC) # add column for BIC
+
+tick_glmm_model_summary <- lapply(tick_glmm_models, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(tick_glmm_models)) {
+  tick_glmm_results$rsq[i] <- tick_glmm_model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  tick_glmm_results$adj_rsq[i] <- tick_glmm_model_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+tick_glmm_results$variables <- c('Year','Site', 'Plot', 'Month', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+# add another column with random effects
+tick_glmm_results$randomeffect <- c('Block','Block','Block','Block','Block','Block','Block')
+
+# make a nice table!
+tick_glmm_models <-kable(tick_glmm_results, digits = 2, align = 'c') %>%
+  kable_styling()
+
+twenty <- tick_glmm_models
+
+twentyone <- export_summs(tick8,tick9,tick10,tick11, tick12, tick13, tick14, scale = TRUE)
+
+```
+
+I need to check if I can run linear regression (lm) models since CTL would apply to this dataframe.
+
+Models
+  tick15
+    Total_ticks ~ Plot
+    Plot is a significant predictor of total ticks 
+        - p = 8.89e-06
+        - adjusted r^2 = 0.0346 ; only 3.59% variation in the total number of ticks can be explained by plot type 
+        
+  tick16
+    Total_ticks ~ Site
+    Site is a significant predictor of total ticks 
+        - p = 1.08e-06
+        - adjusted r^2 = 0.05237 ; only 5.23% variation in the total number of ticks can be explained by plot type 
+        
+Graph
+  twentytwo = table with p values
+
+```{r linear regression of ticks}
+## don't have two numeric variables to compare to so can't do correlation on this dataset, maybe later when I have temp data
+
+# check for linearity, I know I shouldn't have categorical variables in there
+plot.drag <-data.frame(alldrag[,2:3],alldrag[,5:6])
+pairs.panels(plot.drag, density = TRUE, cor = FALSE, lm = TRUE)
+
+#################### run linear regression models ##########################
+
+####### Total_ticks ~ PLOT #######
+tick15 <- lm(Total_ticks ~ Plot, data = alldrag)
+summary(tick15)
+# intercept (b0) : 1.1247  ; pvalue = 8.89e-06 [Plot Open]
+# plot partial (b1) : 1.7097 ; pvalue = 1.82e-06
+# plot total (b2) : 2.5183 ; pvalue = 2.62e-12
+### ^^ for every one unit increase in plot Total, there is a corresponding 2.5183 increase in number of ticks
+### my linear model is Yi = 1.1247 + 2.5183Xi
+
+# r^2 = Multiple R-squared = 0.0359	; Adjusted R-squared = 0.0346
+## ^^ 3.59% of the variation in the total number of ticks (Y) can be explained by the plot type (X)
+
+
+####### Total_ticks ~ SITE #######
+tick16 <- lm(Total_ticks ~ Site, data = alldrag)
+summary(tick16)
+# intercept (b0) : 1.2444   ; pvalue = 1.08e-06 [Site Arid]
+# site intermediate (b1) : 3.0155 ; pvalue = < 2e-16
+# site mesic (b2) : 0.7705 ; pvalue = 0.0305
+### ^^ for every one unit increase in site Arid, there is a corresponding 2.5183 increase in number of ticks
+### my linear model is Yi = 1.2444 + 3.0155Xi
+
+# r^2 = Multiple R-squared =  0.05373	; Adjusted R-squared = 0.05237 
+## ^^ 5.37% of the variation in the total number of ticks (Y) can be explained by the site type (X)
+
+# put these models in nice graph
+summ(tick15, confint = TRUE)
+summ(tick16, confint = TRUE)
+
+# export both graphs
+twentytwo <- export_summs(tick15, tick16, scale = TRUE)
+
+
+```
+
+
+
+###Mammal Data
+
 
 Excel sheets called 
 - 'tejon_mammals1819_09022020'
 - 'tejon_mammalcount_09032020'
+
+
+in these datasheets I name columns with lowercase compared to tick data sheets (i.e. month not Month)
 ```{r import data frames and organize}
 
 # full dataset
@@ -789,15 +1029,17 @@ mammal <-data.frame(mammals[,4:6],mammals[,9])
 # numeric dataframe for community analysis
 Count <- read.csv("~/Desktop/tejon_mammalcount_09032020.csv", header = TRUE)
 
+# remove the arid with NAs
 count <- Count[-4,]
 
+# keep only numeric data to run community analyses
 numeric <- count[,c(-1,-2,-9,-10)]
 
 # organize data into right forms
 count$plot <- factor(count$plot, 
                         levels = c('open','partial','total'))
 
-pal <- c("lightsalmon1", "gold1", "palegreen4")
+plotcolor <- pal
 
 ```
 
