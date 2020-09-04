@@ -82,7 +82,8 @@ a <- ggplot(data = arid,
   theme_classic()+
   xlab('Month') + ylab('Total Ticks')+
   ggtitle('Arid')+
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) #+
+  #geom_jitter(width = 0.2)
 
 i<- ggplot(data = intermediate, 
        aes(x = Month,y = Total_ticks),
@@ -198,6 +199,114 @@ annotate_figure(monthdeoc,
                 top = text_grob('Total D. occidentalis by Month',
                                 face = 'bold', size = 16,
                                 color = 'red'))
+
+c<- alldrag %>%
+  dplyr::group_by(Month, Total_ticks) %>%
+  dplyr::summarize(sumticks = n())
+
+
+ggplot(data = c, aes(x = Month, y = sumticks)) +
+   geom_line(color = 'black', group=2,
+             data = c[!is.na(c$sumticks),],
+             aes(x = Month, y = sumticks))+
+  geom_point()+
+  clean_background
+
+
+alldrag %>%
+  group_by_(.dots = c('Year', 'Month', 'Plot','Site')) %>%
+  dplyr::summarize(Total_ticks = n())
+
+library(dplyr) 
+library(tidyverse)
+library(tidyr)
+# 
+# arid %>%
+#   dplyr::group_by(Year)%>%
+#   dplyr::group_by(Month) %>%
+#   dplyr::count(Total_ticks)
+# 
+# 
+# alldrag %>%
+#   dplyr::select(Year == '2016')
+
+
+boop<-ggplot(data = arid, 
+       aes(x = Month,y = Total_ticks),
+       group = Plot, color = Plot) +
+  facet_wrap(~Plot)+
+  geom_boxplot(fill = 'grey')+
+  geom_point() +
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Arid')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))#+
+  #geom_jitter(width = 0.2)
+
+bop<-ggplot(data = mesic, 
+       aes(x = Month,y = Total_ticks),
+       group = Plot, color = Plot) +
+  facet_wrap(~Plot)+
+  geom_boxplot(fill = 'grey')+
+  geom_point() +
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Mesic')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))#+
+  #geom_jitter(width = 0.2)
+
+### I LIKE THIS ONE
+bleep<-ggplot(data = intermediate, 
+       aes(x = Month,y = Total_ticks),
+       group = Year, color = Year) +
+  facet_wrap(~Plot)+
+  geom_boxplot(fill = 'beige')+
+  scale_fill_brewer()+
+  geom_point() +
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Intermediate')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))#+
+  #geom_jitter(width = 0.02)
+
+noises<-ggarrange(boop + rremove('xlab'),bleep + rremove('xlab'),bop+ rremove('xlab'), ncol = 3)
+annotate_figure(noises,
+                top = text_grob('Total Tick by Month by Site',
+                                face = 'bold', size = 16,
+                                color = 'red'))
+
+boop
+bleep
+bop
+
+pdf("tall.pdf", 8, 8)
+par(mfrow=c(3,1))
+hist(boop,xlim=c(1,12))
+hist(bleep,xlim=c(1,12))
+hist(bop,xlim=c(1,12))  
+dev.off()
+```
+
+```{r}
+
+library(lubridate)
+library(dplyr)
+
+alldrag %>% group_by(Month) %>%
+  summarize(amount = sum(Total_ticks))
+
+alldrag %>%
+  group_by(Month) %>%
+  summarise(sum = sum(Total_ticks))
 ```
 
 

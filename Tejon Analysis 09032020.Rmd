@@ -1,0 +1,903 @@
+---
+title: "First Draft of Tejon Analysis"
+author: "sbsambado"
+date: "9/3/2020"
+output: html_document
+---
+
+Data were collected by the Young lab at UCSB.
+
+Data come from Tejon Ranch in southern California. 
+
+Experimental design:
+  3 Sites that vary in elevation
+    Arid (lowest), Intermediate (middle), Mesic (highest)
+      block desing: 1, 2, 3
+  
+  Within each site there are 3 Plot types that vary in animal exclusion
+    Open (no exclusion), Partial (excludes non-native larger animals), Total (only smaller animals)
+    
+
+  
+  
+Data include:
+  Tick drags 
+    across : Years (2016 - 2019) and months
+    species : I. pacificus, D. occidentalis, D. variabiles, Unknown
+    total ticks
+  
+  Mammal trapping
+    across : Years (2018, 2019) and months
+    species : peromyscus, and limited non-peromysucs 
+    
+
+Notes : 
+- if < 1 animal for species, it was placed in the NA category (i.e. TEBO) 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+devtools::install_github('gavinsimpson/ggvegan')
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('red4','red2','red')
+
+```
+
+Tick Analysis
+- imported data from sheet called 'tejon_all_tick_drags_09022020.csv'
+```{r data importing and organizing}
+# full dataset
+alldrag <- read.csv("~/Desktop/tejon_all_tick_drags_09022020.csv")
+
+# break up by site, no other filter
+intermediate <- filter(alldrag, Site == 'Intermediate')
+mesic <- filter(alldrag, Site == 'Mesic')
+arid <- filter(alldrag, Site == 'Arid')
+
+# transform variables into specific types of data
+alldrag$Month <- factor(alldrag$Month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+
+alldrag$Site <- factor(alldrag$Site,
+                       levels = c('Arid', 'Intermediate', 'Mesic'))
+
+alldrag$Plot <- factor(alldrag$Plot,
+                       levels = c('Open', 'Partial', 'Total'))
+
+alldrag$Year <- factor(alldrag$Year,
+                       levels = c('2016', '2017', '2018', '2019'))
+```
+
+
+Plots
+one = Total ticks per Sampling by  Site no outliers 
+two = Total ticks per Sampling by  Site with outliers
+
+Does site type (X) impact total tick abundance (Y)?
+```{r total tick abundance per sampling ~ site}
+
+## represents average total ticks collected across the years and sitess
+
+## no outliers
+one <- ggplot(data = alldrag, aes(x = Site, y = Total_ticks))+
+  geom_boxplot(fill = sitecolor, outlier.color = 'black', outlier.shape = NA)+
+  clean_background+
+  coord_cartesian(ylim = c(0,16))+
+  xlab('Site Types') + ylab('Total Ticks per Sampling')+
+  ggtitle('Total Ticks per Sampling by Site \n no outliers')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold'))
+
+## with outliers
+two <- ggplot(data = alldrag, aes(x = Site, y = Total_ticks))+
+  geom_boxplot(fill = sitecolor, outlier.color = 'black', outlier.shape = 1)+
+  clean_background+
+  xlab('Site Types') + ylab('Total Ticks per Sampling')+
+  ggtitle('Total ticks per Sampling by Site')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold')) 
+
+
+one
+two
+
+```
+
+Plots
+three = Total ticks per Sampling by  Plot no outliers 
+four = Total ticks per Sampling by  Plot with outliers
+
+
+Does plot type (X) impact total tick abundance (Y)?
+```{r total tick abundance per sampling ~ plot}
+
+## represents average total ticks collected across the years and plots
+
+## no outliers
+three <- ggplot(data = alldrag, aes(x = Plot, y = Total_ticks))+
+  geom_boxplot(fill = plotcolor, outlier.color = 'black', outlier.shape = NA)+
+  clean_background+
+  coord_cartesian(ylim = c(0,13))+
+  xlab('Plot Types') + ylab('Total Ticks per Sampling')+
+  ggtitle('Total Ticks per Sampling by Plot \n no outliers')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold'))
+
+## with outliers
+four <- ggplot(data = alldrag, aes(x = Plot, y = Total_ticks))+
+  geom_boxplot(fill = plotcolor, outlier.color = 'black', outlier.shape = 1)+
+  clean_background+
+  xlab('Plot Types') + ylab('Total Ticks per Sampling')+
+  ggtitle('Total ticks per Sampling by Plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold')) 
+
+
+three
+four
+
+```
+
+
+Plots
+five = Total ticks per sampling across month by site Arid (no outliers)
+six = Total ticks per sampling across month by site Intermediate (no outliers)
+seven = Total ticks per sampling across month by site Mesic (no outliers)
+eight = compares total ticks per sampling across month by all sites (this is messy, but wanted a quick side by side picture)
+nine = Total ticks per sampling across month by site Arid (no outliers)
+ten = Total ticks per sampling across month by site Intermediate (no outliers)
+eleven = Total ticks per sampling across month by site Mesic (no outliers)
+
+How does total tick abundance vary by month at each site? 
+```{r total tick abundance across month by site}
+## no outliers
+five <- ggplot(data = arid, 
+               aes(x = Month, y = Total_ticks,
+                   fill = Plot), group = Plot)+
+  geom_boxplot(outlier.shape = NA)+
+  scale_color_identity()+
+  facet_wrap(~Plot, ncol = 3)+
+  clean_background +
+  coord_cartesian(ylim = c(0,13))+
+  xlab('Months') + ylab('Total ticks per sampling ')+
+  ggtitle('Arid : Total ticks per sampling by plot \n no outliers')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold', size = 8)) +
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))
+
+six <- ggplot(data = intermediate, 
+               aes(x = Month, y = Total_ticks,
+                   fill = Plot), group = Plot)+
+  geom_boxplot(outlier.shape = NA)+
+  scale_color_identity()+
+  facet_wrap(~Plot, ncol = 3)+
+  clean_background +
+  coord_cartesian(ylim = c(0,40))+
+  xlab('Months') + ylab('Total ticks per sampling ')+
+  ggtitle('Intermediate : Total ticks per sampling by plot \n no outliers')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold', size = 8)) +
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))
+
+seven <- ggplot(data = mesic, 
+               aes(x = Month, y = Total_ticks,
+                   fill = Plot), group = Plot)+
+  geom_boxplot(outlier.shape = NA)+
+  scale_color_identity()+
+  facet_wrap(~Plot, ncol = 3)+
+  clean_background +
+  coord_cartesian(ylim = c(0,20))+
+  xlab('Months') + ylab('Total ticks per sampling ')+
+  ggtitle('Mesic : Total ticks per sampling by plot \n no outliers')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold', size = 8)) +
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))
+
+## try to arrange in a visual way
+eight<- ggarrange(five +rremove('xlab') +rremove('ylab') + rremove('legend'),
+                  six +rremove('xlab') +rremove('ylab') + rremove('legend'), 
+                  seven +rremove('xlab') +rremove('ylab')+ rremove('legend'),
+                  ncol = 3)
+annotate_figure(eight,
+                top = text_grob('Total Ticks by Month',
+                                face = 'bold', size = 16,
+                                color = 'red'))
+
+## Outliers
+nine <- ggplot(data = arid, 
+               aes(x = Month, y = Total_ticks,
+                   fill = Plot), group = Plot)+
+  geom_boxplot(outlier.shape = 1)+
+  scale_color_identity()+
+  facet_wrap(~Plot, ncol = 3)+
+  clean_background +
+  coord_cartesian(ylim = c(0,45))+
+  xlab('Months') + ylab('Total ticks per sampling ')+
+  ggtitle('Arid : Total ticks per sampling by plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold', size = 8)) +
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))
+
+ten <- ggplot(data = intermediate, 
+               aes(x = Month, y = Total_ticks,
+                   fill = Plot), group = Plot)+
+  geom_boxplot(outlier.shape = 1)+
+  scale_color_identity()+
+  facet_wrap(~Plot, ncol = 3)+
+  clean_background +
+  coord_cartesian(ylim = c(0,50))+
+  xlab('Months') + ylab('Total ticks per sampling ')+
+  ggtitle('Intermediate : Total ticks per sampling by plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold', size = 8)) +
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))
+
+eleven <- ggplot(data = mesic, 
+               aes(x = Month, y = Total_ticks,
+                   fill = Plot), group = Plot)+
+  geom_boxplot(outlier.shape = 1)+
+  scale_color_identity()+
+  facet_wrap(~Plot, ncol = 3)+
+  clean_background +
+  coord_cartesian(ylim = c(0,20))+
+  xlab('Months') + ylab('Total ticks per sampling ')+
+  ggtitle('Mesic : Total ticks per sampling by plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(face = 'bold', size = 8)) +
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12))
+
+
+five
+six
+seven
+nine
+ten
+eleven
+```
+
+Plots
+
+twelve = total tick abundance per sampling by site and plot type
+```{r tick abundance across sites with plot type fill}
+twelve <-ggplot(data = alldrag,
+       aes(x = Site, y = Total_ticks,
+           fill = Plot))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  theme_classic()+
+  xlab('Site') + ylab('Total tick abundance per sampling')+
+  ggtitle('Total tick abundance per sampling by site and plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+twelve
+```
+
+Plots
+
+thirteen = Total tick abundance per sampling by year by plot type
+```{r tick abundance by year}
+
+thirteen <- ggplot(data = arid,
+                   aes(x = Year, y = Total_ticks,
+                       fill = Plot))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  clean_background +
+  xlab('Year') + ylab('Total tick abundance per sampling')+
+  ggtitle('Total tick abundance per sampling by year and plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+thirteen
+```
+
+
+Need to fix this section with some summary stats, wilcox test
+
+######### is there a trend with total ticks across the years? ######### 
+plot(alldrag$Total_ticks ~ alldrag$Year)
+fit<-lm(alldrag$Total_ticks ~ alldrag$Year)
+abline(fit, col = 'green', lwd = 3)
+
+## ^^ very very small linear increase
+
+```{r basic stats}
+
+########## what is the distribution?  #########
+hist(alldrag$Total_ticks, breaks = 5,
+     xlab = 'Total ticks')
+par(mfrow = c(3,1))
+hist(alldrag$Total_ticks[alldrag$Site == 'Arid'],
+     xlab = 'Total ticks', main = 'Arid')
+hist(alldrag$Total_ticks[alldrag$Site == 'Intermediate'],
+     xlab = 'Total ticks', main = 'Intermediate')
+hist(alldrag$Total_ticks[alldrag$Site == 'Mesic'],
+     xlab = 'Total ticks', main = 'Mesic')
+
+# ^^^^^^ Possion distribution, not surprised
+
+
+########## # can we log transform? ########### 
+
+alldrag$log_total_ticks <- log(alldrag$Total_ticks + 1)
+#view(alldrag)
+
+hist(alldrag$log_total_ticks,
+     xlab = 'Total ticks')
+par(mfrow = c(3,1))
+hist(alldrag$log_total_ticks[alldrag$Site == 'Arid'],
+     xlab = 'Total ticks', main = 'Arid')
+hist(alldrag$log_total_ticks[alldrag$Site == 'Intermediate'],
+     xlab = 'Total ticks', main = 'Intermediate')
+hist(alldrag$log_total_ticks[alldrag$Site == 'Mesic'],
+     xlab = 'Total ticks', main = 'Mesic')
+
+## ^^^ helped with mesic distrubution but not much else
+
+########### how common are certain tick counts?  ############## 
+
+## cumulative density function plot of abundance of ticks ######### 
+emp_cdf <- ecdf(alldrag$Total_ticks)
+plot(emp_cdf, 
+     col = 'red')
+
+## ^^ most total tick counts are less than 10, 80% are < 9 ticks total
+
+########### is there a difference of total ticks between mesic and arid? ########### 
+
+####### shapiro-wilk test
+
+# H0 : data are normal
+# p < 0.5 data are not normal
+
+shapiro.test(alldrag$Total_ticks) # severly not normal, p < 2.2e-16
+qqPlot(alldrag$Total_ticks) # data is not normal, do not run a t-test, like maybe CTL but no
+
+
+####### lavene's test
+# H0 : variance between 2 groups are equal
+# if you reject lavene's test use Welch's t-test
+
+
+# let's create two groups, arid or mesic
+
+aridd <- subset(alldrag, Site == 'Arid')
+mesicc <- subset(alldrag, Site == 'Mesic')
+
+t.test(aridd$Total_ticks, mesicc$Total_ticks)
+
+## ^ p = 0.0008068, p < 0.05, 95% does not contain 0, therefore we reject our H0 and say there is a significant difference between the groups
+
+
+
+```
+
+
+-check to see if CTL will allow me to run ANOVAS since assumptions are not met
+
+Tukey test is a single-step multiple comparison procedure and statistical test. It is a post-hoc analysis, which means that it is used in conjunction with an ANOVA
+
+Tukey-Krame allows to find means of a factor that are significantly different from each other, comparing all possible pairs of means with a t-test like method
+
+
+Factor(s)
+  1. Site
+    levels = Arid, Intermediate, Mesic
+  2. Plot
+    levels = Open, Partial, Total
+  3. Year
+    levels = 2016, 2017, 2018, 2019
+  4. Month (probably less ideal way to do this)
+    levels = January through December 
+    
+    
+Plots
+
+fouteen = ANOVA site
+fifteen = ANOVA plot
+sixteen = ANOVA year
+seventeen = ANOVA month
+```{r ANOVA for site}
+
+############### ####################  SITE  ############ #######################
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Site, 
+        data = alldrag)
+## ^ lots of outliers
+
+with(alldrag, hist(Total_ticks[Site == 'Arid']))
+with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+# run an ANOVA
+site1 <- aov(Total_ticks ~ Site, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(site1)
+
+# check residuals
+res = site1$residuals
+shapiro.test(res) # p << 0.05 so data not normal
+hist(res)
+leveneTest(Total_ticks ~ Site, 
+        data = alldrag) # p << 0.05 so variances are not equal
+
+summary(site1)
+# Fvalue = 39.52
+# p < 2e-16 , reject H0 and conclude that 1 site is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(site1)
+
+# let's do this in a visual way
+Post_hoc <-glht(site1, linfct = mcp(Site = 'Tukey'))
+summary(Post_hoc)
+
+############### ^ intermediate is significantly different (p < 0.001)
+
+
+confint(Post_hoc) # pairwise test
+cld(Post_hoc) # arid & mesic = a ; intermediate = b , so intermediate is different than arid & mesic
+plot(Post_hoc) # plot 95% CIs
+
+############ ^^^^ the mean of total tick counts is significantly different in Intermediate than Mesic and Arid!
+# Intermediate has a different letter & CIs don't overlap with 0 & p-values are significant
+
+# Site
+fourteen <- ggplot(data = alldrag,
+       aes(x = Site, y = Total_ticks,
+           fill = Site))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('red4','red2','red'))+
+  theme_classic()+
+  xlab('Site') + ylab('Total Ticks')+
+  ggtitle('Total Ticks by Site')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = 1.8,
+           size = 9, color = 'red') +
+  annotate('text', label = 'b', 
+           x = 2, y = 5,
+           size = 9, color = 'red') +
+    annotate('text', label = 'a', 
+           x = 3, y = 2.5,
+           size = 9, color = 'red')
+
+
+```
+
+```{r ANOVA for plot}
+######################################## PLOT  ########################################  
+
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Year, 
+        data = alldrag)
+## ^ lots of outliers
+
+#with(alldrag, hist(Total_ticks[Site == 'Arid']))
+#with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+#with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+
+plot1 <- aov(Total_ticks ~ Plot, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(plot1)
+
+# check residuals
+resp = year1$residuals
+shapiro.test(resp) # p << 0.05 so data not normal
+hist(resp)
+#leveneTest(Total_ticks ~ Year, 
+        #data = alldrag) # p << 0.05 so variances are not equal
+
+
+summary(plot1)
+# Fvalue = 25.98 
+# p < 8.33e-12  , reject H0 and conclude that 1 plot is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(plot1)
+
+# let's do this in a visual way
+Post_hocp <-glht(plot1, linfct = mcp(Plot = 'Tukey'))
+summary(Post_hocp)
+
+confint(Post_hocp) # pairwise test
+cld(Post_hocp) # different letters are different from each other open is different than partial & total!
+plot(Post_hocp) # plot 95% CIs
+
+########################  ^^^^ Open is significantly different
+
+# Open has a different letter & CIs don't overlap with 0 & p-values are significant
+
+# Plot
+fifteen <-ggplot(data = alldrag,
+       aes(x = Plot, y = Total_ticks,
+           fill = Plot))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  theme_classic()+
+  xlab('Plot') + ylab('Total Ticks')+
+  ggtitle('Total Ticks by Plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = 1.6,
+           size = 9, color = 'red') +
+  annotate('text', label = 'b', 
+           x = 2, y = 3.4,
+           size = 9, color = 'red') +
+    annotate('text', label = 'b', 
+           x = 3, y = 4.3,
+           size = 9, color = 'red')
+
+
+```
+
+```{r ANOVA for year}
+################################################## YEAR  ######################################## 
+
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Year, 
+        data = alldrag)
+## ^ lots of outliers
+
+#with(alldrag, hist(Total_ticks[Site == 'Arid']))
+#with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+#with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+
+year1 <- aov(Total_ticks ~ Year, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(year1)
+
+# check residuals
+resy = year1$residuals
+shapiro.test(resy) # p << 0.05 so data not normal
+hist(resy)
+#leveneTest(Total_ticks ~ Year, 
+        #data = alldrag) # p << 0.05 so variances are not equal
+
+summary(year1)
+# Fvalue = 21.63
+# p  = 8.33e-12, p < 0.001 reject H0 and conclude that 1 site is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+
+# need to transform year into factor to run TukeyHSD
+class(alldrag$Year) # integer
+alldrag$Year = as.factor(alldrag$Year)
+class(alldrag$Year) #factor
+
+TukeyHSD(year1)
+
+# let's do this in a visual way
+Post_hocy <-glht(year1, linfct = mcp(Year = 'Tukey'))
+summary(Post_hocy)
+
+confint(Post_hocy) # pairwise test
+cld(Post_hocy) # different letters are different from each other
+plot(Post_hocy) # plot 95% CIs
+
+#### ^^^^ 2017 & 2018 similar 'c', 2016 different 'a', 2019 different 'b'
+
+# 2016, 2019, 2017 & 2018 has a different letter & CIs don't overlap with 0 & p-values are significant
+
+
+# Plot
+sixteen<- ggplot(data = alldrag,
+       aes(x = Year, y = Total_ticks,
+           fill = Year))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('lightblue1','lightblue2','lightblue3','lightblue4'))+
+  theme_classic()+
+  xlab('Year') + ylab('Total Ticks')+
+  ggtitle('Total Ticks by Year')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = .5,
+           size = 9, color = 'red') +
+  annotate('text', label = 'c', 
+           x = 2, y = 3.93,
+           size = 9, color = 'red') +
+    annotate('text', label = 'c', 
+           x = 3, y = 3.9,
+           size = 9, color = 'red')+
+   annotate('text', label = 'b', 
+           x = 4, y = 2.72,
+           size = 9, color = 'red')
+
+
+
+
+```
+
+```{r ANOVA for month}
+################### ########## # MONTH  ############# ########## #######
+
+# H0 : all group means are equal
+# HA : at least 1 mean is not equal
+
+boxplot(Total_ticks ~ Month, 
+        data = alldrag)
+## ^ lots of outliers
+
+#with(alldrag, hist(Total_ticks[Site == 'Arid']))
+#with(alldrag, hist(Total_ticks[Site == 'Intermediate']))
+#with(alldrag, hist(Total_ticks[Site == 'Mesic']))
+
+
+month1 <- aov(Total_ticks ~ Month, 
+        data = alldrag)
+par(mfrow = c(2,2))
+plot(month1)
+
+# check residuals
+resm = month1$residuals
+shapiro.test(resm) # p << 0.05 so data not normal
+hist(resm)
+leveneTest(Total_ticks ~ Month, 
+        data = alldrag) # p << 0.05 so variances are not equal
+
+summary(month1)
+# Fvalue = 24.85
+# p < 2e-16 , reject H0 and conclude that 1 month is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(month1)
+
+par(mfrow = c(1,1))
+# let's do this in a visual way
+Post_hocm <-glht(month1, linfct = mcp(Month = 'Tukey'))
+summary(Post_hocm)
+
+confint(Post_hocm) # pairwise test
+cld(Post_hocm) # different letters are different from each other
+plot(Post_hocm) # plot 95% CIs
+
+#### ^^^^ Months (May?) is significantly different, this is kinda  poor way of analyzing months, maybe group by season but that doesn't say much either
+
+seventeen <- ggplot(data = alldrag,
+       aes(x = Month, y = Total_ticks))+
+  geom_bar(stat = 'summary', fun.y = 'mean', fill = 'grey')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  theme_classic()+
+  xlab('Month') + ylab('Total Ticks')+
+  ggtitle('Total Ticks by Month')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = .5,
+           size = 7, color = 'red') +
+  annotate('text', label = 'ab', 
+           x = 2, y = .7,
+           size = 7, color = 'red') +
+    annotate('text', label = 'ac', 
+           x = 3, y = 3.2,
+           size = 7, color = 'red')+
+   annotate('text', label = 'e', 
+           x = 4, y = 6.6,
+           size = 7, color = 'red') +
+  annotate('text', label = 'de', 
+           x = 5, y = 6.4,
+           size = 7, color = 'red') +
+  annotate('text', label = 'cd', 
+           x = 6, y = 4.7,
+           size = 7, color = 'red') +
+    annotate('text', label = 'ab', 
+           x = 7, y = 2.1,
+           size = 7, color = 'red')+
+   annotate('text', label = 'a', 
+           x = 8, y = .5,
+           size = 7, color = 'red')+
+   annotate('text', label = 'a', 
+           x = 9, y = .5,
+           size = 7, color = 'red')+ 
+  annotate('text', label = 'bc', 
+           x = 10, y = 3.6,
+           size = 7, color = 'red')+
+  annotate('text', label = 'ac', 
+           x = 11, y = 3.2,
+           size = 7, color = 'red')+
+  annotate('text', label = 'a', 
+           x = 12, y = .5,
+           size = 7, color = 'red')
+
+
+```
+
+
+Excel sheets called 
+- 'tejon_mammals1819_09022020'
+- 'tejon_mammalcount_09032020'
+```{r import data frames and organize}
+
+# full dataset
+mammals <- read.csv("~/Desktop/tejon_mammals1819_09022020.csv")
+
+# subset for important
+mammal <-data.frame(mammals[,4:6],mammals[,9])
+
+# numeric dataframe for community analysis
+Count <- read.csv("~/Desktop/tejon_mammalcount_09032020.csv", header = TRUE)
+
+count <- Count[-4,]
+
+numeric <- count[,c(-1,-2,-9,-10)]
+
+# organize data into right forms
+count$plot <- factor(count$plot, 
+                        levels = c('open','partial','total'))
+
+pal <- c("lightsalmon1", "gold1", "palegreen4")
+
+```
+
+```{r community analyses}
+
+################################################## SPPR (Y) ##############################
+
+############################## SITE ##############################
+## species richness by site
+site_sppr <- ggplot(count, aes(x = site, y = sppr))+
+  geom_boxplot(fill = pal) +
+  scale_x_discrete(labels = c("Arid", "Intermediate", "Mesic")) +
+  theme(legend.position = "none",
+        plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("grey90"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12)) + 
+  labs(x = "Ecological landtype",
+       y = "Number of species per site",
+       title = "Species richness")+
+  theme_classic()
+site_sppr
+
+## species richness by site
+plot_sppr <- ggplot(count, aes(x = plot, y = sppr))+
+  geom_boxplot(fill = c('red','blue','green')) +
+  scale_x_discrete(labels = c("Open", "Partial", "Total")) +
+  theme(legend.position = "none",
+        plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("grey90"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12)) + 
+  labs(x = "Ecological landtype",
+       y = "Number of species per plot",
+       title = "Species richness")+
+  theme_classic()
+plot_sppr
+
+
+############################## PLOT ##############################
+
+# species diversity by plot with error bars
+
+plot_sppr_error <- ggplot(data = count,
+       aes(x = plot, y = sppr,
+           fill = plot))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('lightblue4','lightblue3','lightblue'))+
+  theme_classic()+
+  xlab('Plot') + ylab('Spieces Richness')+
+  ggtitle('Species Diversity by Plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+##########################################  TOTAL ANIMAL (Y) ##############################
+# total animal abundance by plot
+plot1<-ggplot(data = count,
+       aes(x = plot, y = total,
+           fill = plot))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('lightblue4','lightblue3','lightblue'))+
+  theme_classic()+
+  xlab('Plot') + ylab('Total Animal Abundance')+
+  ggtitle('Total Animal Abundance by Plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+
+## # total animal abundance by site with fill
+site1<-ggplot(data = count,
+       aes(x = site, y = total,
+           fill = plot))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('lightblue4','lightblue3','lightblue'))+
+  theme_classic()+
+  xlab('Site') + ylab('Total Animal Abundance')+
+  ggtitle('Total Animal Abundance by Site')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+
+## # total animal abundance by site no fill
+site2<-ggplot(data = count,
+       aes(x = site, y = total))+
+  geom_bar(stat = 'summary', fun.y = 'mean',
+           fill = c('lightblue4','lightblue3','lightblue'))+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  theme_classic()+
+  xlab('Site') + ylab('Total Animal abundance')+
+  ggtitle('Total Animal abundance by Site')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+ggarrange(site_sppr, plot_sppr)
+ggarrange(plot_sppr_error, plot1, site1, site2)
+
+```
+

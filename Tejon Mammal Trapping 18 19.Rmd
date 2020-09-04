@@ -482,7 +482,10 @@ plot(Post_hoctot_site) # plot 95% CIs
 possibly tick abundance with mammal abundance correlation?
 ```{r correlation}
 
-
+cor.test(combo$total_ticks, combo$total_mammal)
+cor.test(combo$shan_mammal, combo$total_mammal) # significant but colinear?
+cor.test(combo$rich_mammal, combo$total_mammal) # significant but colinear?
+cor.test(combo$total_ticks, combo$shan_mammal) # significant
 
 ```
 
