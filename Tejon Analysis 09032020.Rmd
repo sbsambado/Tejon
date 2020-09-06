@@ -1029,7 +1029,7 @@ mammal <-data.frame(mammals[,4:6],mammals[,9])
 # numeric dataframe for community analysis
 Count <- read.csv("~/Desktop/tejon_mammalcount_09032020.csv", header = TRUE)
 
-# remove the arid with NAs
+# remove the arid with NAs, this will be the full dataset with species richenss and diversity added
 count <- Count[-4,]
 
 # keep only numeric data to run community analyses
@@ -1039,107 +1039,967 @@ numeric <- count[,c(-1,-2,-9,-10)]
 count$plot <- factor(count$plot, 
                         levels = c('open','partial','total'))
 
+
+# species richness
+sppr <- specnumber(numeric)
+
+# shannon diversity
+shannondiv <- diversity(numeric)
+
+# add species richness to count
+count$sppr<-specnumber(numeric)
+
+# add shannon diversity to count
+count$shannondiv <- diversity(numeric)
+
 plotcolor <- pal
+
+
+
 
 ```
 
-```{r community analyses}
+Graphs
 
-################################################## SPPR (Y) ##############################
+
+Total animal
+
+twentythree = total animal abundance by site (Tukey Kramer values)
+twentyfour = total animal abundance by plot
+twentyfive = total animal abundance by site with plot fill
+twentysix = total animal abundance by site and plot combo (I like this one)
+```{r}
+########### TOTAL ANIMAL (Y) ############
+
+# total animal abundance by site
+twentythree <-ggplot(data = count,
+       aes(x = site, y = total,
+           fill = site))+
+  scale_x_discrete(labels = c("Arid", "Intermediate", "Mesic")) +
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('red4','red2','red'))+
+  clean_background +
+  xlab('Site Types') + ylab('Animal Abundance')+
+  ggtitle('Animal Abundance by Site')+
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = 42,
+           size = 9, color = 'red') +
+  annotate('text', label = 'a', 
+           x = 2, y = 23,
+           size = 9, color = 'red') +
+    annotate('text', label = 'b', 
+           x = 3, y = 72,
+           size = 9, color = 'red')
+
+# total animal abundance by plot
+twentyfour <-ggplot(data = count,
+       aes(x = plot, y = total,
+       fill = plot))+
+  scale_x_discrete(labels = c("Open", "Partial", "Total")) +
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  clean_background +
+  xlab('Plot Types') + ylab('Animal Abundance')+
+  ggtitle('Animal Abundance by Plot')+
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5))  
+
+
+
+##  total animal abundance by site with fill
+twentyfive <-ggplot(data = count,
+       aes(x = site, y = total,
+           fill = plot))+
+  scale_x_discrete(labels = c("Arid", "Intermediate", "Mesic")) +
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  clean_background +
+  xlab('Site Types') + ylab('Animal Abundance')+
+  ggtitle('Animal Abundance by Site')+
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+
+
+twentysix <- ggarrange(twentythree + rremove('legend'), twentyfour + rremove('ylab') +rremove('legend'),ncol = 2)
+
+twentythree
+twentyfour
+twentyfive
+twentysix
+```
+
+Graphs
+
+twentyseven = species richness by site type (boxplot)
+twentyeight = species richness by plot type (boxplot)
+twentynine = species richness by site type with error bars
+thirty = species richness by plot type with error bars
+
+```{r species richness by site and plot}
 
 ############################## SITE ##############################
 ## species richness by site
-site_sppr <- ggplot(count, aes(x = site, y = sppr))+
-  geom_boxplot(fill = pal) +
+twentyseven <- ggplot(count, aes(x = site, y = sppr))+
+  geom_boxplot(fill = sitecolor) +
+  coord_cartesian(ylim = c(0,6)) +
   scale_x_discrete(labels = c("Arid", "Intermediate", "Mesic")) +
-  theme(legend.position = "none",
-        plot.background = element_rect("white"),
-        panel.background = element_rect("white"),
-        panel.grid = element_line("grey90"),
-        axis.line = element_line("gray25"),
-        axis.text = element_text(size = 12, color = "gray25"),
-        axis.title = element_text(color = "gray25"),
-        legend.text = element_text(size = 12)) + 
-  labs(x = "Ecological landtype",
-       y = "Number of species per site",
-       title = "Species richness")+
-  theme_classic()
-site_sppr
-
-## species richness by site
-plot_sppr <- ggplot(count, aes(x = plot, y = sppr))+
-  geom_boxplot(fill = c('red','blue','green')) +
-  scale_x_discrete(labels = c("Open", "Partial", "Total")) +
-  theme(legend.position = "none",
-        plot.background = element_rect("white"),
-        panel.background = element_rect("white"),
-        panel.grid = element_line("grey90"),
-        axis.line = element_line("gray25"),
-        axis.text = element_text(size = 12, color = "gray25"),
-        axis.title = element_text(color = "gray25"),
-        legend.text = element_text(size = 12)) + 
-  labs(x = "Ecological landtype",
-       y = "Number of species per plot",
-       title = "Species richness")+
-  theme_classic()
-plot_sppr
+  clean_background + 
+  labs(x = "Site Types",
+       y = "Species Richness",
+       title = "Species Richness by Site") +
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5))
 
 
 ############################## PLOT ##############################
 
+## species richness by plot
+
+twentyeight <- ggplot(count, aes(x = plot, y = sppr))+
+  geom_boxplot(fill = plotcolor) +
+  coord_cartesian(ylim = c(0,6)) +
+  scale_x_discrete(labels = c("Open", "Partial", "Total")) +
+  clean_background + 
+  labs(x = "Site Types",
+       y = "Species Richness",
+       title = "Species Richness by Plot") +
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5))
+
+### geom_bar with error bars
+
+# species diversity by site with error bars
+
+twentynine <- ggplot(data = count,
+       aes(x = site, y = sppr,
+           fill = site))+
+  scale_x_discrete(labels = c("Arid", "Intermediate", "Mesic")) +
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('red4','red2','red'))+
+  clean_background +
+  xlab('Site Types') + ylab('Spieces Richness')+
+  ggtitle('Species Richness by Site')+
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+
+
 # species diversity by plot with error bars
 
-plot_sppr_error <- ggplot(data = count,
+thirty <- ggplot(data = count,
        aes(x = plot, y = sppr,
            fill = plot))+
+  scale_x_discrete(labels = c("Open", "Partial", "Total")) +
   geom_bar(stat = 'summary', fun.y = 'mean')+
   stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
-  scale_fill_manual(values = c('lightblue4','lightblue3','lightblue'))+
-  theme_classic()+
-  xlab('Plot') + ylab('Spieces Richness')+
-  ggtitle('Species Diversity by Plot')+
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+  scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  clean_background +
+  xlab('Plot Types') + ylab('Spieces Richness')+
+  ggtitle('Species Richness by Plot')+
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5)) 
 
-##########################################  TOTAL ANIMAL (Y) ##############################
-# total animal abundance by plot
-plot1<-ggplot(data = count,
-       aes(x = plot, y = total,
+twentyseven
+twentyeight
+twentynine
+thirty
+```
+
+Shannon Diversity
+
+Plots
+
+thirtyone = shannon diversity by site (boxplot)
+thirtytwo = shannon diversity by plot (boxplot)
+thirtythree = shannon diversity by site (Tukey Kramer values)
+thirtyfour = shannon diversity by plot
+```{r}
+
+## shannon diversity by site
+thirtyone <- ggplot(count, aes(x = site, y = shannondiv))+
+  geom_boxplot(fill = sitecolor) +
+  coord_cartesian(ylim = c(0,1.5)) +
+  scale_x_discrete(labels = c("Arid", "Intermediate", "Mesic")) +
+  clean_background + 
+  labs(x = "Site Types",
+       y = "Shannon Diversity",
+       title = "Shannon Diversity by Site") +
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5))
+
+## shannon diversity by plot
+
+thirtytwo <- ggplot(count, aes(x = plot, y = shannondiv))+
+  geom_boxplot(fill = plotcolor) +
+  coord_cartesian(ylim = c(0,1.5)) +
+  scale_x_discrete(labels = c("Open", "Partial", "Total")) +
+  clean_background + 
+  labs(x = "Site Types",
+       y = "Shannon Diversity",
+       title = "Shannon Diversity by Plot") +
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5))
+
+### geom_bar with error bars
+
+# shannon diversity by site with error bars
+
+thirtythree <- ggplot(data = count,
+       aes(x = site, y = shannondiv,
+           fill = site))+
+  scale_x_discrete(labels = c("Arid", "Intermediate", "Mesic")) +
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('red4','red2','red'))+
+  clean_background +
+  xlab('Site Types') + ylab('Shannon Diversity')+
+  ggtitle('Shannon Diversity by Site')+
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'ab', 
+           x = 1, y = 1.1,
+           size = 9, color = 'red') +
+  annotate('text', label = 'a', 
+           x = 2, y = .7,
+           size = 9, color = 'red') +
+    annotate('text', label = 'b', 
+           x = 3, y = 1.3,
+           size = 9, color = 'red') 
+
+
+
+# shannon diversity by plot with error bars
+
+thirtyfour <- ggplot(data = count,
+       aes(x = plot, y = shannondiv,
            fill = plot))+
+  scale_x_discrete(labels = c("Open", "Partial", "Total")) +
   geom_bar(stat = 'summary', fun.y = 'mean')+
   stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
-  scale_fill_manual(values = c('lightblue4','lightblue3','lightblue'))+
-  theme_classic()+
-  xlab('Plot') + ylab('Total Animal Abundance')+
-  ggtitle('Total Animal Abundance by Plot')+
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+  scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  clean_background +
+  xlab('Plot Types') + ylab('Shannon Diversity')+
+  ggtitle('Shannon Diversity by Plot')+
+  theme(axis.text = element_text(size = 12, face = 'bold'),
+        axis.title = element_text( size = 14),
+        plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+thirtyone
+thirtytwo
+thirtythree
+thirtyfour
+```
+
+ANOVA 
+
+1. plot type (X)
+    mammal 1 : abundance (Y) 
+    mammal 2 : shannon diversity (Y) 
+    mammal 3 : species richness (Y) 
+2. site type 
+    mammal 4 : abundance (Y) 
+    mammal 5 : shannon diversity (Y) 
+    mammal 6 : species richness (Y) 
+```{r ANOVA}
+
+# real quick
+
+### plot on mammal metrics
+mammal1 <- aov(total ~ plot, data = count)
+summary(mammal1) # p value = 0.597
+
+mammal2 <- aov(sppr ~ plot, data = count)
+summary(mammal2) # p value = 0.422
+
+mammal3 <-aov(shannondiv ~ plot, data = count)
+summary(mammal3) # p value = 0.501
+
+### site on mammal metrics
+mammal4 <- aov(total ~ site, data = count)
+summary(mammal4) # p value = 0.00857 [SIGNIFICANT]
+
+mammal5 <- aov(sppr ~ site, data = count)
+summary(mammal5) # p value = 0.0723
+
+mammal6 <-aov(shannondiv ~ site, data = count)
+summary(mammal6) # p value = 0.0485 [SIGNIFICANT]
 
 
-## # total animal abundance by site with fill
-site1<-ggplot(data = count,
-       aes(x = site, y = total,
-           fill = plot))+
-  geom_bar(stat = 'summary', fun.y = 'mean')+
-  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
-  scale_fill_manual(values = c('lightblue4','lightblue3','lightblue'))+
-  theme_classic()+
-  xlab('Site') + ylab('Total Animal Abundance')+
-  ggtitle('Total Animal Abundance by Site')+
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+
+## mammal4 and mammal6 are signficant so I will check residuals and run a Tukey Kramer
 
 
-## # total animal abundance by site no fill
-site2<-ggplot(data = count,
-       aes(x = site, y = total))+
-  geom_bar(stat = 'summary', fun.y = 'mean',
-           fill = c('lightblue4','lightblue3','lightblue'))+
-  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
-  theme_classic()+
-  xlab('Site') + ylab('Total Animal abundance')+
-  ggtitle('Total Animal abundance by Site')+
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+########## Mammal4 (total ~ site)
+# run an ANOVA
+plot(mammal4)
 
-ggarrange(site_sppr, plot_sppr)
-ggarrange(plot_sppr_error, plot1, site1, site2)
+# check residuals
+res4 = mammal4$residuals
+shapiro.test(res4) # p = 0.617 (p > 0.05) so data is normal
+hist(res4)
+leveneTest(total ~ site, data = count) # p = 0.781, (p > 0.05) so variances are equal
 
+summary(mammal4)
+# Fvalue = 11.66
+# p = 0.00857 (p < 0.05), reject H0 and conclude that 1 site is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(mammal4)
+
+# let's do this in a visual way
+Post_hoc4 <-glht(mammal4, linfct = mcp(site = 'Tukey'))
+summary(Post_hoc4)
+
+############### ^ mesic is significantly different (p < 0.001)
+
+
+confint(Post_hoc4) # pairwise test
+cld(Post_hoc4) # arid & intermediate = a ; mesic = b , so intermediate is different than arid & mesic
+plot(Post_hoc4) # plot 95% CIs
+
+############ ^^^^ the total mammal counts is significantly different in Mesic than Intermediate and Arid!
+# Mesic has a different letter & CIs don't overlap with 0 & p-values are significant
+
+
+
+
+########## Mammal6 (shannondiv ~ site)
+# run an ANOVA
+plot(mammal6)
+
+# check residuals
+res6 = mammal6$residuals
+shapiro.test(res6) # p = 0.4144 (p > 0.05) so data is normal
+hist(res6)
+leveneTest(shannondiv ~ site, data = count) # p = 0.3411, (p > 0.05) so variances are equal
+
+summary(mammal6)
+# Fvalue = 5.226
+# p = 0.0485 (p < 0.05), reject H0 and conclude that 1 site is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(mammal6)
+
+# let's do this in a visual way
+Post_hoc6 <-glht(mammal6, linfct = mcp(site = 'Tukey'))
+summary(Post_hoc6)
+
+
+
+confint(Post_hoc6) # pairwise test
+cld(Post_hoc6) # arid = ab, & intermediate = a ; mesic = b , so intermediate and mesic are different 
+plot(Post_hoc6) # plot 95% CIs
+
+############ ^^^^ the shannon diversity is significantly different between intermediate and mesic but these results are not as clear 
+# intermediate has a different letter & CIs don't overlap with 0 & p-values are significant
+
+
+
+```
+
+PCA plot
+- honestly these are not as clear, but willing to keep working on them if people are interested
+
+Graphs
+
+PCA1 = count by site, shows some grouping by site
+PCA2 = count by species
+  site 1 - 3 : arid
+  site 4 - 7 : intermediate
+  site 8 - 10 : mesic
+```{r PCA plots - needs more work}
+
+################### Attempt one ###################
+
+mam.pca <- prcomp(numeric, center = TRUE, scale = TRUE)
+print(mam.pca)
+plot(mam.pca, type = 'l')
+summary(mam.pca)
+
+out <- as.data.frame(mam.pca$x) #get the PC values for each observation so we can plot it
+
+out$site <-c('arid','arid','arid',
+                 'intermediate','intermediate','intermediate',
+                 'mesic','mesic','mesic')
+PCA1 <- ggplot(out, aes(x=PC1, y=PC2, color = site))+
+  clean_background+
+  geom_point()
+
+
+
+################### Attempt two ###################
+# redundancy analyssis
+mammalPCA <- rda(numeric)
+mammalPCA
+
+
+PCAscores <- scores(mammalPCA, display = "sites") %>% 
+  as.data.frame() %>% 
+  rownames_to_column("site") %>% 
+  full_join(site_type, by = "site")
+
+
+PCAvect <- scores(mammalPCA, display = "species") %>% 
+  as.data.frame()
+
+PCA2 <- ggplot() +
+  geom_point(data = PCAscores, aes(x = PC1, y = PC2, color = site)) +
+  geom_vline(xintercept = c(0), color = "grey70", linetype = 2) +
+  geom_hline(yintercept = c(0), color = "grey70", linetype = 2) +
+  clean_background +
+  geom_segment(data = PCAvect, aes(x = 0, y = 0, xend = PC1, yend = PC2), arrow = arrow(length = unit(0.2, "cm"))) +
+  geom_text(data = PCAvect, aes(x = PC1, y = PC2, label = rownames(PCAvect))) +
+  labs(x = "PC1",
+       y = "PC2",
+       title = "Principal Components Analysis") 
+
+PCA1
+PCA2
+```
+
+################ COMBO DATASETS ################
+
+
+Excel sheet 'tejon_tickmammal_09032020'
+
+Has tick and mammmal data combined with calculated species richness and shannondiversity metrics associated with each site
+```{r read in datasets and organize}
+combo <- read.csv("~/Desktop/tejon_tickmammal_09032020.csv")
+
+combo$site <- factor(combo$site, 
+                        levels = c('Arid','Intermediate','Mesic'))
+
+combo$plot <- factor(combo$plot, 
+                        levels = c('Open','Partial','Total'))
+combo$month <- factor(combo$month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+combo$year = as.factor(combo$year)
+
+
+```
+
+**Linear Regression models - may not be appropriate for these data**
+
+models : tick14 - tick19
+- Lowest AIC for *multivariables* is tick18 (total_tick ~ site, year, plot) 
+- Lowest AIC for *singularvariable* is tick14 (total_tick ~ year)
+
+models : mammal7 - mammal12
+- Lowest AIC for *multivariables* is mammal11 (total_mammal ~ site, year, plot) 
+- Lowest AIC for *singularvariable* is mammal (total_mammal ~ site)
+
+
+models : combo1 - combo6
+- Lowest AIC for *multivariables* is combo5 (total_tick ~ site, year, plot, shannon) 
+- Lowest AIC for *singularvariable* is combo2 (total_tick ~ mammal species richness) [not very different between tot, richness, shannon AICs]
+
+
+Graphs/ Tables with df, AIC, BIC, rsq, adj_rsq, variables
+1. tickmodel_lm 
+2. mammalmodel_lm 
+3. combomodel_lm
+```{r linear regression models}
+####################### TICKS ###########################
+##### run individual models on total mammal abundance
+tick14 <- lm(total_ticks ~ year, 
+               data = combo)
+
+tick15 <- lm(total_mammal ~ site, 
+               data = combo)
+
+tick16 <- lm(total_mammal ~ plot, 
+               data = combo)
+
+tick17 <- lm(total_mammal ~ site + year, 
+               data = combo)
+
+tick18  <- lm(total_mammal ~ site + year + plot, 
+               data = combo)
+
+tick19 <- lm(total_mammal ~ site + year + plot + month, 
+               data = combo)
+
+
+# calculate AIC of each model
+
+result_lm_tick <- AIC(tick14, tick15, tick16,
+                        tick17, tick18, tick19)
+
+# add other metrics to table
+model_lm_tick <- list(tick14, tick15, tick16,
+                        tick17, tick18, tick19) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+result_lm_tick$BIC <- sapply(model_lm_tick, BIC) # add column for BIC
+
+model_lm_tick_summary <- lapply(model_lm_tick, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(model_lm_tick)) {
+  result_lm_tick$rsq[i] <- model_lm_tick_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result_lm_tick$adj_rsq[i] <- model_lm_tick_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+result_lm_tick$variables <- c('Year','Site', 'Plot', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+tickmodel_lm <-kable(result_lm_tick, digits = 2, align = 'c',
+                        caption = '<b>Linear regression models for total tick abundance</b>', 
+                        format = 'html') %>%
+  kable_styling()
+
+tickmodel_lm 
+
+
+
+
+####################### MAMMALS ###########################
+##### run individual models on total mammal abundance
+mammal7 <- lm(total_mammal ~ year, 
+               data = combo)
+
+mammal8 <- lm(total_mammal ~ site, 
+               data = combo)
+
+mammal9 <- lm(total_mammal ~ plot, 
+               data = combo)
+
+mammal10 <- lm(total_mammal ~ site + year, 
+               data = combo)
+
+mammal11 <- lm(total_mammal ~ site + year + plot, 
+               data = combo)
+
+mammal12 <- lm(total_mammal ~ site + year + plot + month, 
+               data = combo)
+
+
+# calculate AIC of each model
+
+result_lm_mammal <- AIC(mammal7, mammal8,mammal9,
+               mammal10, mammal11, mammal12)
+
+# add other metrics to table
+model_lm_mammal <- list(mammal7, mammal8,mammal9,
+               mammal10, mammal11, mammal12) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+result_lm_mammal$BIC <- sapply(model_lm_mammal, BIC) # add column for BIC
+
+model_lm_mammal_summary <- lapply(model_lm_mammal, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(model_lm_mammal)) {
+  result_lm_mammal$rsq[i] <- model_lm_mammal_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result_lm_mammal$adj_rsq[i] <- model_lm_mammal_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+result_lm_mammal$variables <- c('Year','Site', 'Plot', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+mammalmodel_lm <-kable(result_lm_mammal, digits = 2, align = 'c',
+                        caption = '<b>Linear regression models for total mammal abundance</b>', 
+                        format = 'html') %>%
+  kable_styling()
+
+mammalmodel_lm 
+
+
+####################### COMBINATION OF TICKS AND MAMMALS ###########################
+
+combo1 <- lm(total_ticks ~ total_mammal, 
+               data = combo)
+
+combo2 <- lm(total_ticks ~ rich_mammal, 
+               data = combo)
+
+combo3 <- lm(total_ticks ~ shan_mammal, 
+               data = combo)
+
+combo4 <- lm(total_ticks ~ shan_mammal + total_mammal, 
+               data = combo)
+
+combo5 <- lm(total_ticks ~ site + year + plot + month + shan_mammal, 
+               data = combo)
+
+combo6 <- lm(total_ticks ~ site + year + plot + month + shan_mammal + total_mammal, 
+               data = combo)
+
+
+# calculate AIC of each model
+
+result_lm_combo <- AIC(combo1,combo2, combo3,combo4, combo5,
+                        combo6)
+
+# add other metrics to table
+model_lm_combo <- list(combo1,combo2, combo3,combo4, combo5,
+                        combo6) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+result_lm_combo$BIC <- sapply(model_lm_combo, BIC) # add column for BIC
+
+model_lm_combo_summary <- lapply(model_lm_combo, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(model_lm_combo)) {
+  result_lm_combo$rsq[i] <- model_lm_combo_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result_lm_combo$adj_rsq[i] <- model_lm_combo_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+result_lm_combo$variables <- c('Total Mammal','Mammal Species Richness', 'Mammal Shannon Diversity', 'Shannon + Total', 'Site + Year + Plot + Shannon', 'Site + Year + Plot + Shannon + Total')
+
+combomodel_lm <-kable(result_lm_combo, digits = 2, align = 'c',
+                        caption = '<b>Linear regression models for tick abundance with mammal variables</b>', 
+                        format = 'html') %>%
+  kable_styling()
+
+combomodel_lm 
+
+```
+
+**Generalized Linear Regression models**
+
+models : tick20 - tick25
+- Lowest AIC for *multivariables* is tick24 (total_tick ~ site, year, plot) [same as lm]
+- Lowest AIC for *singularvariable* is tick20 (total_tick ~ year) [very clear better singular predictor]
+
+models : mammal13 - mammal18
+- Lowest AIC for *multivariables* is mammal17 (total_mammal ~ site, year, plot) [same as lm]
+- Lowest AIC for *singularvariable* is mammal14 (total_mammal ~ site) [very clear better singular predictor]
+
+
+models : combo7 - combo12
+- Lowest AIC for *multivariables* is combo12 (total_tick ~ site, year, plot, shannon, total) [different than lm] 
+- Lowest AIC for *singularvariable* is combo28 (total_tick ~ mammal species richness) [different than lm]
+
+
+Graphs/ Tables with df, AIC, BIC, rsq, adj_rsq, variables
+1. tickmodel_glm 
+2. mammalmodel_glm 
+3. combomodel_glm
+
+```{r}
+####################### TICKS ###########################
+##### run individual models on total mammal abundance
+
+library(lme4)
+tick20 <- glm(total_ticks ~ year, 
+               data = combo,
+              family = 'poisson')
+
+tick21 <- glm(total_mammal ~ site, 
+               data = combo,
+              family = 'poisson')
+
+tick22 <- glm(total_mammal ~ plot, 
+               data = combo,
+              family = 'poisson')
+
+tick23 <- glm(total_mammal ~ site + year, 
+               data = combo,
+              family = 'poisson')
+
+tick24  <- glm(total_mammal ~ site + year + plot, 
+               data = combo,
+              family = 'poisson')
+
+tick25 <- glm(total_mammal ~ site + year + plot + month, 
+               data = combo,
+              family = 'poisson')
+
+
+# calculate AIC of each model
+
+result_glm_tick <- AIC(tick20, tick21, tick22,
+                        tick23, tick24, tick25)
+
+# add other metrics to table
+model_glm_tick <- list(tick20, tick21, tick22,
+                        tick23, tick24, tick25) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+result_glm_tick$BIC <- sapply(model_glm_tick, BIC) # add column for BIC
+
+model_glm_tick_summary <- lapply(model_glm_tick, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(model_glm_tick)) {
+  result_glm_tick$rsq[i] <- model_glm_tick_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result_glm_tick$adj_rsq[i] <- model_glm_tick_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+result_glm_tick$variables <- c('Year','Site', 'Plot', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+tickmodel_glm <-kable(result_glm_tick, digits = 2, align = 'c',
+                        caption = '<b>Generalized linear regression models for total tick abundance</b>', 
+                        format = 'html') %>%
+  kable_styling()
+
+tickmodel_glm 
+
+
+
+
+####################### MAMMALS ###########################
+##### run individual models on total mammal abundance
+mammal13 <- glm(total_mammal ~ year, 
+               data = combo,
+              family = 'poisson')
+
+mammal14 <- glm(total_mammal ~ site, 
+               data = combo,
+              family = 'poisson')
+
+mammal15 <- glm(total_mammal ~ plot, 
+               data = combo,
+              family = 'poisson')
+
+mammal16 <- glm(total_mammal ~ site + year, 
+               data = combo,
+              family = 'poisson')
+
+mammal17 <- glm(total_mammal ~ site + year + plot, 
+               data = combo,
+              family = 'poisson')
+
+mammal18 <- glm(total_mammal ~ site + year + plot + month, 
+               data = combo,
+              family = 'poisson')
+
+
+# calculate AIC of each model
+
+result_glm_mammal <- AIC(mammal13, mammal14,mammal15,
+               mammal16, mammal17, mammal18)
+
+# add other metrics to table
+model_glm_mammal <- list(mammal13, mammal14,mammal15,
+               mammal16, mammal17, mammal18) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+result_glm_mammal$BIC <- sapply(model_glm_mammal, BIC) # add column for BIC
+
+model_glm_mammal_summary <- lapply(model_glm_mammal, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(model_glm_mammal)) {
+  result_glm_mammal$rsq[i] <- model_glm_mammal_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result_glm_mammal$adj_rsq[i] <- model_glm_mammal_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+result_glm_mammal$variables <- c('Year','Site', 'Plot', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+mammalmodel_glm <-kable(result_glm_mammal, digits = 2, align = 'c',
+                        caption = '<b>Generalized linear regression models for total mammal abundance</b>', 
+                        format = 'html') %>%
+  kable_styling()
+
+mammalmodel_glm 
+
+
+####################### COMBINATION OF TICKS AND MAMMALS ###########################
+
+combo7 <- glm(total_ticks ~ total_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo8 <- glm(total_ticks ~ rich_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo9 <- glm(total_ticks ~ shan_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo10 <- glm(total_ticks ~ shan_mammal + total_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo11 <- glm(total_ticks ~ site + year + plot + month + shan_mammal, 
+               data = combo,
+              family = 'poisson')
+
+combo12 <- glm(total_ticks ~ site + year + plot + month + shan_mammal + total_mammal, 
+               data = combo,
+              family = 'poisson')
+
+
+# calculate AIC of each model
+
+result_glm_combo <- AIC(combo7,combo8, combo9,combo10, combo11,
+                        combo12)
+
+# add other metrics to table
+model_glm_combo <- list(combo7,combo8, combo9,combo10, combo11,
+                        combo12) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+result_glm_combo$BIC <- sapply(model_glm_combo, BIC) # add column for BIC
+
+model_glm_combo_summary <- lapply(model_glm_combo, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(model_glm_combo)) {
+  result_glm_combo$rsq[i] <- model_glm_combo_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result_glm_combo$adj_rsq[i] <- model_glm_combo_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+result_glm_combo$variables <- c('Total Mammal','Mammal Species Richness', 'Mammal Shannon Diversity', 'Shannon + Total', 'Site + Year + Plot + Shannon', 'Site + Year + Plot + Shannon + Total')
+
+combomodel_glm <-kable(result_glm_combo, digits = 2, align = 'c',
+                        caption = '<b>Generalized linear regression models for tick abundance with mammal variables</b>', 
+                        format = 'html') %>%
+  kable_styling()
+
+combomodel_glm 
+
+
+
+```
+
+## Zero Inflated hurdle models
+
+Negative binomial version is more significant than poisson
+
+Models
+*1. ZIP_round_down*
+  Site was a significant predictor of total tick counts p = 1.73e-8
+  Plot was a significant predictor of total tick counts = p < 2e-16
+  Year was a significant predictor of total tick counts p < 2e-16
+
+*2.H1downB (negative binomial)*
+  Site Intermidate was a significant predictor of total tick counts p = 2e-16
+  Site Mesic was a significant predictor of total tick counts p = 4.59e-5
+
+  Plot Partial was a significant predictor of total tick counts p = 3.37e-13
+  Plot Total was a significant predictor of total tick counts p < 2e-16
+
+  Year was a significant predictor of total tick counts p < 2e-16
+
+*3. ZIP_round_downmam*
+  Site was a significant predictor of total mammal counts p = 1.73e-8
+  Plot was a significant predictor of total mammal counts = p < 2e-16
+  Year was a significant predictor of total mammal counts p < 2e-16
+
+*4.H1downB (negative binomial)*
+  Site Intermidate was a significant predictor of total mammal counts p = 2e-16
+  Site Mesic was a significant predictor of total mammal counts p = 0.00824
+
+  Plot Partial was a significant predictor of total mammal counts p = 0.02398
+  
+
+  Year was a significant predictor of total mammal counts p < 2e-16
+```{r zero inflated models}
+library(pscl)
+library(lmtest)
+
+######################## Tick abundances ##################
+
+# zero inflated poisson
+fldown <- formula(total_ticks ~ site + plot | year)
+ZIP_round_down <- zeroinfl(fldown, dist = 'poisson',
+                           link = 'logit',
+                           data = combo)
+summary(ZIP_round_down)
+
+# zero adjusted poisson and negative binomial (hurdle models)
+H1downA <- hurdle(fldown, dist = "poisson", link = "logit",data = combo)
+H1downB <- hurdle(fldown, dist = "negbin", link = "logit",data = combo)
+lrtest(H1downA,H1downB)
+# Negative binomial version much more significant
+
+summary(H1downB)
+
+
+
+######################## Mammal abundances ########################
+
+# zero inflated poisson
+fldownmam <- formula(total_ticks ~ site + plot + total_mammal | year)
+ZIP_round_downmam <- zeroinfl(fldown, dist = 'poisson',
+                           link = 'logit',
+                           data = combo)
+summary(ZIP_round_downmam)
+
+# zero adjusted poisson and negative binomial (hurdle models)
+H1downAmam <- hurdle(fldownmam, dist = "poisson", link = "logit",data = combo)
+H1downBmam <- hurdle(fldownmam, dist = "negbin", link = "logit",data = combo)
+lrtest(H1downAmam,H1downBmam)
+# Negative binomial version much more significant
+
+summary(H1downBmam)
+library(jtools)
+
+```
+
+
+
+
+```{r print out models}
+
+# library(broom.mixed)
+# library(ggstance)
+# 
+# 
+# summ(tick24)
+# summ(mammal17) 
+# summ(mammal14)
+# summ(combo12) 
+# summ(combo28)
+# 
+# plot_summs(combo1, scale = TRUE, plot.distributions = TRUE, inner_ci_level = .9)
+# plot_summs(combo1, combo2, combo3)
+# jtools::plot_summs(combo1)
+# plot_summs(combo1)
+# plot_summs(fit1, fit2, scale = TRUE, model.names = c('site', 'plot'))
+# ## export this out to word
+# install.packages('huxtable')
+# library(huxtable)
+# export_summs(fit1, fit2, scale = TRUE)
+# 
+# ## with confidence intervals instead of standard errors
+# export_summs(fit1, fit2, scale = TRUE,
+#             error_format = "[{conf.low}, {conf.high}]")
+# 
+# ##  save as word doc
+# export_summs(fit1, fit2, scale = TRUE, 
+#              to.file = "docx",
+#              file.name = "test.docx")
 ```
 
