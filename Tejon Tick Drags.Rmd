@@ -1127,3 +1127,339 @@ alldrag %>%
 # look at this https://www.datanovia.com/en/lessons/ancova-in-r/
 ```
 
+```{r trying again on 9/7/20}
+view(alldrag)
+
+alldrag <- read.csv("~/Desktop/tejon_all_tick_drags_09022020.csv")
+alldrag$Month <- factor(alldrag$Month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+
+p<-aov(Total_ticks ~ Plot, data = alldrag)
+summary(p) # p = 8.33e-12, significant!
+s<-aov(Total_ticks ~ Site, data = alldrag)
+summary(s) # p < 2e-16, significant!
+
+
+```
+
+
+```{r tick drags by month}
+### summaries by month
+
+Aridmonthdrag16 <- alldrag %>%
+  filter(Site == 'Arid') %>%
+  group_by(Month) %>%
+  filter(Year == '2016')
+
+A16 <-aggregate(Aridmonthdrag16$Total_ticks, by = list(Month = Aridmonthdrag16$Month), FUN = sum)
+a16 <- ggplot(data = A16, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2016')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) + 
+  annotate(geom = 'text', label = 'Arid', col = 'red',
+               x = 5, y = 5.8, fontface = 'bold')
+
+Aridmonthdrag17 <- alldrag %>%
+  filter(Site == 'Arid') %>%
+  group_by(Month) %>%
+  filter(Year == '2017')
+
+A17 <-aggregate(Aridmonthdrag17$Total_ticks, by = list(Month = Aridmonthdrag17$Month), FUN = sum)
+a17 <-ggplot(data = A17, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2017')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Aridmonthdrag18 <- alldrag %>%
+  filter(Site == 'Arid') %>%
+  group_by(Month) %>%
+  filter(Year == '2018')
+
+A18 <-aggregate(Aridmonthdrag18$Total_ticks, by = list(Month = Aridmonthdrag18$Month), FUN = sum)
+a18 <- ggplot(data = A18, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2018')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Aridmonthdrag19 <- alldrag %>%
+  filter(Site == 'Arid') %>%
+  group_by(Month) %>%
+  filter(Year == '2019')
+
+A19 <-aggregate(Aridmonthdrag19$Total_ticks, by = list(Month = Aridmonthdrag19$Month), FUN = sum)
+a19 <-ggplot(data = A19,aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line(na.rm = TRUE)+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2019')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+# a16
+# a17
+# a18
+# a19
+
+Ariddrags <- ggarrange(a16 + rremove('xlab') + rremove('ylab'), 
+          a17 + rremove('xlab') + rremove('ylab'), 
+          a18 + rremove('xlab') + rremove('ylab'), 
+          a19 + rremove('xlab') + rremove('ylab'),
+          nrow = 4, rel_heights = c(.5, .5, .5,1),
+          align = 'v') 
+
+########################### INTERMEDIATE 
+
+Intermediatemonthdrag16 <- alldrag %>%
+  filter(Site == 'Intermediate') %>%
+  group_by(Month) %>%
+  filter(Year == '2016')
+
+i16 <-aggregate(Intermediatemonthdrag16$Total_ticks, by = list(Month = Intermediatemonthdrag16$Month), FUN = sum)
+i16 <- ggplot(data = i16, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2016')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) + 
+  annotate(geom = 'text', label = 'Intermediate', col = 'red',
+               x = 5, y = 7.8, fontface = 'bold')
+
+Intermediatemonthdrag17 <- alldrag %>%
+  filter(Site == 'Intermediate') %>%
+  group_by(Month) %>%
+  filter(Year == '2017')
+
+i17 <-aggregate(Intermediatemonthdrag17$Total_ticks, by = list(Month = Intermediatemonthdrag17$Month), FUN = sum)
+i17 <-ggplot(data = A17, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2017')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Intermediatemonthdrag18 <- alldrag %>%
+  filter(Site == 'Intermediate') %>%
+  group_by(Month) %>%
+  filter(Year == '2018')
+
+i18 <-aggregate(Intermediatemonthdrag18$Total_ticks, by = list(Month = Intermediatemonthdrag18$Month), FUN = sum)
+i18 <- ggplot(data = i18, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2018')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Intermediatemonthdrag19 <- alldrag %>%
+  filter(Site == 'Intermediate') %>%
+  group_by(Month) %>%
+  filter(Year == '2019')
+
+i19 <-aggregate(Intermediatemonthdrag19$Total_ticks, by = list(Month = Intermediatemonthdrag19$Month), FUN = sum)
+i19 <-ggplot(data = i19,aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line(na.rm = TRUE)+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2019')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+# a16
+# a17
+# a18
+# a19
+
+intermediatedrags <- ggarrange(i16 + rremove('xlab') + rremove('ylab'), 
+          i17 + rremove('xlab') + rremove('ylab'), 
+          i18 + rremove('xlab') + rremove('ylab'), 
+          i19 + rremove('xlab') + rremove('ylab'),
+          nrow = 4, rel_heights = c(.5, .5, .5,1),
+          align = 'v') 
+
+
+
+
+
+########################### MESIC
+
+Mesicmonthdrag16 <- alldrag %>%
+  filter(Site == 'Mesic') %>%
+  group_by(Month) %>%
+  filter(Year == '2016')
+
+m16 <-aggregate(Mesicmonthdrag16$Total_ticks, by = list(Month = Intermediatemonthdrag16$Month), FUN = sum)
+m16 <- ggplot(data = m16, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2016')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) + 
+  annotate(geom = 'text', label = 'Mesic', col = 'red',
+               x = 5, y = 7.8, fontface = 'bold')
+
+Mesicmonthdrag17 <- alldrag %>%
+  filter(Site == 'Mesic') %>%
+  group_by(Month) %>%
+  filter(Year == '2017')
+
+m17 <-aggregate(Mesicmonthdrag17$Total_ticks, by = list(Month = Intermediatemonthdrag17$Month), FUN = sum)
+m17 <-ggplot(data = m17, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2017')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Mesicmonthdrag18 <- alldrag %>%
+  filter(Site == 'Mesic') %>%
+  group_by(Month) %>%
+  filter(Year == '2018')
+
+m18 <-aggregate(Mesicmonthdrag18$Total_ticks, by = list(Month = Mesicmonthdrag18$Month), FUN = sum)
+m18 <- ggplot(data = m18, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2018')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Mesicmonthdrag19 <- alldrag %>%
+  filter(Site == 'Mesic') %>%
+  group_by(Month) %>%
+  filter(Year == '2019')
+
+m19 <-aggregate(Mesicmonthdrag19$Total_ticks, by = list(Month = Mesicmonthdrag19$Month), FUN = sum)
+m19 <-ggplot(data = m19,aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line(na.rm = TRUE)+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2019')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+# a16
+# a17
+# a18
+# a19
+
+mesicdrags <- ggarrange(m16 + rremove('xlab') + rremove('ylab'), 
+          m17 + rremove('xlab') + rremove('ylab'), 
+          m18 + rremove('xlab') + rremove('ylab'), 
+          m19 + rremove('xlab') + rremove('ylab'),
+          nrow = 4, rel_heights = c(.5, .5, .5,1),
+          align = 'v') 
+
+
+ariddrags
+intermediatedrags
+mesicdrags
+
+year16 <- ggarrange(a16, i16, m16, nrow = 3)
+year17 <- ggarrange(a17, i17, m17, nrow = 3)
+year18 <- ggarrange(a18, i18, m18, nrow = 3)
+year19 <- ggarrange(a19, i19, m19, nrow = 3)
+
+year16
+year17
+year18
+year19
+
+
+```
+
+```{r try to combine sum}
+newish <- alldrag %>%
+  group_by(Site) %>%
+  group_by(Month) 
+
+new <-aggregate(newish$Total_ticks, 
+                by = list(Month = newish$Month, Site = newish$Site, Plot = newish$Plot), FUN = sum)
+colnames(new) <- c('month', 'site','plot','total_ticks')
+print(new)
+
+
+s <-aov(total_ticks ~ site, data = new)
+summary(s) # p = 0.0177, significant!
+
+p <-aov(total_ticks ~ plot, data = new)
+summary(p) # p = 0.137, not significant
+
+
+plot(y = new$total_ticks, x = new$month, data = new )
+```
+

@@ -339,7 +339,10 @@ lrtest(H1downAmam,H1downBmam)
 summary(H1downBmam)
 library(jtools)
 summ(H1downB)
+
 ```
+
+
 ```{r visualizations for model}
 # other ways to visualize
 summ(combo14)
@@ -384,5 +387,17 @@ export_summs(fit1, fit2, scale = TRUE,
 export_summs(fit1, fit2, scale = TRUE, 
              to.file = "docx",
              file.name = "test.docx")
+```
+
+
+```{r correlation}
+
+combo.numeric <- data.frame(fullcombo[,6], fullcombo[,11:13])
+
+combo.numeric$logticks <- log(combo.numeric$total_ticks + 1)
+pairs.panels(combo.numeric, density = TRUE, cor = TRUE, lm = TRUE, method = 'spearman')
+
+cor.test(log(combo.numeric$total_ticks + 1), combo.numeric$total_mammal,
+         method = 'pearson', alternative = 'two.sided')
 ```
 

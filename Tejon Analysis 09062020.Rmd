@@ -62,6 +62,7 @@ library(devtools)
 library(ggfortify)
 library(jtools)
 devtools::install_github('gavinsimpson/ggvegan')
+library(tadaatoolbox)
 
 clean_background <- theme(plot.background = element_rect("white"),
         panel.background = element_rect("white"),
@@ -87,6 +88,29 @@ alldrag <- read.csv("~/Desktop/tejon_all_tick_drags_09022020.csv")
 intermediate <- filter(alldrag, Site == 'Intermediate')
 mesic <- filter(alldrag, Site == 'Mesic')
 arid <- filter(alldrag, Site == 'Arid')
+
+
+# aggregate tick count data
+aggregateticks <- alldrag %>%
+  group_by(Site) %>%
+  group_by(Month) 
+
+aggregate <-aggregate(aggregateticks$Total_ticks, 
+                by = list(Month = aggregateticks$Month, 
+                          Site = aggregateticks$Site, 
+                          Plot = aggregateticks$Plot), FUN = sum)
+colnames(aggregate) <- c('Month', 'Site','Plot','Total_ticks')
+print(aggregate)
+
+
+# aggregate tick count data by year
+aggregateyear <-aggregate(aggregateticks$Total_ticks, 
+                by = list(Month = aggregateticks$Month, 
+                          Site = aggregateticks$Site, 
+                          Plot = aggregateticks$Plot,
+                          Year = aggregateticks$Year), FUN = sum)
+colnames(aggregateyear) <- c('Month', 'Site','Plot','Year', 'Total_ticks')
+
 
 # transform variables into specific types of data
 alldrag$Month <- factor(alldrag$Month, 
@@ -116,27 +140,30 @@ Does site type (X) impact total tick abundance (Y)?
 ## represents average total ticks collected across the years and sitess
 
 ## no outliers
-one <- ggplot(data = alldrag, aes(x = Site, y = Total_ticks))+
+one <- ggplot(data = aggregate, aes(x = Site, y = Total_ticks))+
   geom_boxplot(fill = sitecolor, outlier.color = 'black', outlier.shape = NA)+
   clean_background+
-  coord_cartesian(ylim = c(0,16))+
-  xlab('Site Types') + ylab('Total Ticks per Sampling')+
-  ggtitle('Total Ticks per Sampling by Site \n no outliers')+
+  coord_cartesian(ylim = c(0, 200))+
+  xlab('Site Types') + ylab('Total Ticks')+
+  ggtitle('Total Ticks by Site \n no outliers')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
   theme(axis.text.x = element_text(face = 'bold'))
 
 ## with outliers
-two <- ggplot(data = alldrag, aes(x = Site, y = Total_ticks))+
+two <- ggplot(data = aggregate, aes(x = Site, y = Total_ticks))+
   geom_boxplot(fill = sitecolor, outlier.color = 'black', outlier.shape = 1)+
   clean_background+
-  xlab('Site Types') + ylab('Total Ticks per Sampling')+
-  ggtitle('Total ticks per Sampling by Site')+
+  xlab('Site Types') + ylab('Total Ticks')+
+  ggtitle('Total ticks by Site')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
   theme(axis.text.x = element_text(face = 'bold')) 
 
 
 one
 two
+
+
+
 
 ```
 
@@ -151,21 +178,21 @@ Does plot type (X) impact total tick abundance (Y)?
 ## represents average total ticks collected across the years and plots
 
 ## no outliers
-three <- ggplot(data = alldrag, aes(x = Plot, y = Total_ticks))+
+three <- ggplot(data = aggregate, aes(x = Plot, y = Total_ticks))+
   geom_boxplot(fill = plotcolor, outlier.color = 'black', outlier.shape = NA)+
   clean_background+
-  coord_cartesian(ylim = c(0,13))+
-  xlab('Plot Types') + ylab('Total Ticks per Sampling')+
-  ggtitle('Total Ticks per Sampling by Plot \n no outliers')+
+  coord_cartesian(ylim = c(0,130))+
+  xlab('Plot Types') + ylab('Total Ticks')+
+  ggtitle('Total Ticks by Plot \n no outliers')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
   theme(axis.text.x = element_text(face = 'bold'))
 
 ## with outliers
-four <- ggplot(data = alldrag, aes(x = Plot, y = Total_ticks))+
+four <- ggplot(data = aggregate, aes(x = Plot, y = Total_ticks))+
   geom_boxplot(fill = plotcolor, outlier.color = 'black', outlier.shape = 1)+
   clean_background+
-  xlab('Plot Types') + ylab('Total Ticks per Sampling')+
-  ggtitle('Total ticks per Sampling by Plot')+
+  xlab('Plot Types') + ylab('Total Ticks')+
+  ggtitle('Total ticks by Plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
   theme(axis.text.x = element_text(face = 'bold')) 
 
@@ -186,16 +213,17 @@ ten = Total ticks per sampling across month by site Intermediate (no outliers)
 eleven = Total ticks per sampling across month by site Mesic (no outliers)
 
 How does total tick abundance vary by month at each site? 
-```{r total tick abundance across month by site}
+
+```{r total tick abundance across month by site using aggregate data}
 ## no outliers
-five <- ggplot(data = arid, 
+five <- ggplot(data = aggregate, 
                aes(x = Month, y = Total_ticks,
                    fill = Plot), group = Plot)+
   geom_boxplot(outlier.shape = NA)+
   scale_color_identity()+
   facet_wrap(~Plot, ncol = 3)+
   clean_background +
-  coord_cartesian(ylim = c(0,13))+
+  #coord_cartesian(ylim = c(0,13))+
   xlab('Months') + ylab('Total ticks per sampling ')+
   ggtitle('Arid : Total ticks per sampling by plot \n no outliers')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
@@ -204,14 +232,14 @@ five <- ggplot(data = arid,
   scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
                            10,11,12))
 
-six <- ggplot(data = intermediate, 
+six <- ggplot(data = aggregate, 
                aes(x = Month, y = Total_ticks,
                    fill = Plot), group = Plot)+
   geom_boxplot(outlier.shape = NA)+
   scale_color_identity()+
   facet_wrap(~Plot, ncol = 3)+
   clean_background +
-  coord_cartesian(ylim = c(0,40))+
+  #coord_cartesian(ylim = c(0,40))+
   xlab('Months') + ylab('Total ticks per sampling ')+
   ggtitle('Intermediate : Total ticks per sampling by plot \n no outliers')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
@@ -220,14 +248,14 @@ six <- ggplot(data = intermediate,
   scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
                            10,11,12))
 
-seven <- ggplot(data = mesic, 
+seven <- ggplot(data = aggregate, 
                aes(x = Month, y = Total_ticks,
                    fill = Plot), group = Plot)+
   geom_boxplot(outlier.shape = NA)+
   scale_color_identity()+
   facet_wrap(~Plot, ncol = 3)+
   clean_background +
-  coord_cartesian(ylim = c(0,20))+
+  #coord_cartesian(ylim = c(0,20))+
   xlab('Months') + ylab('Total ticks per sampling ')+
   ggtitle('Mesic : Total ticks per sampling by plot \n no outliers')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
@@ -247,14 +275,14 @@ annotate_figure(eight,
                                 color = 'red'))
 
 ## Outliers
-nine <- ggplot(data = arid, 
+nine <- ggplot(data = aggregate, 
                aes(x = Month, y = Total_ticks,
                    fill = Plot), group = Plot)+
   geom_boxplot(outlier.shape = 1)+
   scale_color_identity()+
   facet_wrap(~Plot, ncol = 3)+
   clean_background +
-  coord_cartesian(ylim = c(0,45))+
+  #coord_cartesian(ylim = c(0,45))+
   xlab('Months') + ylab('Total ticks per sampling ')+
   ggtitle('Arid : Total ticks per sampling by plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
@@ -263,14 +291,14 @@ nine <- ggplot(data = arid,
   scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
                            10,11,12))
 
-ten <- ggplot(data = intermediate, 
+ten <- ggplot(data = aggregate, 
                aes(x = Month, y = Total_ticks,
                    fill = Plot), group = Plot)+
   geom_boxplot(outlier.shape = 1)+
   scale_color_identity()+
   facet_wrap(~Plot, ncol = 3)+
   clean_background +
-  coord_cartesian(ylim = c(0,50))+
+  #coord_cartesian(ylim = c(0,50))+
   xlab('Months') + ylab('Total ticks per sampling ')+
   ggtitle('Intermediate : Total ticks per sampling by plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
@@ -279,14 +307,14 @@ ten <- ggplot(data = intermediate,
   scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
                            10,11,12))
 
-eleven <- ggplot(data = mesic, 
+eleven <- ggplot(data = aggregate, 
                aes(x = Month, y = Total_ticks,
                    fill = Plot), group = Plot)+
   geom_boxplot(outlier.shape = 1)+
   scale_color_identity()+
   facet_wrap(~Plot, ncol = 3)+
   clean_background +
-  coord_cartesian(ylim = c(0,20))+
+  #coord_cartesian(ylim = c(0,20))+
   xlab('Months') + ylab('Total ticks per sampling ')+
   ggtitle('Mesic : Total ticks per sampling by plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
@@ -304,11 +332,316 @@ ten
 eleven
 ```
 
+
+How does tick abundance vary across the months by Site?
+```{r aggregate data}
+
+# I know there is a better way/shorter code of doing this but it is what it is
+
+### summaries by month
+
+Aridmonthdrag16 <- alldrag %>%
+  filter(Site == 'Arid') %>%
+  group_by(Month) %>%
+  filter(Year == '2016')
+
+A16 <-aggregate(Aridmonthdrag16$Total_ticks, by = list(Month = Aridmonthdrag16$Month), FUN = sum)
+a16 <- ggplot(data = A16, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  #labs(y = 'total ticks', title = 'Arid') +
+  ggtitle('2016')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) +
+  annotate(geom = 'text', label = 'Arid', col = 'red',
+               x = 5, y = 5.8, fontface = 'bold')
+
+Aridmonthdrag17 <- alldrag %>%
+  filter(Site == 'Arid') %>%
+  group_by(Month) %>%
+  filter(Year == '2017')
+
+A17 <-aggregate(Aridmonthdrag17$Total_ticks, by = list(Month = Aridmonthdrag17$Month), FUN = sum)
+a17 <-ggplot(data = A17, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2017')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Aridmonthdrag18 <- alldrag %>%
+  filter(Site == 'Arid') %>%
+  group_by(Month) %>%
+  filter(Year == '2018')
+
+A18 <-aggregate(Aridmonthdrag18$Total_ticks, by = list(Month = Aridmonthdrag18$Month), FUN = sum)
+a18 <- ggplot(data = A18, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2018')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Aridmonthdrag19 <- alldrag %>%
+  filter(Site == 'Arid') %>%
+  group_by(Month) %>%
+  filter(Year == '2019')
+
+A19 <-aggregate(Aridmonthdrag19$Total_ticks, by = list(Month = Aridmonthdrag19$Month), FUN = sum)
+a19 <-ggplot(data = A19,aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line(na.rm = TRUE)+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2019')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+# a16
+# a17
+# a18
+# a19
+
+Ariddrags <- ggarrange(a16 + rremove('xlab') + rremove('ylab'), 
+          a17 + rremove('xlab') + rremove('ylab'), 
+          a18 + rremove('xlab') + rremove('ylab'), 
+          a19 + rremove('xlab') + rremove('ylab'),
+          nrow = 4, rel_heights = c(.5, .5, .5,1),
+          align = 'v') 
+
+########################### INTERMEDIATE 
+
+Intermediatemonthdrag16 <- alldrag %>%
+  filter(Site == 'Intermediate') %>%
+  group_by(Month) %>%
+  filter(Year == '2016')
+
+i16 <-aggregate(Intermediatemonthdrag16$Total_ticks, by = list(Month = Intermediatemonthdrag16$Month), FUN = sum)
+i16 <- ggplot(data = i16, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2016')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) + 
+  annotate(geom = 'text', label = 'Intermediate', col = 'red',
+               x = 5, y = 7.8, fontface = 'bold')
+
+Intermediatemonthdrag17 <- alldrag %>%
+  filter(Site == 'Intermediate') %>%
+  group_by(Month) %>%
+  filter(Year == '2017')
+
+i17 <-aggregate(Intermediatemonthdrag17$Total_ticks, by = list(Month = Intermediatemonthdrag17$Month), FUN = sum)
+i17 <-ggplot(data = A17, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2017')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Intermediatemonthdrag18 <- alldrag %>%
+  filter(Site == 'Intermediate') %>%
+  group_by(Month) %>%
+  filter(Year == '2018')
+
+i18 <-aggregate(Intermediatemonthdrag18$Total_ticks, by = list(Month = Intermediatemonthdrag18$Month), FUN = sum)
+i18 <- ggplot(data = i18, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2018')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Intermediatemonthdrag19 <- alldrag %>%
+  filter(Site == 'Intermediate') %>%
+  group_by(Month) %>%
+  filter(Year == '2019')
+
+i19 <-aggregate(Intermediatemonthdrag19$Total_ticks, by = list(Month = Intermediatemonthdrag19$Month), FUN = sum)
+i19 <-ggplot(data = i19,aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line(na.rm = TRUE)+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2019')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+# a16
+# a17
+# a18
+# a19
+
+intermediatedrags <- ggarrange(i16 + rremove('xlab') + rremove('ylab'), 
+          i17 + rremove('xlab') + rremove('ylab'), 
+          i18 + rremove('xlab') + rremove('ylab'), 
+          i19 + rremove('xlab') + rremove('ylab'),
+          nrow = 4, rel_heights = c(.5, .5, .5,1),
+          align = 'v') 
+
+
+
+
+
+########################### MESIC
+
+Mesicmonthdrag16 <- alldrag %>%
+  filter(Site == 'Mesic') %>%
+  group_by(Month) %>%
+  filter(Year == '2016')
+
+m16 <-aggregate(Mesicmonthdrag16$Total_ticks, by = list(Month = Intermediatemonthdrag16$Month), FUN = sum)
+m16 <- ggplot(data = m16, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2016')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) + 
+  annotate(geom = 'text', label = 'Mesic', col = 'red',
+               x = 5, y = 7.8, fontface = 'bold')
+
+Mesicmonthdrag17 <- alldrag %>%
+  filter(Site == 'Mesic') %>%
+  group_by(Month) %>%
+  filter(Year == '2017')
+
+m17 <-aggregate(Mesicmonthdrag17$Total_ticks, by = list(Month = Intermediatemonthdrag17$Month), FUN = sum)
+m17 <-ggplot(data = m17, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2017')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Mesicmonthdrag18 <- alldrag %>%
+  filter(Site == 'Mesic') %>%
+  group_by(Month) %>%
+  filter(Year == '2018')
+
+m18 <-aggregate(Mesicmonthdrag18$Total_ticks, by = list(Month = Mesicmonthdrag18$Month), FUN = sum)
+m18 <- ggplot(data = m18, aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line()+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2018')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+
+Mesicmonthdrag19 <- alldrag %>%
+  filter(Site == 'Mesic') %>%
+  group_by(Month) %>%
+  filter(Year == '2019')
+
+m19 <-aggregate(Mesicmonthdrag19$Total_ticks, by = list(Month = Mesicmonthdrag19$Month), FUN = sum)
+m19 <-ggplot(data = m19,aes(x = factor(Month), y = x, group = 1))+ 
+  geom_line(na.rm = TRUE)+
+  geom_point()+
+  clean_background +
+  xlab('Month') + ylab('Total Tick Abundance')+
+  ggtitle('2019')+
+  theme(axis.text = element_text(size = 6, face = 'bold'),
+        axis.title = element_text( size = 2),
+        plot.title = element_text(face = 'bold', hjust = 0.5))+
+  theme(axis.text.x = element_text(angle = 45))+
+  scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
+                           10,11,12)) 
+# a16
+# a17
+# a18
+# a19
+
+mesicdrags <- ggarrange(m16 + rremove('xlab') + rremove('ylab'), 
+          m17 + rremove('xlab') + rremove('ylab'), 
+          m18 + rremove('xlab') + rremove('ylab'), 
+          m19 + rremove('xlab') + rremove('ylab'),
+          nrow = 4, rel_heights = c(.5, .5, .5,1),
+          align = 'v') 
+
+
+ariddrags
+intermediatedrags
+mesicdrags
+
+year16 <- ggarrange(a16, i16, m16, nrow = 3)
+year17 <- ggarrange(a17, i17, m17, nrow = 3)
+year18 <- ggarrange(a18, i18, m18, nrow = 3)
+year19 <- ggarrange(a19, i19, m19, nrow = 3)
+
+year16
+year17
+year18
+year19
+
+```
+
+
+
+
 Plots
 
 twelve = total tick abundance per sampling by site and plot type
 ```{r tick abundance across sites with plot type fill}
-twelve <-ggplot(data = alldrag,
+
+twelve <-ggplot(data = aggregate,
        aes(x = Site, y = Total_ticks,
            fill = Plot))+
   geom_bar(stat = 'summary', fun.y = 'mean')+
@@ -319,24 +652,33 @@ twelve <-ggplot(data = alldrag,
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
 
 twelve
+
 ```
 
 Plots
 
 thirteen = Total tick abundance per sampling by year by plot type
 ```{r tick abundance by year}
+aggregateyear <-aggregate(aggregateticks$Total_ticks, 
+                by = list(Month = aggregateticks$Month, 
+                          Site = aggregateticks$Site, 
+                          Plot = aggregateticks$Plot,
+                          Year = aggregateticks$Year), FUN = sum)
+colnames(aggregateyear) <- c('Month', 'Site','Plot','Year', 'Total_ticks')
+print(aggregateyear)
 
-thirteen <- ggplot(data = arid,
+thirteen <- ggplot(data = aggregateyear,
                    aes(x = Year, y = Total_ticks,
                        fill = Plot))+
   geom_bar(stat = 'summary', fun.y = 'mean')+
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   clean_background +
-  xlab('Year') + ylab('Total tick abundance per sampling')+
-  ggtitle('Total tick abundance per sampling by year and plot')+
+  xlab('Year') + ylab('Total tick abundance')+
+  ggtitle('Total tick abundance \nby year and plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
 
 thirteen
+
 ```
 
 
@@ -417,6 +759,25 @@ t.test(aridd$Total_ticks, mesicc$Total_ticks)
 ## ^ p = 0.0008068, p < 0.05, 95% does not contain 0, therefore we reject our H0 and say there is a significant difference between the groups
 
 
+## paired t-test for pre-post fence (Welch Two sample t-test)
+prefence <- combo %>%
+  filter(year == '2016')
+
+
+postfence <- combo %>%
+  filter(year != '2016')
+
+# check distributions and variance
+hist(log(prefence$total_ticks + 1))
+hist(log(postfence$total_ticks + 1))
+
+# levene's test to be used for unequal variances when samples are not strictly normal
+# comparing means when variances are not equal = Welch's two sample t-test
+t.test(log(prefence$total_ticks + 1), log(postfence$total_ticks + 1)) # p < 2.2e-16
+
+# wilcoxon rank sum test with continuity correction
+wilcox.test(prefence$total_ticks, postfence$total_ticks) # p < 2.2e-16
+
 
 ```
 
@@ -447,6 +808,7 @@ sixteen = ANOVA year
 seventeen = ANOVA month
 ```{r ANOVA for site}
 
+# use anova() for summary 
 ############### ####################  SITE  ############ #######################
 # H0 : all group means are equal
 # HA : at least 1 mean is not equal
@@ -521,6 +883,8 @@ fourteen <- ggplot(data = alldrag,
 ```
 
 ```{r ANOVA for plot}
+
+anova(plot1)
 ######################################## PLOT  ########################################  
 
 # H0 : all group means are equal
@@ -595,6 +959,8 @@ fifteen <-ggplot(data = alldrag,
 ```
 
 ```{r ANOVA for year}
+
+anova(year1)
 ################################################## YEAR  ######################################## 
 
 # H0 : all group means are equal
@@ -680,6 +1046,8 @@ sixteen<- ggplot(data = alldrag,
 ```
 
 ```{r ANOVA for month}
+
+anova(month1)
 ################### ########## # MONTH  ############# ########## #######
 
 # H0 : all group means are equal
@@ -775,6 +1143,33 @@ seventeen <- ggplot(data = alldrag,
 
 ```
 
+```{r plot of anovas}
+library(effects)
+plot(predictorEffects(plot1, ~ Plot),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(site1, ~ Site),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(year1, ~ Year),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+# 
+# ggplot(data = combo, aes(x = site, y = total_ticks,
+#         fill = plot, color = plot)) + 
+#     geom_jitter(size = 3, position = position_dodge2(width = 0.3)) +
+#     labs(x = "YEAR", y = "COUNT") +
+#     theme_classic()+
+#     theme(text = element_text(size = 14)) 
+```
+
+
+
 ##What are good predictors (X) of total tick abundance (Y)?
 
 Ran *generalized linear models* because data breaks assumptions of normality. Used family poisson because of count data.
@@ -861,6 +1256,28 @@ nineteen <- export_summs(tick1, tick2, tick3, scale = TRUE)
 
 ```
 
+Kruskal-Wallis test
+- non-parametric test similar to a single factor anova
+- uses the ranks of data points
+```{r kruskal-wallis test}
+
+kw1 <- kruskal.test(total_ticks ~ site, data = combo) # p = 1.165e-09
+kw2 <- kruskal.test(total_ticks ~ plot, data = combo) # p = 2.601e-12
+kw3 <-kruskal.test(total_ticks ~ year, data = combo) # p < 2.2e-16
+
+library(rstatix)
+plot.kw(wallisresults, strip = TRUE, posthoc = TRUE, adjust = 'bonferroni')
+
+Kw1 <- combo %>% add_xy_position(x = 'site')
+ggboxplot(combo, x = 'site', y = 'total_ticks')+
+  stat_pvalue_manual(combo, hide.ns = TRUE) +
+  labs(subtitle = get_test_label(res.kruksal, detailed = TRUE),
+       caption = get_pwc_label(pwc))
+
+
+
+
+```
 
 Ran *generalized linear mixed-effect models* because data breaks assumptions of normality. Used family poisson because of count data. *Incorporating mixed-effects.*
 
@@ -1087,7 +1504,8 @@ twentythree <-ggplot(data = count,
   ggtitle('Animal Abundance by Site')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
-        plot.title = element_text(face = 'bold', hjust = 0.5)) +
+        plot.title = element_text(face = 'bold', hjust = 0.5),
+        legend.position = "none") +
   annotate('text', label = 'a', 
            x = 1, y = 42,
            size = 9, color = 'red') +
@@ -1111,7 +1529,8 @@ twentyfour <-ggplot(data = count,
   ggtitle('Animal Abundance by Plot')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
-        plot.title = element_text(face = 'bold', hjust = 0.5))  
+        plot.title = element_text(face = 'bold', hjust = 0.5),
+        legend.position = "none")  
 
 
 
@@ -1196,7 +1615,8 @@ twentynine <- ggplot(data = count,
   ggtitle('Species Richness by Site')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
-        plot.title = element_text(face = 'bold', hjust = 0.5)) 
+        plot.title = element_text(face = 'bold', hjust = 0.5),
+        legend.position = "none") 
 
 
 
@@ -1214,7 +1634,8 @@ thirty <- ggplot(data = count,
   ggtitle('Species Richness by Plot')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
-        plot.title = element_text(face = 'bold', hjust = 0.5)) 
+        plot.title = element_text(face = 'bold', hjust = 0.5),
+        legend.position = "none") 
 
 twentyseven
 twentyeight
@@ -1275,7 +1696,8 @@ thirtythree <- ggplot(data = count,
   ggtitle('Shannon Diversity by Site')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
-        plot.title = element_text(face = 'bold', hjust = 0.5)) +
+        plot.title = element_text(face = 'bold', hjust = 0.5),
+        legend.position = "none") +
   annotate('text', label = 'ab', 
            x = 1, y = 1.1,
            size = 9, color = 'red') +
@@ -1302,7 +1724,8 @@ thirtyfour <- ggplot(data = count,
   ggtitle('Shannon Diversity by Plot')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
-        plot.title = element_text(face = 'bold', hjust = 0.5)) 
+        plot.title = element_text(face = 'bold', hjust = 0.5),
+        legend.position = "none") 
 
 thirtyone
 thirtytwo
@@ -1869,6 +2292,21 @@ combomodel_glm
 
 ## Zero Inflated hurdle models
 
+Neither total tick or mammal counts are normally distributed (shapiro.test p << 0.05, meaning data not normal).
+
+The models are based on Poisson and Negative binomial distribution are expecting count data (integer values only).
+
+Hurdle model: treat as 2 part process
+  a. 1st part is 0
+  b. 2nd part is non-zero
+  
+Zero inflated Poisson (ZIP): 
+  Two types of 0s : good and bad
+    variance = mean
+
+Zero inflated negative binomial (ZINB):
+
+  
 Negative binomial version is more significant than poisson
 
 Models
@@ -1903,20 +2341,56 @@ Models
 library(pscl)
 library(lmtest)
 
+## check to make sure data really aren't normal 
+
+# ticks forsure not normally distributed
+length(combo$total_ticks[combo$total_ticks == 0]) # 879
+shapiro.test(combo$total_ticks) # p < 2.2e-16
+
+
+# mammals are more evelyn distributed, but this dataset may not be the appropriate way to run these analyses
+length(combo$total_mammal[combo$total_mammal == 0]) # 6
+shapiro.test(combo$total_mammal) # p < 2.2e-16
+
+hist(combo$total_mammal)
+min(combo$total_mammal, na.rm = TRUE) # 8
+max(combo$total_mammal, na.rm = TRUE) # 72
+length(combo$total_mammal) #1456
+length(combo$total_mammal[combo$total_mammal == 0])/length(combo$total_mammal) #0.004120879
+hist(combo$total_mammal, 50)
+mean(combo$total_mammal, na.rm = TRUE) # 34.9131
+
+
 ######################## Tick abundances ##################
 
-# zero inflated poisson
-fldown <- formula(total_ticks ~ site + plot | year)
+## part 1 of 0s
+# zero inflated poisson (ZIP)
+fldown <- formula(total_ticks ~ site + plot | site + plot) # what explains the load that's not 0 | explanatory variables if something is present or not
 ZIP_round_down <- zeroinfl(fldown, dist = 'poisson',
                            link = 'logit',
                            data = combo)
-summary(ZIP_round_down)
+summary(ZIP_round_down) # site and plot are signficant!
 
-# zero adjusted poisson and negative binomial (hurdle models)
+# zero inflated negative binomial (ZINB)
+fldown <- formula(total_ticks ~ site + plot | site)
+ZINB_round_down <- zeroinfl(fldown, dist = 'negbin', # changed distribution
+                            link = 'logit',
+                            data = combo)
+summary(ZINB_round_down) # site and plot are significant!
+
+
+# likeligood ratio test to compare ZIP and ZINB
+# test the two models
+lrtest(ZIP_round_down, ZINB_round_down) # ZINB p < 2.2e-16, so go with negative binomial
+
+
+## part two non-0s
+# Hurdle Models
+# ZIP
 H1downA <- hurdle(fldown, dist = "poisson", link = "logit",data = combo)
+# ZINB
 H1downB <- hurdle(fldown, dist = "negbin", link = "logit",data = combo)
-lrtest(H1downA,H1downB)
-# Negative binomial version much more significant
+lrtest(H1downA,H1downB) # Negative binomial version much more significant, p < 2.2e-16
 
 summary(H1downB)
 
@@ -1942,10 +2416,67 @@ library(jtools)
 
 ```
 
+Is there correlation between tick abundance and mammal abundance?
+- even log transformed total ticks does not help normality, so will run a Spearman's rank correlation (non-parametric)
 
+Spearman's rank correlation 
+1. observations are random samples
+2. relationship between X and Y are monotonic
+
+```{r correlation}
+shapiro.test(combo$total_ticks) # total ticks are not normally distributed, p < 2.2e-16
+
+# breaks normality assumption so need to run a non-parametric test (i.e. Spearmans' rank)
+
+# select only numeric values
+combo.numeric <- data.frame(combo[,6], combo[,11:13])
+colnames(combo.numeric) <- c('total_ticks', 'total_mammal', 'shannon', 'richness')
+
+# if I wanted to a parametric test, I would try to log transform data to make it more normal
+#combo.numeric$logticks <- log(combo.numeric$total_ticks + 1)
+
+# visualize data
+pairs.panels(combo.numeric, density = TRUE, cor = TRUE, lm = TRUE, method = 'spearman')
+
+# run spearman's rank test
+
+# total ticks & total mammals
+cor.test(combo.numeric$total_ticks, combo.numeric$total_mammal,
+         method = 'spearman') # rho = 0.007601 very very weak positive correlation
+
+# mammal shannon diversity & total mammals
+cor.test(combo.numeric$shannon, combo.numeric$total_mammal,
+         method = 'spearman') # rho = 0.770606 very strong positive correlation but I think these are too colinear of variables
+
+# mammal species richness & total mammals
+cor.test(combo.numeric$richness, combo.numeric$total_mammal,
+         method = 'spearman') # rho = 0.8226635 very strong positive correlation but I think these are too colinear of variables
+
+
+```
+X^2 goodness-of-fit test
+- compares counts to a discrete probability distribution
+H0: data comes from particular discrete probability distribution
+
+- goodness-of-fit test compares count data to a model of the expected frequencies of a set of categories
+H0: prob of tick presence occurring on any given month is equal to other proportions
+
+assumptions:
+- no more than 20% of categories have expected <5
+- no category with expected < 1
+```{r goodness of fit test}
+
+```
 
 
 ```{r print out models}
+library(MASS)
+summary(glm.nb(total_ticks ~ site + plot + year, data = combo))
+
+summary(glm(total_ticks ~ site + plot + year, data = combo,
+    family = 'poisson'))
+
+
 
 # library(broom.mixed)
 # library(ggstance)
