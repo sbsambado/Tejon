@@ -1,5 +1,5 @@
 ---
-title: "Tejon Analysis09082020"
+title: "Tejon Analysis (09082020)"
 author: "sbsambado"
 date: "9/8/2020"
 output: html_document
@@ -14,6 +14,8 @@ knitr::opts_chunk$set(strip.white = TRUE)
 
 
 ```
+
+### *Background*
 
 Data were collected by the Young lab at UCSB.
 
@@ -131,7 +133,9 @@ sitecolor = c('red4','red2','red')
 
 
 *imported data from sheet called 'tejon_all_tick_drags_09022020'*
+
 ```{r data importing and organizing, include=FALSE}
+
 ## full dataset
 alldrag <- read.csv("~/Desktop/tejon_all_tick_drags_09022020.csv")
 
@@ -210,6 +214,7 @@ combo$year = as.factor(combo$year)
 
 > #Exploratory Data Analysis
 
+
 # How does tick abudance (Y) vary across site type (X)?
 
 
@@ -232,7 +237,7 @@ two <- ggplot(data = aggregate, aes(x = Site, y = Total_ticks))+
   geom_boxplot(fill = sitecolor, outlier.color = 'black', outlier.shape = 1)+
   clean_background+
   xlab('Site Types') + ylab('Total Ticks')+
-  ggtitle('Total ticks by Site')+
+  ggtitle('Total ticks by site')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
   theme(axis.text.x = element_text(face = 'bold')) 
 
@@ -245,6 +250,7 @@ two
 
 
 ```{r EDA tick abundace ~ plot}
+
 ## represents average total ticks collected across the years and plots
 
 ## no outliers
@@ -262,7 +268,7 @@ four <- ggplot(data = aggregate, aes(x = Plot, y = Total_ticks))+
   geom_boxplot(fill = plotcolor, outlier.color = 'black', outlier.shape = 1)+
   clean_background+
   xlab('Plot Types') + ylab('Total Ticks')+
-  ggtitle('Total ticks by Plot')+
+  ggtitle('Total ticks by plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
   theme(axis.text.x = element_text(face = 'bold')) 
 
@@ -276,17 +282,19 @@ four
 
 
 ```{r EDA tick abundance ~ site, fill = plot}
+
 twelve <-ggplot(data = aggregate,
        aes(x = Site, y = Total_ticks,
            fill = Plot))+
   geom_bar(stat = 'summary', fun.y = 'mean')+
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   theme_classic()+
-  xlab('Site') + ylab('Total tick abundance per sampling')+
-  ggtitle('Total tick abundance per sampling by site and plot')+
+  xlab('Site') + ylab('Total ticks')+
+  ggtitle('Total tick abundance by site and plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
 
 twelve
+
 ```
 
 
@@ -294,7 +302,6 @@ twelve
 
 
 ```{r EDA tick abundance ~ month by site}
-
 
 ggplot(data = aggregate, aes(x = Month, y = Total_ticks))+
   facet_wrap( ~ Site, nrow = 3, scales = 'free')+
@@ -317,6 +324,7 @@ ggplot(data = aggregate, aes(x = Month, y = Total_ticks))+
 
 
 ```{r EDA tick abundance ~ year across plot types}
+
 ggplot(data = aggregate, aes(x = Month, y = Total_ticks))+
   facet_wrap( ~ Plot, nrow = 3, scales = 'free')+
   geom_boxplot()+
@@ -330,14 +338,16 @@ ggplot(data = aggregate, aes(x = Month, y = Total_ticks))+
   theme(axis.text.x = element_text(angle = 45))+
   scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
                            10,11,12))
+
 ```
 
 
 # How does tick abundance (Y) vary by year (X) across site types (X)?
 
-* I know these graphs look wonky on .html, trying to trouble shoot this*
+*I know these graphs look wonky on .html, trying to trouble shoot this*
 
 ```{r EDA total ticks ~ month for arid }
+
 # I know there is a better way/shorter code of doing this but it is what it is
 
 ### summaries by month
@@ -431,6 +441,8 @@ Ariddrags <- ggarrange(a16 + rremove('xlab') + rremove('ylab'),
           a19 + rremove('xlab') + rremove('ylab'),
           nrow = 4, ncol = 1, rel_heights = c(.5, .5, .5,1),
           align = 'v') 
+
+Ariddrags
 ```
 
 
@@ -492,7 +504,7 @@ i18 <- ggplot(data = i18, aes(x = factor(Month), y = x, group = 1))+
   ggtitle('2018')+
   theme(axis.text = element_text(size = 6, face = 'bold'),
         axis.title = element_text( size = 2),
-        plot.title = element_text(face = 'bold', hjust = 0.5))+
+      plot.title = element_text(face = 'bold', hjust = 0.5))+
   theme(axis.text.x = element_text(angle = 45))+
     theme(plot.title = element_text(color = "red"))+
   scale_x_discrete(labels =c(1,2,3,4,5,6,7,8,9,
@@ -525,6 +537,7 @@ intermediatedrags <- ggarrange(i16 + rremove('xlab') + rremove('ylab'),
           nrow = 4, rel_heights = c(.5, .5, .5,1),
           align = 'v') 
 
+intermediatedrags
 
 ```
 
@@ -586,7 +599,7 @@ m18 <- ggplot(data = m18, aes(x = factor(Month), y = x, group = 1))+
   xlab('Month') + ylab('Total Tick Abundance')+
   ggtitle('2018')+
   theme(axis.text = element_text(size = 6, face = 'bold'),
-        axis.title = element_text( size = 2),
+       axis.title = element_text( size = 2),
         plot.title = element_text(face = 'bold', hjust = 0.5))+
   theme(axis.text.x = element_text(angle = 45))+
     theme(plot.title = element_text(color = "red"))+
@@ -620,22 +633,26 @@ mesicdrags <- ggarrange(m16 + rremove('xlab') + rremove('ylab'),
           m19 + rremove('xlab') + rremove('ylab'),
           nrow = 4, rel_heights = c(.5, .5, .5,1),
           align = 'v')
-    
+  
+mesicdrags  
 ```
 
 
 ```{r full plot }
-Ariddrags 
-intermediatedrags
-mesicdrags
+
+#Ariddrags 
+#intermediatedrags
+#mesicdrags
 
 ```
+
 
 
 # How does tick abundance (Y) vary by year (X) across plot types (X)?
 
 
 ```{r EDA tick abundance ~ year, fill by plot}
+
 aggregateyear <-aggregate(aggregateticks$Total_ticks, 
                 by = list(Month = aggregateticks$Month, 
                           Site = aggregateticks$Site, 
@@ -655,10 +672,11 @@ thirteen <- ggplot(data = aggregateyear,
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
 
 thirteen
+
 ```
 
 
-> # **Basic Statistics**
+> #**Basic Statistics**
 
 **1. Shapiro wilk test **
 
@@ -720,6 +738,7 @@ kw3 <-kruskal.test(total_ticks ~ year, data = combo) # p < 2.2e-16
 ```
     
 ```{r basic stats on tick abundance data across extreme ends of site and plot type}
+
 ## check if data are normal
 
 # shapiro-wilk test
@@ -782,7 +801,7 @@ wilcox.test(openn$Total_ticks, totall$Total_ticks) # p = 1.948e-11
 
 ```
 
-# **ANOVAS**
+> #**ANOVAS**
 
 # Is site a significant predictor of total tick abundances?
 
@@ -797,7 +816,10 @@ ANOVA summary:
 Tukey-Kramer:
 
 + **Intermediate is significantly different than arid (p < 1e-04) and mesic (p < 1e-04)**
+
+
 ```{r ANOVA for site type}
+
 # H0 : all group means are equal
 # HA : at least 1 mean is not equal
 
@@ -855,7 +877,7 @@ fourteen <- ggplot(data = alldrag,
   scale_fill_manual(values = c('red4','red2','red'))+
   theme_classic()+
   xlab('Site') + ylab('Total Ticks')+
-  ggtitle('Total Ticks by Site')+
+  ggtitle('Total ticks by site')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
   annotate('text', label = 'a', 
            x = 1, y = 1.8,
@@ -867,6 +889,7 @@ fourteen <- ggplot(data = alldrag,
            x = 3, y = 2.5,
            size = 9, color = 'red')
 fourteen
+
 ```
 
 
@@ -887,6 +910,7 @@ Tukey-Kramer:
 + **Open is significantly different than partial (p < 1e-04) and total (p < 1e-04)**
 
 ```{r ANOVA plot type }
+
 # H0 : all group means are equal
 # HA : at least 1 mean is not equal
 
@@ -944,7 +968,7 @@ fifteen <-ggplot(data = alldrag,
   scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
   theme_classic()+
   xlab('Plot') + ylab('Total Ticks')+
-  ggtitle('Total Ticks by Plot')+
+  ggtitle('Total ticks by plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
   annotate('text', label = 'a', 
            x = 1, y = 1.6,
@@ -977,6 +1001,7 @@ Tukey-Kramer:
 + **2017 and 2018 are significantly different than 2016 (p < 0.001) and 2019 (p = 0.00921, p = 0.01091 )**
 
 ```{r ANOVA for year}
+
 # H0 : all group means are equal
 # HA : at least 1 mean is not equal
 
@@ -1039,7 +1064,7 @@ sixteen<- ggplot(data = alldrag,
   stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
   theme_classic()+
   xlab('Year') + ylab('Total Ticks')+
-  ggtitle('Total Ticks by Year')+
+  ggtitle('Total ticks by year')+
   scale_fill_manual(values = c('lightblue1','lightblue2','lightblue3','lightblue4'))+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5),
         legend.position = "none") +
@@ -1075,6 +1100,8 @@ Tukey-Kramer:
 
 + *This analysis is a little more messy, but there are months that are significantly different from each other*
 + **Specifically, April is different from every month except May**
+
+
 ```{r ANOVA for month}
 
 # H0 : all group means are equal
@@ -1124,7 +1151,7 @@ seventeen <- ggplot(data = aggregate,
   stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
   theme_classic()+
   xlab('Month') + ylab('Total Ticks')+
-  ggtitle('Total Ticks by Month')+
+  ggtitle('Total ticks by month')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
   annotate('text', label = 'a', 
            x = 1, y = 50,
@@ -1167,34 +1194,34 @@ seventeen
 ```
 
 
-Plots of ANOVAS
+
 
 
 ```{r plot of ANOVAS}
-plot(predictorEffects(plot1, ~ Plot),
-     lines=list(multiline=TRUE),
-     lattice=list(key.args=list(columns=2)),
-     confint=list(style="bars"))
-
-plot(predictorEffects(site1, ~ Site),
-     lines=list(multiline=TRUE),
-     lattice=list(key.args=list(columns=2)),
-     confint=list(style="bars"))
-
-plot(predictorEffects(year1, ~ Year),
-     lines=list(multiline=TRUE),
-     lattice=list(key.args=list(columns=2)),
-     confint=list(style="bars"))
-
-plot(predictorEffects(month1, ~ Month),
-     lines=list(multiline=TRUE),
-     lattice=list(key.args=list(columns=2)),
-     confint=list(style="bars"))
+# plot(predictorEffects(plot1, ~ Plot),
+#      lines=list(multiline=TRUE),
+#      lattice=list(key.args=list(columns=2)),
+#      confint=list(style="bars"))
+# 
+# plot(predictorEffects(site1, ~ Site),
+#      lines=list(multiline=TRUE),
+#      lattice=list(key.args=list(columns=2)),
+#      confint=list(style="bars"))
+# 
+# plot(predictorEffects(year1, ~ Year),
+#      lines=list(multiline=TRUE),
+#      lattice=list(key.args=list(columns=2)),
+#      confint=list(style="bars"))
+# 
+# plot(predictorEffects(month1, ~ Month),
+#      lines=list(multiline=TRUE),
+#      lattice=list(key.args=list(columns=2)),
+#      confint=list(style="bars"))
 
 ```
 
 
-# **Linear Models**
+> #**Generalized Linear Models**
 
 #What are good predictors (X) of total tick abundance (Y)?
 
@@ -1208,7 +1235,7 @@ plot(predictorEffects(month1, ~ Month),
   + **Site AIC = 10665**
   + **Plot AIC = 10871**
 
-models : tick1 - tick7 glm
+models : tick1 - tick7 
 
 
 ```{r GLM for tick data}
@@ -1278,7 +1305,9 @@ eighteen
 #nineteen <- export_summs(tick1, tick2, tick3, scale = TRUE)
 #nineteen
 #min(tickresults$AIC)
+
 ```
+  
   
   
 # Data - Mammal Analysis
@@ -1290,7 +1319,8 @@ Excel sheets called
 + 'tejon_mammalcount_09032020'
 
 *Notes*
-+in these datasheets I name columns with lowercase compared to tick data sheets (i.e. month not Month)
+
++ in these datasheets I name columns with lowercase compared to tick data sheets (i.e. month not Month)
 
 ```{r import data frames and organize, include=FALSE}
 
@@ -1314,10 +1344,10 @@ count$plot <- factor(count$plot,
                         levels = c('open','partial','total'))
 
 
-# species richness
+# calculate mammal species richness
 sppr <- specnumber(numeric)
 
-# shannon diversity
+# calculate mamal shannon diversity
 shannondiv <- diversity(numeric)
 
 # add species richness to count
@@ -1332,12 +1362,14 @@ plotcolor <- pal
 ```
 
 
-> # **Exploratory Data Analysis**
+> #**Exploratory Data Analysis**
 
 # How does mammal abudance (Y) vary across site type (X)?
 
 
 ```{r animal abundance ~ site type}
+
+
 twentythree <-ggplot(data = count,
        aes(x = site, y = total,
            fill = site))+
@@ -1347,7 +1379,7 @@ twentythree <-ggplot(data = count,
   scale_fill_manual(values = c('red4','red2','red'))+
   clean_background +
   xlab('Site Types') + ylab('Animal Abundance')+
-  ggtitle('Animal Abundance by Site')+
+  ggtitle('Total Animal abundance by site')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5),
@@ -1373,7 +1405,7 @@ twentyfive <-ggplot(data = count,
   scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
   clean_background +
   xlab('Site Types') + ylab('Animal Abundance')+
-  ggtitle('Animal Abundance by Site')+
+  ggtitle('Total animal abundance by site')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5)) 
@@ -1385,6 +1417,8 @@ twentyfive
 # How does mammal abudance (Y) vary across plot type (X)?
 
 ```{r mammal abundance ~ plot type}
+
+
 twentyfour <-ggplot(data = count,
        aes(x = plot, y = total,
        fill = plot))+
@@ -1394,7 +1428,7 @@ twentyfour <-ggplot(data = count,
   scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
   clean_background +
   xlab('Plot Types') + ylab('Animal Abundance')+
-  ggtitle('Animal Abundance by Plot')+
+  ggtitle('Total animal abundance by plot')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5),
@@ -1405,10 +1439,12 @@ twentyfour
 ```
 
 
-# How does mammal species richness vary by site?
+# How does mammal species richness (Y) vary by site type (X)?
 
 
 ```{r mammal species richness ~ site type}
+
+
 twentynine <- ggplot(data = count,
        aes(x = site, y = sppr,
            fill = site))+
@@ -1418,19 +1454,21 @@ twentynine <- ggplot(data = count,
   scale_fill_manual(values = c('red4','red2','red'))+
   clean_background +
   xlab('Site Types') + ylab('Spieces Richness')+
-  ggtitle('Species Richness by Site')+
+  ggtitle('Mammal Species richness by site')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5),
         legend.position = "none") 
 
 twentynine
+
 ```
 
 
-# How does mammal species richness vary by plot type?
+# How does mammal species richness(Y) vary by plot type (X)?
 
 ```{r mammal species richness ~ plot type}
+
 thirty <- ggplot(data = count,
        aes(x = plot, y = sppr,
            fill = plot))+
@@ -1440,19 +1478,22 @@ thirty <- ggplot(data = count,
   scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
   clean_background +
   xlab('Plot Types') + ylab('Spieces Richness')+
-  ggtitle('Species Richness by Plot')+
+  ggtitle('Mammal species richness by plot')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5),
         legend.position = "none") 
 
 thirty
+
+
 ```
 
-# How does shannon diversity vary by site types?
+# How does shannon diversity (Y) vary by site types (X)?
 
 
-```{r}
+```{r shannon diversity ~ site}
+
 ## shannon diversity by site
 thirtyone <- ggplot(count, aes(x = site, y = shannondiv))+
   geom_boxplot(fill = sitecolor) +
@@ -1461,7 +1502,7 @@ thirtyone <- ggplot(count, aes(x = site, y = shannondiv))+
   clean_background + 
   labs(x = "Site Types",
        y = "Shannon Diversity",
-       title = "Shannon Diversity by Site") +
+       title = "Mammal shannon diversity by site") +
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5))
@@ -1477,7 +1518,7 @@ thirtythree <- ggplot(data = count,
   scale_fill_manual(values = c('red4','red2','red'))+
   clean_background +
   xlab('Site Types') + ylab('Shannon Diversity')+
-  ggtitle('Shannon Diversity by Site')+
+  ggtitle('Mammal shannon diversity by site')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5),
@@ -1494,12 +1535,16 @@ thirtythree <- ggplot(data = count,
 
 thirtyone
 thirtythree
+
+
 ```
 
 
-# How does shannon diversity vary by plot types?
+# How does shannon diversity (Y) vary by plot types (X)?
 
 ```{r mammal shannon diversity ~ plot types}
+
+
 thirtytwo <- ggplot(count, aes(x = plot, y = shannondiv))+
   geom_boxplot(fill = plotcolor) +
   coord_cartesian(ylim = c(0,1.5)) +
@@ -1507,7 +1552,7 @@ thirtytwo <- ggplot(count, aes(x = plot, y = shannondiv))+
   clean_background + 
   labs(x = "Site Types",
        y = "Shannon Diversity",
-       title = "Shannon Diversity by Plot") +
+       title = "Mammal shannon diversity by plot") +
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5))
@@ -1523,7 +1568,7 @@ thirtyfour <- ggplot(data = count,
   scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
   clean_background +
   xlab('Plot Types') + ylab('Shannon Diversity')+
-  ggtitle('Shannon Diversity by Plot')+
+  ggtitle('Mammal shannon diversity by plot')+
   theme(axis.text = element_text(size = 12, face = 'bold'),
         axis.title = element_text( size = 14),
         plot.title = element_text(face = 'bold', hjust = 0.5),
@@ -1531,10 +1576,12 @@ thirtyfour <- ggplot(data = count,
 
 thirtytwo
 thirtyfour
+
+
 ```
 
 
-># **Basic Statistics**
+> #**Basic Statistics**
 
 **1. Shapiro wilk test**
 
@@ -1542,6 +1589,7 @@ thirtyfour
    
 
 ```{r}
+
 ## check if data are normal
 
 # shapiro-wilk test
@@ -1558,30 +1606,64 @@ shapiro.test(count$total) # data are normal, p = 0.5137
 ```     
      
 
-**2. ANOVAS**
+> #**ANOVAS**
 
 **Only significant variable on total mammal abundances was site, not plot**
 
+total mammal abundance ~ plot type
+
 ```{r quick ANOVAS}
+
 ### plot on mammal metrics
 mammal1 <- aov(total ~ plot, data = count)
-summary(mammal1) # p value = 0.597
+anova(mammal1) # p value = 0.597
 
+```
+
+
+mammal species richness ~ plot type
+
+```{r}
 mammal2 <- aov(sppr ~ plot, data = count)
-summary(mammal2) # p value = 0.422
+anova(mammal2) # p value = 0.422
 
+```
+
+
+mammal shannon diversity ~ plot type
+
+```{r}
 mammal3 <-aov(shannondiv ~ plot, data = count)
-summary(mammal3) # p value = 0.501
+anova(mammal3) # p value = 0.501
 
+```
+
+total mammal abundance ~ site type
+
+```{r}
 ### site on mammal metrics
 mammal4 <- aov(total ~ site, data = count)
-summary(mammal4) # p value = 0.00857 [SIGNIFICANT]
+anova(mammal4) # p value = 0.00857 [SIGNIFICANT]
 
+```
+
+
+mammal species richness ~ site type
+
+```{r}
 mammal5 <- aov(sppr ~ site, data = count)
-summary(mammal5) # p value = 0.0723
+anova(mammal5) # p value = 0.0723
 
+```
+
+
+mammal shannon diversity ~ site type
+
+```{r}
 mammal6 <-aov(shannondiv ~ site, data = count)
-summary(mammal6) # p value = 0.0485 [SIGNIFICANT]
+anova(mammal6) # p value = 0.0485 [SIGNIFICANT]
+
+
 ```
 
 
@@ -1600,6 +1682,7 @@ Tukey-Kramer:
 + **Mesic is significantly different than arid (p = 0.04407) and intermediate (p = 0.00737)**
 
 ```{r ANOVA on total mammal abundance}
+
 # run an ANOVA
 par(mfrow = c(2,2))
 #plot(mammal4)
@@ -1652,6 +1735,7 @@ Tukey-Kramer:
 + **Mesic is significantly different than intermediate (p = 0.0415)**
 
 ```{r ANOVA on mammal shannon diversity}
+
 # run an ANOVA
 par(mfrow = c(2,2))
 #plot(mammal6)
@@ -1719,6 +1803,7 @@ PCA1 <- ggplot(out, aes(x=PC1, y=PC2, color = site))+
   geom_point()
 
 PCA1
+
 ```
 
 
@@ -1729,6 +1814,8 @@ Excel sheet 'tejon_tickmammal_09032020'
 Has tick and mammmal data combined with calculated species richness and shannondiversity metrics associated with each site
 
 ```{r read in datasets and organize, include=FALSE}
+
+
 combo <- read.csv("~/Desktop/tejon_tickmammal_09032020.csv")
 
 combo$site <- factor(combo$site, 
@@ -1748,7 +1835,7 @@ combo$year = as.factor(combo$year)
 
 
 
-**Generalized Linear Regression models**
+> #**Generalized Linear Regression models**
 
 models : tick20 - tick25
 
@@ -1768,15 +1855,17 @@ models : combo7 - combo12
 
 
 Graphs/ Tables with df, AIC, BIC, rsq, adj_rsq, variables
-1. tickmodel_glm 
-2. mammalmodel_glm 
-3. combomodel_glm
+
++ 1. tickmodel_glm 
++ 2. mammalmodel_glm 
++ 3. combomodel_glm
 
 ```{r GLMS ticks}
-####################### TICKS ###########################
-##### run individual models on total mammal abundance
 
-library(lme4)
+
+
+#library(lme4)
+
 tick20 <- glm(total_ticks ~ year, 
                data = combo,
               family = 'poisson')
@@ -1904,7 +1993,6 @@ mammalmodel_glm
 
 ```{r GLM combo}
 
-
 combo7 <- glm(total_ticks ~ total_mammal, 
                data = combo,
               family = 'poisson')
@@ -1967,13 +2055,14 @@ combomodel_glm
 
 
 ```{r full model print out}
+
 #tickmodel_glm 
 #mammalmodel_glm 
 #combomodel_glm 
 ```
 
 
-## Zero Inflated hurdle models
+> #**Zero Inflated hurdle models**
 
 + Neither total tick or mammal counts are normally distributed (shapiro.test p << 0.05, meaning data not normal).
 
@@ -1998,13 +2087,13 @@ Zero inflated negative binomial (ZINB):
 
 Models
 
-**1. ZIP_round_down**
+**1. ZIP_round_down (poisson - tick counts)**
 
   + Site was a significant predictor of total tick counts **p = 1.73e-8**
   + Plot was a significant predictor of total tick counts  **p < 2e-16**
   + Year was a significant predictor of total tick counts **p < 2e-16**
 
-**2. H1downB (negative binomial)**
+**2. H1downB (negative binomial - tick counts)**
 
   + Site Intermidate was a significant predictor of total tick counts **p = 2e-16**
   + Site Mesic was a significant predictor of total tick counts **p = 4.59e-5**
@@ -2014,13 +2103,15 @@ Models
 
   + Year was a significant predictor of total tick counts **p < 2e-16**
 
-**3. ZIP_round_downmam**
+**3. ZIP_round_downmam (poisson - mammal counts)**
+
+*need to double check if this is applicable to mammal counts, I think how I currently have the dataframet set up this may not be appropriate*
 
   + Site was a significant predictor of total mammal counts **p = 1.73e-8**
   + Plot was a significant predictor of total mammal counts **p < 2e-16**
   + Year was a significant predictor of total mammal counts **p < 2e-16**
 
-**4. H1downB (negative binomial)**
+**4. H1downB (negative binomial - mammal counts)**
 
   + Site Intermidate was a significant predictor of total mammal counts **p = 2e-16**
   + Site Mesic was a significant predictor of total mammal counts **p = 0.00824**
