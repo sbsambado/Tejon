@@ -1,0 +1,16 @@
+---
+title: "Untitled"
+author: "sbsambado"
+date: "9/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Experimental design: 
+
+** 3 Sites that vary in elevation
+  + Arid (lowest), 
+  

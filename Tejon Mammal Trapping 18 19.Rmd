@@ -350,7 +350,7 @@ plot_cca
 library(grid)
 library(gridExtra)
 
-mam.pca <- prcomp(numeric, center = TRUE, scale = TRUE)
+mam.pca <- prcomp(numeric, center = TRUE,  = TRUE)
 print(mam.pca)
 plot(mam.pca, type = 'l')
 summary(mam.pca)
@@ -385,7 +385,6 @@ autoplot(pca_res, data = out, color = 'site')
 
 
 ```
-
 
 ```{r EDA 1st attempt failed}
 
