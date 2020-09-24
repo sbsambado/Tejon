@@ -235,7 +235,7 @@ combo$year = as.factor(combo$year)
 ## with outliers
 two <- ggplot(data = aggregate, aes(x = Site, y = Total_ticks))+
   geom_boxplot(fill = sitecolor, outlier.color = 'black', outlier.shape = 1)+
-  clean_background+
+  clean_background +
   xlab('Site Types') + ylab('Total Ticks')+
   ggtitle('Total ticks by site')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
@@ -571,7 +571,7 @@ Mesicmonthdrag17 <- alldrag %>%
   group_by(Month) %>%
   filter(Year == '2017')
 
-m17 <-aggregate(Mesicmonthdrag17$Total_ticks, by = list(Month = Intermediatemonthdrag17$Month), FUN = sum)
+m17 <-aggregate(Mesicmonthdrag17$Total_ticks, by = list(Month = Mesicmonthdrag17$Month), FUN = sum)
 m17 <-ggplot(data = m17, aes(x = factor(Month), y = x, group = 1))+ 
   geom_line()+
   geom_point()+

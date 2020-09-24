@@ -11,6 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Experimental design: 
 
-** 3 Sites that vary in elevation
+* 3 Sites that vary in elevation
   + Arid (lowest), 
   

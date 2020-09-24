@@ -1463,3 +1463,13 @@ summary(p) # p = 0.137, not significant
 plot(y = new$total_ticks, x = new$month, data = new )
 ```
 
+```{r generlized dissimilarity models GDM}
+install.packages('gdm')
+library(gdm)
+mantel(xdis = numeric$site, ydis = numeric$total,
+       method = 'pearson',
+       permutation = 999)
+
+
+```
+
