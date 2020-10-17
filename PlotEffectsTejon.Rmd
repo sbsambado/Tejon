@@ -1,0 +1,348 @@
+---
+title: "Predictor Effects"
+author: "sbsambado"
+date: "10/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(effects)
+
+```
+
+
+
+
+```{r}
+tick_climate <- read.csv("~/Desktop/tejon_tick_climate_09292020.csv")
+
+tick_climate$diff <- tick_climate$mean_max_F - tick_climate$mean_min_F
+
+tots <- aggregate(Total_ticks ~ Site + diff, data = tick_climate, FUN = sum)
+plot(tots$diff, tots$Total_ticks)
+
+ggplot(tots, aes(diff,Total_ticks ))+
+  facet_wrap(~Site, nrow = 3, scale = 'free_y')+
+  geom_smooth(color = 'red', se = FALSE, lwd = 2)+
+  geom_smooth(stat = 'identity', color = 'black', alpha =.8)+
+  theme_minimal()+
+  labs(x = 'Difference in min/max (F)', y = 'Total ticks')
+
+
+ggplot(tots, aes(diff,Total_ticks, group = Site, color = Site))+
+  geom_smooth(se = FALSE, lwd = 2)+
+  geom_smooth(stat = 'identity', color = 'black', alpha =.4, size = .5)+
+  theme_minimal()+
+  labs(x = 'Difference in min/max (F)', y = 'Total ticks')+
+  ylim(0,300)
+
+
+nozeros = tots[which(tots$Total_ticks != 0),]
+ggplot(nozeros, aes(diff,Total_ticks, group = Site, color = Site))+
+  geom_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)),lwd = 2)+
+  geom_point()+
+  theme_minimal()+
+  labs(x = 'Difference in min/max (F)', y = 'Total ticks')+
+  ylim(0,300)
+ggsave("TemperatureDiffTick_v1.pdf", dpi = 320)
+
+ggplot(nozeros, aes(diff,Total_ticks, group = Site, color = Site))+
+  geom_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)),lwd = 2)+
+  geom_point()+
+  geom_boxplot()+
+  theme_minimal()+
+  labs(x = 'Difference in min/max (F)', y = 'Total ticks')+
+  ylim(0,300)
+
+
+Tots <- aggregate(Total_ticks ~ Site + mean_max_F, data = tick_climate, FUN = sum)
+plot(tots$diff, tots$Total_ticks)
+
+ggplot(Tots, aes(mean_max_F,Total_ticks, group = Site, color = Site))+
+  geom_smooth(se = FALSE, lwd = 2)+
+  geom_smooth(stat = 'identity', color = 'black', alpha =.4, size = .5)+
+  theme_minimal()+
+  labs(x = 'Mean max temperature (F)', y = 'Total ticks')+
+  ylim(0,300)
+
+ggplot(Tots, aes(mean_max_F,Total_ticks))+
+  geom_smooth(se = FALSE, lwd = 2)+
+  geom_smooth(stat = 'identity', color = 'black', alpha =.4, size = .5)+
+  theme_minimal()+
+  labs(x = 'Mean max temperature (F)', y = 'Total ticks')+
+  ylim(0,300)
+
+Full <- aggregate(Total_ticks ~ Site + mean_max_F + station_elevation, data = tick_climate, FUN = sum)
+
+Full$station_elevation = factor(Full$station_elevation, 
+                             levels = c('1089.7', '1290.8', '1493.5'))
+ggplot(Full, aes(x = station_elevation,y = Total_ticks))+
+  geom_boxplot(notch = TRUE)+
+  theme_minimal()+
+  labs(x = 'Station Elevation', y = 'Total ticks')
+```
+
+
+
+Plot effect 
+```{r}
+tick_climate.full <- glm(Total_ticks~Site*Plot*diff,family=poisson, data=tick_climate)
+tick_climate.full_nointeraction <- glm(Total_ticks~Site+Plot+diff,family=poisson, data=tick_climate)
+
+tick_climate.S <- glm(Total_ticks~Site,family=poisson, data=tick_climate)
+tick_climate.M <- glm(Total_ticks~Plot,family=poisson, data=tick_climate)
+tick_climate.D <- glm(Total_ticks~diff,family=poisson, data=tick_climate)
+tick_climate.SplusM <- glm(Total_ticks~Site+Plot,family=poisson, data=tick_climate)
+tick_climate.StimesM <- glm(Total_ticks~Site*Plot,family=poisson, data=tick_climate)
+tick_climate.SplusD <- glm(Total_ticks~Site+diff,family=poisson, data=tick_climate)
+tick_climate.StimesD <- glm(Total_ticks~Site*diff,family=poisson, data=tick_climate)
+tick_climate.MplusD <- glm(Total_ticks~Plot+diff,family=poisson, data=tick_climate)
+tick_climate.MtimesD <- glm(Total_ticks~Plot*diff,family=poisson, data=tick_climate)
+tick_climate.SplusMD <- glm(Total_ticks~Site+Plot*diff,family=poisson, data=tick_climate)
+tick_climate.MplusSD <- glm(Total_ticks~Plot+Site*diff,family=poisson, data=tick_climate)
+tick_climate.DplusSM <- glm(Total_ticks~Site*Plot+diff,family=poisson, data=tick_climate)
+
+AIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+
+BIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+
+plot(predictorEffects(tick_climate.full, ~ Plot),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(tick_climate.full, ~ Site),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(tick_climate.full, ~ diff),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+```
+
+
+
+Try some of Ana's suggestions
+
+```{r}
+
+# library(MASS) #glm.nb for negative binomial models
+# library(glmmTMB) #Salamanders dataset and lots of families
+# library(lme4) #grouseticks dataset and mixed model functionality
+# library(DHARMa) #model diagnostics
+# library(effects) #what do my marginal effects look like?
+# library(performance) #binomial model diagnostics
+# library(emmeans) #post hoc for categorical predictors
+
+
+tick_climate %>%
+  ggplot(aes(x = diff, y = Total_ticks), group = Site) +
+  geom_point(aes(color = Site)) +
+  geom_smooth(method = "lm", se =F) +
+  #facet_wrap(~ Site, scales = "free") +
+  theme_bw()
+
+tick_climate %>%
+  ggplot(aes(x = diff, y = Total_ticks)) +
+  geom_point() +
+  geom_smooth(method = "lm", se =F) +
+  facet_wrap(~ Site, scales = "free") +
+  theme_bw()
+
+model <- glm(Total_ticks ~ Site + diff + mean_max_F + mean_min_F,
+    data = tick_climate,
+    family = "poisson")
+
+summary(model)
+
+simulationOutput <- simulateResiduals(fittedModel = model, plot = T)
+
+testDispersion(simulationOutput) # gives expected values for histogram
+
+## very low p-value so our data is over dispersed (not surprised)
+# lets refit with negative binomial, add zero inflation term, think about data transformations
+
+nb.model <- glm.nb(Total_ticks ~ Site + diff + mean_max_F,
+    data = tick_climate)
+
+# negative binomial summary
+summary(nb.model)
+
+# reminder of poisson model summary
+summary(model)
+
+
+
+# do my data fit the model assumptions?
+simulationOutput <- simulateResiduals(fittedModel = nb.model, plot = T)
+testDispersion(simulationOutput) # there's still patterns in our residuals, but it's getting better. Might be further resolved with a mixed-model
+
+## let's visualize
+
+# line graph shows marginal change in counts for this model given a change in each predictors, while accounting for everything else in model
+plot(allEffects(nb.model))
+
+```
+
+Try zero inflated count data by Tatum
+```{r}
+library(lme4)
+
+ggplot(tick_climate, aes(x = diff, y = Total_ticks)) +
+  geom_point(aes(color = Site)) +
+  geom_smooth(method = "lm", se = F) +
+  theme_bw()
+
+ggplot(tick_climate, aes(x = mean_max_F, y = Total_ticks)) +
+  geom_point(aes(color = Site)) +
+  geom_smooth(method = "lm", se = F) +
+  theme_bw()
+
+hist(tick_climate$Total_ticks)
+
+str(tick_climate) # 1455 observations
+
+tick_climate %>%
+  filter(Total_ticks == 0) %>%
+  summarise(count = n(), total = 1455, proportion = count/1455)
+
+# out of 1455 observations, 818 are zeros (56%) - that's a ton!
+
+# lets fit a normal poisson model
+
+ticks_poisson <- glm(Total_ticks ~ diff,
+                   data = tick_climate,
+                   family = "poisson")
+
+simulationOutput <- simulateResiduals(fittedModel = ticks_poisson, plot = T) # overdispersed
+
+testDispersion(ticks_poisson)
+
+# what if we can't fit a negative binomal model or it doesn't fit our zero inflation problems
+
+# determine if we have zero inflation issues
+testZeroInflation(ticks_poisson)
+
+library(TMB)
+library(pscl)
+install.packages('glmmTMB',type="source")
+library(glmmTMB)
+library(ZIM)
+library(DHARMa)
+
+# lets fit a zero inflated model rather than a negative binomial model to see if we can fix our model assumptions
+
+
+ticks_zi <- glmmTMB(Total_ticks ~ diff,
+                   data = tick_climate,
+                   ziformula = ~1,
+                   family = "poisson")
+
+# do my data meet model assumptions?
+simulationOutput <- simulateResiduals(fittedModel = ticks_zi, plot = T) # nope
+
+# let's try to fix this by including a zero inflation term in the model
+testZeroInflation(ticks_zi) # better
+
+
+```
+
+Categorical fixed effects
+
+what is the effect of sites on tick counts?
+```{r}
+ggplot(tick_climate, aes(x = Site, y = Total_ticks)) +
+  geom_boxplot() +
+  theme_bw()
+
+
+library(emmeans)
+
+
+site_poisson <- glm(formula = Total_ticks ~ Site, family = "poisson", data = tick_climate)
+em <- emmeans(site_poisson, "Site")
+em
+
+plot(pairs(em))
+
+plot(allEffects(site_poisson))
+```
+
+LMMs
+```{r}
+par(mfrow=c(1,2))
+hist(tick_climate$diff, main = "Histogram")
+qqnorm(tick_climate$diff)
+qqline(tick_climate$diff)
+par(mfrow=c(1,1))
+# data is not normal, looks 0 inflated
+
+# spread of data across treatments
+boxplot(tick_climate$Total_ticks ~ tick_climate$Site)
+
+# looking at spread of data across random effects
+par(mfrow=c(1,1))
+boxplot(tick_climate$Total_ticks ~ tick_climate$diff) # spread of data across survey dates
+boxplot(tick_climate$Total_ticks ~ tick_climate$mean_max_F) # spread of data across parent colony
+boxplot(tick_climate$Total_ticks ~ tick_climate$Site) 
+boxplot(tick_climate$Total_ticks ~ tick_climate$Plot) 
+
+par(mfrow=c(2,2))
+qqp(tick_climate$Total_ticks, "norm", main = "Gaussian") # normal distribution
+qqp(tick_climate$Total_ticks, "lnorm", main = "Log Normal") # log normal distribution
+nbinom <- fitdistr(tick_climate$Total_ticks, "Negative Binomial") 
+qqp(tick_climate$Total_ticks, "nbinom", size = nbinom$estimate[[1]], mu = nbinom$estimate[[2]], main = "Negative Binomial") # negative binomial distribution
+
+```
+
+
+GLMMs
+
+```{r}
+require(lme4)
+require(tidyverse)
+require(effects)
+require(lattice)
+
+
+tickle <- glmer(Total_ticks ~ diff + (1|Plot), data = tick_climate, family = poisson)
+
+summary(tickle)
+
+tickley <- glmer(Total_ticks ~ diff + (1|Year), data = tick_climate, family = poisson)
+
+summary(tickley)
+
+# compare standard deviance (tickle = 0.4956 , tickley = 1.084) to prob that average tick would be found
+
+dotplot(ranef(tickle, condVar = T)) #condVar adds 95% confidence intervals around random effects estimates
+
+dotplot(ranef(tickley, condVar = T)) #condVar adds 95% confidence intervals around random effects estimates
+
+
+plot(allEffects(tickley))
+
+
+```
+
+```{r}
+library(effects)
+
+fit <- lm(Total_ticks ~ poly(mean_max_F,3) + dist, data = tick_climate,na.action=na.omit)
+effect_plot(fit, pred = mag, interval = TRUE,
+  int.type = "confidence", int.width = .8, data = attenu)
+```
+
+

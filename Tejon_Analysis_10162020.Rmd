@@ -1,0 +1,296 @@
+---
+title: "Tejon_Analysis_10162020"
+author: "sbsambado"
+date: "10/16/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r libraries and saved variables}
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+devtools::install_github('gavinsimpson/ggvegan')
+
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('red4','red2','red')
+
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+```
+
+
+```{r organize data}
+
+full <- read.csv("~/Desktop/tejon_tick_climate_10162020.csv")
+View(full)
+
+full <- subset(full, select = -c(21:29))
+full$Month <- factor(full$Month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+full$site <- factor(full$site, 
+                    levels = c('Arid', 'Intermediate', 'Mesic'))
+names(full)
+names(full)[1] <- "year"
+names(full)[2] <- "month"
+names(full)[3] <- "site"
+names(full)[4] <- "block"
+names(full)[5] <- "plot"
+names(full)[6] <- "plotID"
+names(full)[7] <- "totalticks"
+
+names(full)[15] <- "maxF"
+names(full)[16] <- "minF"
+names(full)[19] <- "precip_in"
+names(full)[20] <- "precip_mm"
+
+
+full$year <- factor(full$year)
+full$stationID_elevation <- factor(full$stationID_elevation)
+
+str(full)
+
+```
+
+#EDA
+
+**Total ticks ~ Plot ID**
+
++ aggregated 2016 - 2019
++ split into individual years
+
++ O = Open , P = Partial , T = Total
++ 1 = Block 1 , 2 = Block 2 , 3 = Block 3
+
+```{r aggregated data}
+ col <- aggregate(totalticks ~ plotID  + site + year, data=full, FUN=sum)
+
+ggplot(col, aes(x = plotID, y = totalticks, color = site))+
+  geom_boxplot()+
+  geom_point()+
+  theme_bw() +
+  rotatexaxistheme+
+  labs(x = 'Plot ID (2016 - 2019)', y = 'Total ticks', color = 'Site') +
+  xtitletheme + ytitletheme
+  # annotate(geom = "text", x = 3, y = 230, label = "O = Open", size = 4, color = 'red',hjust = "left justified")+
+  # annotate(geom = "text", x = 3, y = 220, label = "P = Patial", size = 4, color = 'red',hjust = "left justified")+
+  # annotate(geom = "text", x = 3, y = 210, label = "T = Total", size = 4, color = 'red',hjust = "left justified")
+  
+
+ col <- aggregate(totalticks ~ plotID  + site + year, data=full, FUN=sum)
+
+ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ year, scale = 'free_y')+
+  rotatexaxistheme+
+  labs(x = 'Plot ID', y = 'Total ticks', fill = 'Site')+
+  xtitletheme + ytitletheme
+
+
+```
+
+**Total ticks ~ Plot**
+
++ aggregated 2016 - 2019
++ split into years
+```{r}
+col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
+
+ggplot(col, aes(x = plot, y = totalticks, fill = site))+
+  geom_boxplot(aes(fill = site))+
+  #geom_point()+
+  theme_bw() +
+  labs(x = 'Plot', y = 'Total ticks (2016 - 2019)', fill = 'Site')+
+  xtitletheme + ytitletheme
+  
+
+  
+
+ col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
+
+ggplot(col, aes(x = plot, y = totalticks, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ year, scale = 'free_y')+
+  labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
+  xtitletheme + ytitletheme
+
+```
+
+**Total ticks ~ Temperature**
+
++ Total ticks ~ Mean maximum temperature (F)
+  
+  + aggregated 2016 - 2019
+  + split into individual years
+
++ Total ticks ~ Mean minimum temperature (F)
+
+  + aggregated 2016 - 2019
+  + split into individual years
+  
++ Total ticks ~ magnitude of difference between min/max temperature (F)
+
+  + aggregated 2016 - 2019
+  + split into individual years
+  
+```{r}
+ col <- aggregate(totalticks ~ plot  + site + year + maxF + minF, data=full, FUN=sum)
+
+
+ggplot(col, aes(x = maxF, y = totalticks, color = site))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  facet_wrap(~ year, scale = 'free_y')+
+  labs(x = 'Mean maximum temperature (F)', y = 'Total ticks', color = 'Site')
+
+ggplot(col, aes(x = minF, y = totalticks, color = site))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  facet_wrap(~ year, scale = 'free_y')+
+  labs(x = 'Mean minimum temperature (F)', y = 'Total ticks', color = 'Site')
+
+# no facet wrap
+ggplot(col, aes(x = maxF, y = totalticks, color = site))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Mean maximum temperature (F)', y = 'Total ticks', color = 'Site')
+
+ggplot(col, aes(x = minF, y = totalticks, color = site))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Mean minimum temperature (F)', y = 'Total ticks', color = 'Site')
+
+
+
+col <- aggregate(totalticks ~ plot  + site + year + diff, data=full, FUN=sum)
+
+ggplot(col, aes(x = diff, y = totalticks, color = site))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  facet_wrap(~ year, scale = 'free_y')+
+  labs(x = 'Difference between min/max temperature (F)', y = 'Total ticks')
+
+# no facet wrap
+ggplot(col, aes(x = diff, y = totalticks, color = site))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Difference between min/max  temperature (F)', y = 'Total ticks', color = 'Site')+
+  ylim(0, 125)
+
+```
+
+**Total ticks ~ Precipitation**
+
+```{r}
+col <- aggregate(totalticks ~ plot  + site + year + precip_mm, data=full, FUN=sum)
+
+
+# no facet wrap
+col <- col[which(col$precip_mm != 'NA'),]
+
+ggplot(col, aes(x = log(precip_mm), y = totalticks, color = site))+
+  geom_jitter(size = 2, alpha = .5, width = .2)+
+  theme_bw() +
+  geom_smooth(method = 'lm', se = FALSE, alpha = .7)+
+  labs(x = 'log(Total precipitation (mm))', y = 'Total ticks', color = 'Site') +
+  xtitletheme + ytitletheme
+
+
+
+col <- col[which(col$precip_mm != 'NA'),]
+ggplot(col, aes(x = log(precip_mm), y = totalticks))+
+  geom_jitter(size = 3, alpha = .5, aes(color = site))+
+  theme_bw() +
+  geom_smooth(method = 'lm',  alpha = .7, aes(weight = totalticks, ymin = ifelse(..ymin.. < 0, 0, ..ymin..)))+
+  labs(x = 'log(Total precipitation (mm))', y = 'Total ticks', color = 'Site')+
+  ylim(0, 175) +
+  xtitletheme + ytitletheme
+
+
+
+
+```
+
+
+
+
+**Precipitation ~ Site (fill with Plot)**
+
++ split into individual years
++ split into months
+
+```{r}
+# histograms
+ col <- aggregate(precip_mm ~ plot  + site + year , data=full, FUN=sum)
+
+
+ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ year)+
+  labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')
+
+
+col <- aggregate(precip_mm ~ plot  + site + month , data=full, FUN=sum)
+
+
+ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ month)+
+  rotatexaxistheme+
+  labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')
+
+```
+
+

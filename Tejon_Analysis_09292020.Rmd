@@ -112,6 +112,8 @@ library(devtools)
 library(ggfortify)
 library(jtools)
 library(effects)
+library(pscl)
+library(lmtest)
 devtools::install_github('gavinsimpson/ggvegan')
 
 
@@ -129,6 +131,219 @@ sitecolor = c('red4','red2','red')
 
 ```
 
+
+
+```{r}
+library(lme4)
+library(tidyverse)
+climate <- read.csv("~/Desktop/tejon_tick_climate_09292020.csv")
+#View(climate)
+climate$Month <- factor(climate$Month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+
+
+plot(y = log(climate$Total_ticks),x =  climate$precip..mm.)
+#plot(glm.nb(Total_ticks ~ precip..mm., data = climate, family = 'poisson'))
+
+
+aggregateticks <- climate %>%
+  group_by(Site) %>%
+  group_by(Month) 
+
+ggplot(data = climate, aes(y = aggregateticks$Total_ticks,x =  aggregateticks$precip..mm., group = Site, color = Site))+
+  geom_smooth()
+
+ggplot(data = climate, aes(y = precip..mm.,x =  Site,))+
+  geom_point()
+
+
+rain <- aggregate(precip..mm. ~ Site + Total_ticks + Year, FUN = sum, data = climate)
+plot(rain)
+
+ggplot(data = rain, aes(y = log(precip..mm.),x =  Site, color = Year))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_jitter(size = 3, alpha = .5) +
+  theme_bw()
+
+ggplot(data = rain, aes(x = log(precip..mm.),y =  log(Total_ticks), color = Year))+
+  geom_jitter(size = 2, alpha = .5) +
+  theme_bw()
+
+mod <- glm(Total_ticks ~ precip..mm., family = 'poisson', data = rain)
+
+plot(predictorEffects(mod))
+
+mod2 <- glm(precip..mm. ~ Site, family = 'poisson', data = rain)
+
+plot(predictorEffects(mod2))
+
+rain$Year <- as.factor(rain$Year)
+mod3 <- glm(precip..mm. ~ Year, family = 'poisson', data = rain)
+plot(predictorEffects(mod3))
+
+ggplot(data = rain, aes(y = log(precip..mm.),x =  Year, color = Site))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_jitter(size = 3, alpha = .4) +
+  theme_bw()
+
+ggplot(data = rain, aes(y = log(precip..mm.),x =  Year, color = Site))+
+  geom_boxplot(outlier.shape = NA)+
+  theme_bw()
+
+ggplot(data = rain, aes(y = precip..mm.,x =  Year, color = Site))+
+  geom_boxplot(outlier.shape = NA)+
+  theme_bw()
+
+rain_in <- aggregate(precip..in. ~ Site + Total_ticks + Year, FUN = sum, data = climate)
+rain_in$Year <- as.factor(rain_in$Year)
+
+ggplot(data = rain_in, aes(y = log(precip..in.),x =  Year, color = Site))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_jitter(size = 3, alpha = .4) +
+  theme_bw()
+
+ggplot(data = rain_in, aes(y = log(precip..in.),x =  Year, color = Site))+
+  geom_boxplot(outlier.shape = NA)+
+  theme_bw()
+
+ggplot(data = rain_in, aes(y = precip..in.,x =  Year, color = Site))+
+  geom_boxplot(outlier.shape = NA)+
+  theme_bw()
+
+
+rain2 <- aggregate(precip..mm. ~ Site + Total_ticks + Year + Month, FUN = sum, data = climate)
+plot(rain2)
+
+ggplot(data = rain2, aes(y = log(precip..mm.),x =  Site, color = Year))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_jitter(size = 3, alpha = .5) +
+  theme_bw()
+
+ggplot(data = rain2, aes(x = log(precip..mm.),y =  log(Total_ticks), color = Year))+
+  geom_jitter(size = 2, alpha = .5) +
+  theme_bw()
+
+mod3 <- glm(Total_ticks ~ precip..mm., family = 'poisson', data = rain2)
+
+plot(predictorEffects(mod3))
+
+mod4 <- glm(Total_ticks ~ precip..mm. + Month, family = 'poisson', data = rain2)
+
+plot(predictorEffects(mod3))
+
+
+ggplot(data = rain2, aes(y = precip..mm.,x =  Month, color = Year))+
+  geom_jitter(size = 2, alpha = .5) +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+
+ggplot(data = rain2, aes(y = precip..mm.,x =  Month, color = Year))+
+  geom_boxplot() +
+  geom_point()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+
+ggplot(data = rain2, aes(y = log(precip..mm.),x =  Month, color = Year))+
+  geom_boxplot() +
+  geom_point()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+  
+
+ggplot(data = rain2, aes(y = log(precip..mm.),x =  Month, color = Site))+
+  geom_boxplot() +
+  geom_point()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+
+ggplot(data = rain2, aes(y = log(precip..mm.),x =  Month, color = Year))+
+  geom_point()+
+  geom_line()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+
+
+ggplot(data = rain2, aes(y = log(precip..mm.),x =  Month, color = Site))+
+  geom_point()+
+  theme_bw()+
+  facet_wrap(~ Year)+
+  theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+
+
+ggplot(data = rain2, aes(y = precip..mm.,x =  Month, color = Site))+
+  geom_point()+
+  theme_bw()+
+  facet_wrap(~ Year)+
+  theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+
+```
+```{r}
+library(MASS)
+
+summary(m1 <- glm.nb(Total_ticks ~  Site, data = climate))
+summary(m2 <- glm.nb(Total_ticks ~  Year, data = climate))
+summary(m3 <- glm.nb(Total_ticks ~  diff, data = climate))
+summary(m4 <- glm.nb(Total_ticks ~  precip..mm., data = climate))
+summary(m5 <- glm.nb(Total_ticks ~  mean_max_F, data = climate))
+summary(m6 <- glm.nb(Total_ticks ~  Site + mean_max_F, data = climate))
+summary(m7 <- glm.nb(Total_ticks ~  Year + mean_max_F, data = climate))
+summary(m8 <- glm.nb(Total_ticks ~  diff + mean_max_F, data = climate))
+summary(m9 <- glm.nb(Total_ticks ~  diff + precip..mm., data = climate))
+
+View(climate)
+# what hillary wanted
+Tick_abundance ~ climate + treatment + climate*treatment + 1|plotID + 1|month+ 1|rainfall year
+summary(m10 <- glm(Total_ticks ~ mean_max_F + Plot + mean_max_F*Plot + 1|Block + 1|Month+ 1|rain_year, data = climate))
+
+
+plot(predictorEffects(m1))
+plot(predictorEffects(m2))
+plot(predictorEffects(m3))
+plot(predictorEffects(m4))
+plot(predictorEffects(m5))
+plot(predictorEffects(m6))
+plot(predictorEffects(m7))
+plot(predictorEffects(m8))
+plot(predictorEffects(m9))
+
+```
+
+
+```{r}
+H1downB <- hurdle(fldown, dist = "negbin", link = "logit",data = combo)
+
+fldown <- formula(total_ticks ~ site + plot | site)
+```
+
+~~~~~~~~~~~~~~~~~
+predictor effects of glm
+```{r}
+library(effects)
+
+# example from Poissonregressionexample
+#plot(predictorEffects(mod.ornstein, xlevels=list(assets=100)),
+#    axes=list(x=list(rotate=40)))
+
+plot(predictorEffects(tick1a))
+
+plot(predictorEffects(tick5))
+
+
+
+sinclair.full <- glm(COUNT~SEX*MARROW*DEATH,family=poisson, data=sinclair)
+sinclair.full_nointeraction <- glm(COUNT~SEX+MARROW+DEATH,family=poisson, data=sinclair)
+
+
+```
+
+
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 **Second round of analyses 09292020**
 
 Hillary's suggestions for models
@@ -156,11 +371,17 @@ if there are multiple models with robust AIC support maybe we could also go with
 
 
 ```{r}
+library(lme4)
+glmer(Total_ticks ~ climate + treatment  + 1|month + 1|rainfall year, family = 'poisson' ,
+     data = climate)
+plot(glmer(Total_ticks ~ Site + 1|Month, family = 'poisson' ,
+     data = climate))
 
-glm(Total_ticks ~ climate + treatment + climate*treatment + 1|month + 1|rainfall year)
+glm(Total_ticks ~ diff  + Site + diff*Site + 1|Month + 1|rain_year, family = 'poisson',data = climate)
 
 
-glm(Total_ticks ~ diff  + Site + diff*Site + 1|Month + 1|rain_year, data = climate)
+cor.test(climate$diff, climate$Total_ticks)
+
 
 ```
 
@@ -207,8 +428,29 @@ Treated rain year as beginning in November.
 2019/2020 for November 2019 to October 2020
 
 
+
+**on 10/14/2020 I added precipitation data and added diff column**
+
+**Arid : Lebec collected by NOAA**
+
++ ID : GHCND:USC00044863
++ Lat, Long : 34.83328, -118.86497
++ **Elevation: 1089.7 m**
+
+**Intermediate : Loraine 5 NNE**
+
++ ID: GHCND:USC00045100
++ Lat, Long : 35.3836, -118.4122
++ **Elevation : 1290.8 m**
+
+**Mesic : Bear Valley Springs collected by NOAA**
+
++ ID : KCATHEHAC23
++ Lat, Long : 35.04, 118.57
++ **Elevation: 1455.42 m**
+
 *imported data from sheet called `tejon_tick_climate_09292020`*
-```{r}
+```{r visualize}
 climate <- read.csv("~/Desktop/tejon_tick_climate_09292020.csv")
 
 str(climate)
@@ -226,8 +468,8 @@ ggplot(data = climate, aes(x = mean_min_F, y = Total_ticks, group = Site, color 
 ## geom point
 
 # group pairing
-ggplot(data = climate, aes(x = mean_min_F, y = Total_ticks, group = Site, color = Site, size = diff))+
-  geom_point(aes(size = diff))+
+ggplot(data = climate, aes(x = mean_min_F, y = Total_ticks, group = Site, color = Site))+
+  geom_point()+
   clean_background
 
 # diff
@@ -242,17 +484,175 @@ ggplot(data = climate, aes(x = diff, y = Total_ticks))+
 # group pairing
 ggplot(data = climate, aes(x = diff, y = Total_ticks, group = Site, color = Site))+
   geom_smooth()+
-  clean_background
+  clean_background+
+  coord_cartesian(ylim = c(0,10))
+
+# mean max vs tot tick count
+ggplot(data = climate, aes(x = mean_max_F, y = Total_ticks, group = Site, color = Site))+
+  geom_smooth()+
+  clean_background+
+  coord_cartesian(ylim = c(0,12))
+
 
 
 ggplot(data = climate, aes(y = diff, x = Site))+
   geom_boxplot()+
-  clean_background
+  clean_background +
+  xlim('Arid', 'Intermediate', 'Mesic')
 
 
-glm(Total_ticks ~ diff, data = climate)
-glm(Total_ticks ~ mean_max_F, data = climate)
-glm(Total_ticks ~ mean_min_F, data = climate)
+ggplot(data = climate, aes(y = mean_max_F, x = Site))+
+  geom_boxplot()+
+  clean_background +
+  xlim('Arid', 'Intermediate', 'Mesic')
+
+ggplot(data = climate, aes(y = mean_min_F, x = Site))+
+  geom_boxplot()+
+  clean_background +
+  xlim('Arid', 'Intermediate', 'Mesic')
+
+#ggplot(climate, aes(diff, color = Site)) + 
+  #geom_freqpoly(binwidth = 10)+
+  #clean_background
+
+```
+
+
+best single variable (lowest AIC score of 10313.06) : **diff**
+
+best multivariable variable (lowest AIC score) : **diff**
+
+
+```{r glms with temp}
+
+tick1a <- glm(Total_ticks ~ diff, 
+               data = climate,
+             family = 'poisson')
+
+tick1b <- glm(Total_ticks ~ mean_max_F, 
+               data = climate,
+             family = 'poisson')
+
+tick1c <- glm(Total_ticks ~ mean_min_F, 
+               data = climate,
+             family = 'poisson')
+
+tick1 <- glm(Total_ticks ~ rain_year, 
+               data = climate,
+             family = 'poisson')
+
+tick2 <- glm(Total_ticks ~ Site, 
+               data = climate,
+              family = 'poisson')
+
+tick3 <- glm(Total_ticks ~ Plot, 
+               data = climate,
+              family = 'poisson')
+
+tick4 <- glm(Total_ticks ~ Month, 
+               data = climate,
+              family = 'poisson')
+
+tick5 <- glm(Total_ticks ~ Site + rain_year, 
+               data = climate,
+              family = 'poisson')
+
+tick6 <- glm(Total_ticks ~ Site + rain_year + Plot, 
+               data = climate,
+              family = 'poisson')
+
+tick7 <- glm(Total_ticks ~ Site + rain_year + Plot + Month, 
+               data = climate,
+              family = 'poisson')
+
+
+# calculate AIC of each model
+
+tickresults <- AIC(tick1a,tick1b,tick1c, 
+                   tick1, tick2, tick3,
+                    tick4, tick5, tick6,
+                   tick7)
+
+# add other metrics to table
+tickmodels <- list(tick1a,tick1b,tick1c,
+                   tick1, tick2, tick3,
+                    tick4, tick5, tick6,
+                   tick7) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+tickresults$BIC <- sapply(tickmodels, BIC) # add column for BIC
+
+tick_model_summary <- lapply(tickmodels, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(tickmodels)) {
+  tickresults$rsq[i] <- tick_model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  tickresults$adj_rsq[i] <- tick_model_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+tickresults$variables <- c('diff', 'mean_max', 'mean_min','rain_year','Site', 'Plot', 'Month', 'Site + rain_year', 'Site + rain_year + Plot', 'Site + rain_year + Plot + Month')
+
+# make a nice table!
+tickmodels <-kable(tickresults, digits = 2, align = 'c') %>%
+  kable_styling()
+
+eighteen <-tickmodels
+
+eighteen
+
+```
+
+
+
+Hurdle models
+
+```{r}
+
+Tick_abundance ~ climate + treatment + climate*treatment + 1|plotID + 1|month+ 1|rainfall year
+
+## part 1 of 0s
+# zero inflated poisson (ZIP)
+fldown <- formula(Total_ticks ~ diff + Site + diff*Site + 1|Month + 1|rain_year,
+                  data = climate) # what explains the load that's not 0 | explanatory variables if something is present or not
+ZIP_round_down <- zeroinfl(fldown, dist = 'poisson',
+                           link = 'logit',
+                           data = climate)
+summary(ZIP_round_down) # site and plot are signficant!
+
+# zero inflated negative binomial (ZINB)
+fldown <- formula(total_ticks ~ site + plot | site)
+ZINB_round_down <- zeroinfl(fldown, dist = 'negbin', # changed distribution
+                            link = 'logit',
+                            data = combo)
+summary(ZINB_round_down) # site and plot are significant!
+
+
+# likeligood ratio test to compare ZIP and ZINB
+# test the two models
+lrtest(ZIP_round_down, ZINB_round_down) # ZINB p < 2.2e-16, so go with negative binomial
+
+
+## part two non-0s
+# Hurdle Models
+# ZIP
+H1downA <- hurdle(fldown, dist = "poisson", link = "logit",data = combo)
+# ZINB
+H1downB <- hurdle(fldown, dist = "negbin", link = "logit",data = combo)
+lrtest(H1downA,H1downB) # Negative binomial version much more significant, p < 2.2e-16
+
+summary(H1downB)
+```
+
+```{r basic stats}
+
+glm(Total_ticks ~ diff, data = climate, family = 'poisson')
+glm(Total_ticks ~ mean_max_F, data = climate, family = 'poisson')
+glm(Total_ticks ~ mean_min_F, data = climate, family = 'poisson')
+
+
+
 
 ```
 
@@ -423,9 +823,25 @@ twelve <-ggplot(data = aggregate,
   xlab('Site') + ylab('Total ticks')+
   ggtitle('Total tick abundance by site and plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
-ggsave("TickAbundanceBargraphPlot_v1.pdf", dpi = 320)
+
 twelve
 
+Aggregateticks <- alldrag %>%
+  group_by(Site) %>%
+  group_by(Month) %>%
+  group_by(Year)
+
+ggplot(data = Aggregateticks,
+       aes(x = Site, y = Total_ticks,
+           fill = Plot))+
+  facet_wrap(~Year)+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  theme_classic()+
+  xlab('Site') + ylab('Total ticks')+
+  ggtitle('Total tick abundance by site and plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5)) 
+ggsave("TotalticksSitePlotYear.pdf", dpi = 320)
 ```
 
 
@@ -575,6 +991,7 @@ Ariddrags <- ggarrange(a16 + rremove('xlab') + rremove('ylab'),
 
 Ariddrags
 ```
+
 
 
 ```{r EDA total ticks ~ month for intermediate}
@@ -2185,6 +2602,8 @@ combomodel_glm
 ```
 
 
+
+
 ```{r full model print out}
 
 #tickmodel_glm 
@@ -2287,6 +2706,7 @@ ZIP_round_down <- zeroinfl(fldown, dist = 'poisson',
 summary(ZIP_round_down) # site and plot are signficant!
 
 # zero inflated negative binomial (ZINB)
+
 fldown <- formula(total_ticks ~ site + plot | site)
 ZINB_round_down <- zeroinfl(fldown, dist = 'negbin', # changed distribution
                             link = 'logit',
