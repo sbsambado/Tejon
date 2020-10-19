@@ -121,6 +121,7 @@ ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
   # annotate(geom = "text", x = 3, y = 230, label = "O = Open", size = 4, color = 'red',hjust = "left justified")+
   # annotate(geom = "text", x = 3, y = 220, label = "P = Patial", size = 4, color = 'red',hjust = "left justified")+
   # annotate(geom = "text", x = 3, y = 210, label = "T = Total", size = 4, color = 'red',hjust = "left justified")
+ggsave("TickAbundancePlotID_v1.pdf", dpi = 320)
   
 
  col <- aggregate(totalticks ~ plotID  + site + rain_year, data=full, FUN=sum)
@@ -133,6 +134,7 @@ ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
   rotatexaxistheme+
   labs(x = 'Plot ID', y = 'Total ticks', fill = 'Site')+
   xtitletheme + ytitletheme
+ggsave("TickAbundancePlotIDRainYear_v1.pdf", dpi = 320)
 
 
  col <- aggregate(totalticks ~ plotID  + site + year, data=full, FUN=sum)
@@ -144,6 +146,7 @@ ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
   rotatexaxistheme+
   labs(x = 'Plot ID', y = 'Total ticks', fill = 'Site')+
   xtitletheme + ytitletheme
+ggsave("TickAbundancePlotIDYear_v1.pdf", dpi = 320)
 
 
 ```
@@ -166,7 +169,8 @@ ggplot(col, aes(x = plot, y = totalticks, fill = site))+
   theme_bw() +
   labs(x = 'Plot', y = 'Total ticks (2016 - 2019)', fill = 'Site')+
   xtitletheme + ytitletheme
-  
+ggsave("TickAbundancePlot_v1.pdf", dpi = 320)
+
 
   
  col <- aggregate(totalticks ~ plot  + site + rain_year, data=full, FUN=sum)
@@ -179,6 +183,7 @@ ggplot(col, aes(x = plot, y = totalticks, fill = site))+
   scale_fill_manual(values =c('red4','red3','red'))+
   labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
   xtitletheme + ytitletheme
+ggsave("TickAbundancePlotRainYear_v1.pdf", dpi = 320)
 
 
  col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
@@ -190,6 +195,7 @@ ggplot(col, aes(x = plot, y = totalticks, fill = site))+
   scale_fill_manual(values =c('red4','red3','red'))+
   labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
   xtitletheme + ytitletheme
+ggsave("TickAbundancePlotYear_v1.pdf", dpi = 320)
 
 # # no fill
 #  col <- aggregate(totalticks ~ plot  + year, data=full, FUN=sum)
@@ -226,6 +232,7 @@ ggplot(data = col,
   xlab('Site') + ylab('Total ticks')+
   ggtitle('Total tick abundance by site and plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+ggsave("TickAbundanceSiteRainYear_v1.pdf", dpi = 320)
 
 
 col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
@@ -242,6 +249,7 @@ ggplot(data = col,
   xlab('Site') + ylab('Total ticks')+
   ggtitle('Total tick abundance by site and plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+ggsave("TickAbundanceSite_v1.pdf", dpi = 320)
 
 # # no fill
 # col <- aggregate(totalticks ~ site + year, data=full, FUN=sum)
@@ -272,6 +280,7 @@ ggplot(col, aes(x = maxF, y = totalticks, color = site))+
   theme_bw() +
   facet_wrap(~ year, scale = 'free_y')+
   labs(x = 'Mean maximum temperature (F)', y = 'Total ticks', color = 'Site')
+ggsave("TickAbundanceSiteMaxFYear_v1.pdf", dpi = 320)
 
 ggplot(col, aes(x = minF, y = totalticks, color = site))+
   geom_point()+
@@ -279,6 +288,7 @@ ggplot(col, aes(x = minF, y = totalticks, color = site))+
   theme_bw() +
   facet_wrap(~ year, scale = 'free_y')+
   labs(x = 'Mean minimum temperature (F)', y = 'Total ticks', color = 'Site')
+ggsave("TickAbundanceSiteMinFYear_v1.pdf", dpi = 320)
 
 # no facet wrap
 ggplot(col, aes(x = maxF, y = totalticks, color = site))+
@@ -286,12 +296,16 @@ ggplot(col, aes(x = maxF, y = totalticks, color = site))+
   stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
   theme_bw() +
   labs(x = 'Mean maximum temperature (F)', y = 'Total ticks', color = 'Site')
+ggsave("TickAbundanceSiteMaxF_v1.pdf", dpi = 320)
+
 
 ggplot(col, aes(x = minF, y = totalticks, color = site))+
   geom_point()+
   stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
   theme_bw() +
   labs(x = 'Mean minimum temperature (F)', y = 'Total ticks', color = 'Site')
+ggsave("TickAbundanceSiteMinF_v1.pdf", dpi = 320)
+
 
 # no color by site
 ggplot(col, aes(x = maxF, y = totalticks))+
@@ -300,6 +314,7 @@ ggplot(col, aes(x = maxF, y = totalticks))+
   theme_bw() +
   labs(x = 'Max  temperature (F)', y = 'Total ticks', color = 'Site')+
   ylim(0, 125)
+ggsave("TickAbundanceSiteMaxF_v1.pdf", dpi = 320)
 
 
 ggplot(col, aes(x = minF, y = totalticks))+
@@ -308,6 +323,7 @@ ggplot(col, aes(x = minF, y = totalticks))+
   theme_bw() +
   labs(x = 'Min  temperature (F)', y = 'Total ticks', color = 'Site')+
   ylim(0, 125)
+ggsave("TickAbundanceSiteMinF_v1.pdf", dpi = 320)
 
 
 ```
@@ -328,6 +344,7 @@ ggplot(col, aes(x = diff, y = totalticks, color = site))+
   facet_wrap(~ year, scale = 'free_y')+
   labs(x = 'Difference between min/max temperature (F)', y = 'Total ticks')+
   ylim(0, 125)
+ggsave("TickAbundancePlotYear_v1.pdf", dpi = 320)
 
 # no facet wrap
 ggplot(col, aes(x = diff, y = totalticks, color = site))+
@@ -336,6 +353,7 @@ ggplot(col, aes(x = diff, y = totalticks, color = site))+
   theme_bw() +
   labs(x = 'Difference between min/max  temperature (F)', y = 'Total ticks', color = 'Site')+
   ylim(0, 125)
+ggsave("TickAbundanceSiteDiff_v1.pdf", dpi = 320)
 
 
 ggplot(col, aes(x = diff, y = totalticks))+
@@ -344,6 +362,7 @@ ggplot(col, aes(x = diff, y = totalticks))+
   theme_bw() +
   labs(x = 'Difference between min/max  temperature (F)', y = 'Total ticks', color = 'Site')+
   ylim(0, 125)
+ggsave("TickAbundanceDiff_v1.pdf", dpi = 320)
 
 
 
@@ -370,6 +389,7 @@ ggplot(col, aes(x = log(precip_mm), y = totalticks, color = site))+
   geom_smooth(method = 'lm', se = FALSE, alpha = .7)+
   labs(x = 'log(Total precipitation (mm))', y = 'Total ticks', color = 'Site') +
   xtitletheme + ytitletheme
+ggsave("logTickAbundanceSitePrecipmm_v1.pdf", dpi = 320)
 
 
 
@@ -381,6 +401,7 @@ ggplot(col, aes(x = log(precip_mm), y = totalticks))+
   labs(x = 'log(Total precipitation (mm))', y = 'Total ticks', color = 'Site')+
   ylim(0, 175) +
   xtitletheme + ytitletheme
+ggsave("logTickAbundanceSitePrecip_mm_v1.pdf", dpi = 320)
 
 # not log
 
@@ -391,6 +412,7 @@ ggplot(col, aes(x = precip_mm, y = totalticks))+
   labs(x = 'Total precipitation (mm)', y = 'Total ticks', color = 'Site')+
   ylim(0, 175) +
   xtitletheme + ytitletheme
+ggsave("TickAbundanceSitePrecipmm_v1.pdf", dpi = 320)
 
 
 # inches
@@ -402,6 +424,7 @@ ggplot(col, aes(x = log(precip_in), y = totalticks))+
   labs(x = 'log(Total precipitation (in))', y = 'Total ticks', color = 'Site')+
   ylim(0, 175) +
   xtitletheme + ytitletheme
+ggsave("TickAbundanceSitePrecip_mm_v1.pdf", dpi = 320)
 
 # not log
 col <- aggregate(totalticks ~ plot  + site + year + precip_in, data=full, FUN=sum)
@@ -412,6 +435,7 @@ ggplot(col, aes(x = precip_in, y = totalticks))+
   labs(x = 'Total precipitation (in)', y = 'Total ticks', color = 'Site')+
   ylim(0, 175) +
   xtitletheme + ytitletheme
+ggsave("TickAbundanceSitePrecip__mm_v1.pdf", dpi = 320)
 
 
 ```
@@ -490,6 +514,8 @@ ggplot(col, aes(x = plotID, y = totalmammals, fill = site))+
   rotatexaxistheme+
   labs(x = 'Plot ID', y = 'Total mammals (2018-9)', fill = 'Site') +
   xtitletheme + ytitletheme
+ggsave("MammalAbundancePlotID_v1.pdf", dpi = 320)
+
 
   
 
@@ -502,6 +528,8 @@ ggplot(col, aes(x = plotID, y = totalmammals, fill = site))+
   rotatexaxistheme+
   labs(x = 'Plot ID', y = 'Total mammals', fill = 'Site')+
   xtitletheme + ytitletheme
+ggsave("MammalAbundancePlotIDYear_v1.pdf", dpi = 320)
+
 ```
 
 
@@ -520,6 +548,7 @@ ggplot(col, aes(x = plot, y = totalmammals), group = site)+
   labs(x = 'Plot', y = 'Total mammals (2018-9)', fill = 'Site') +
     scale_fill_manual(values =c('red4','red3','red'))+
   xtitletheme + ytitletheme
+ggsave("MammalAbundancePlot_v1.pdf", dpi = 320)
 
 # no fill
 col <- aggregate(totalmammals ~ plot, data=mammals, FUN=sum)
@@ -529,6 +558,8 @@ ggplot(col, aes(x = plot, y = totalmammals))+
   theme_bw() +
   labs(x = 'Plot', y = 'Total mammals (2018-9)', fill = 'Site') +
   xtitletheme + ytitletheme
+ggsave("MammalAbundancePlot_v1.pdf", dpi = 320)
+
 ```
 
 
@@ -545,6 +576,7 @@ ggplot(col, aes(x = site, y = totalmammals, fill = plot))+
   labs(x = 'Site', y = 'Total mammals (2018-9)', fill = 'Plot') +
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   xtitletheme + ytitletheme 
+ggsave("MammalAbundanceSite_v1.pdf", dpi = 320)
 
 # no fill
 col <- aggregate(totalmammals ~ site, data=mammals, FUN=sum)
@@ -554,6 +586,8 @@ ggplot(col, aes(x = site, y = totalmammals))+
   theme_bw() +
   labs(x = 'Site', y = 'Total mammals (2018-9)') +
   xtitletheme + ytitletheme 
+ggsave("MammalAbundanceSite__v1.pdf", dpi = 320)
+
 
 ```
 
@@ -572,6 +606,7 @@ ggplot(col, aes(x = plot, y = sppr, fill = site))+
   labs(x = 'Plot', y = 'Mammal richness (2018-9)', fill = 'Site') +
   scale_fill_manual(values =c('red4','red3','red'))+
   xtitletheme + ytitletheme
+ggsave("MammalRichnessPlot_v1.pdf", dpi = 320)
 
 # no fill
 col <- aggregate(sppr ~ plot, data=count, FUN=sum)
@@ -582,6 +617,8 @@ ggplot(col, aes(x = plot, y = sppr))+
   theme_bw() +
   labs(x = 'Site', y = 'Mammal richness (2018-9)', fill = 'Plot') +
   xtitletheme + ytitletheme
+ggsave("MammalRichnessPlot__v1.pdf", dpi = 320)
+
 ```
 
 **Mammal richness ~ Site**
@@ -599,6 +636,7 @@ ggplot(col, aes(x = site, y = sppr, fill = plot))+
   labs(x = 'Site', y = 'Mammal richness (2018-9)', fill = 'Plot') +
     scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   xtitletheme + ytitletheme
+ggsave("MammalRichnessSite_v1.pdf", dpi = 320)
 
 
 # no fill
@@ -610,6 +648,8 @@ ggplot(col, aes(x = site, y = sppr))+
   theme_bw() +
   labs(x = 'Site', y = 'Mammal richness (2018-9)', fill = 'Plot') +
   xtitletheme + ytitletheme
+ggsave("MammalRichnessSite__v1.pdf", dpi = 320)
+
 ```
 
 
@@ -626,6 +666,7 @@ ggplot(col, aes(x = plot, y = shannondiv, fill = site))+
   labs(x = 'Plot', y = 'Shannon diversity (2018-9)', fill = 'Site') +
   scale_fill_manual(values =c('red4','red3','red'))+
   xtitletheme + ytitletheme
+ggsave("MammalShannonDiversityPlot_v1.pdf", dpi = 320)
 
 # no fill
  col <- aggregate(shannondiv ~ plot, data=count, FUN=sum)
@@ -635,6 +676,8 @@ ggplot(col, aes(x = plot, y = shannondiv))+
   theme_bw() +
   labs(x = 'Site', y = 'Shannon diversity (2018-9)') +
   xtitletheme + ytitletheme
+ggsave("MammalShannonDiversityPlot__v1.pdf", dpi = 320)
+
 ```
 
 **Shannon diversity ~ Site**
@@ -649,6 +692,7 @@ ggplot(col, aes(x = site, y = shannondiv, fill = plot))+
   labs(x = 'Site', y = 'Shannon diversity (2018-9)', fill = 'Site') +
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   xtitletheme + ytitletheme
+ggsave("MammalShannonDiversitySite_v1.pdf", dpi = 320)
 
 # no fill
  col <- aggregate(shannondiv ~ site, data=count, FUN=sum)
@@ -658,6 +702,8 @@ ggplot(col, aes(x = site, y = shannondiv))+
   theme_bw() +
   labs(x = 'Site', y = 'Shannon diversity (2018-9)') +
   xtitletheme + ytitletheme
+ggsave("MammalShannonDiversitySite__v1.pdf", dpi = 320)
+
 ```
 
 
@@ -687,6 +733,7 @@ ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')+
   xtitletheme + ytitletheme
+ggsave("PrecipmmSiteRainYear_v1.pdf", dpi = 320)
 
 
 # calendar year
@@ -700,6 +747,7 @@ ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')+
   xtitletheme + ytitletheme
+ggsave("PrecipmmSiteYear_v1.pdf", dpi = 320)
 
 
 col <- aggregate(precip_mm ~ plot  + site + month , data=full, FUN=sum)
@@ -713,6 +761,7 @@ ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
   labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')+
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   xtitletheme + ytitletheme
+ggsave("PrecipmmSiteRainMonth_v1.pdf", dpi = 320)
 
 
 
@@ -736,6 +785,7 @@ ggplot(full, aes(x = site, y = maxF))+
   labs(x = 'Site', y = 'Max Temperature (F)', fill = 'Plot')+
   xtitletheme + ytitletheme+
   guides(fill  = FALSE)
+ggsave("TempMaxFSite_v1.pdf", dpi = 320)
 
 ggplot(full, aes(x = site, y = minF))+
   geom_violin(aes(fill = site), trim = FALSE, scale = 'count', adjust = .7, draw_quantiles = c(0.25, 0.5, 0.75))+
@@ -745,6 +795,8 @@ ggplot(full, aes(x = site, y = minF))+
   labs(x = 'Site', y = 'Min Temperature (F)', fill = 'Plot')+
   xtitletheme + ytitletheme+
   guides(fill  = FALSE)
+ggsave("TempMinFSite_v1.pdf", dpi = 320)
+
 
 ggplot(full, aes(x = site, y = diff))+
   geom_violin(aes(fill = site), trim = FALSE, scale = 'count', adjust = .7, draw_quantiles = c(0.25, 0.5, 0.75))+
@@ -753,6 +805,8 @@ ggplot(full, aes(x = site, y = diff))+
   labs(x = 'Site', y = 'Difference in min/max temperature (F)', fill = 'Plot')+
   xtitletheme + ytitletheme+
   guides(fill  = FALSE)
+ggsave("TempDiffSite_v1.pdf", dpi = 320)
+
 
 ggplot(full, aes(x = site, y = diff))+
   #geom_violin(aes(fill = site), trim = FALSE, scale = 'count', adjust = .5, draw_quantiles = c(0.25, 0.5, 0.75))+
@@ -763,6 +817,7 @@ ggplot(full, aes(x = site, y = diff))+
   labs(x = 'Site', y = 'Difference in min/max temperature (F)', fill = 'Plot')+
   xtitletheme + ytitletheme+
   guides(fill  = FALSE)
+ggsave("TempDiffSiteMonth_v1.pdf", dpi = 320)
 
 
 ```
