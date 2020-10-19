@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
+Import libraries and variables
 ```{r libraries and saved variables}
 library(tidyverse)
 library(readr)
@@ -58,11 +58,11 @@ ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust
 xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
 ```
 
-
+Organize data
 ```{r organize data}
 
 full <- read.csv("~/Desktop/tejon_tick_climate_10162020.csv")
-View(full)
+#View(full)
 
 full <- subset(full, select = -c(21:29))
 full$Month <- factor(full$Month, 
@@ -70,7 +70,7 @@ full$Month <- factor(full$Month,
                                    'April', 'May', 'June', 'July',
                                    'August', 'September', 'October',
                                    'November', 'December'))
-full$site <- factor(full$site, 
+full$Site <- factor(full$Site, 
                     levels = c('Arid', 'Intermediate', 'Mesic'))
 names(full)
 names(full)[1] <- "year"
@@ -94,12 +94,10 @@ str(full)
 
 ```
 
-#EDA
+##EDA
 
 **Total ticks ~ Plot ID**
 
-+ aggregated 2016 - 2019
-+ split into individual years
 
 + O = Open , P = Partial , T = Total
 + 1 = Block 1 , 2 = Block 2 , 3 = Block 3
@@ -107,7 +105,7 @@ str(full)
 ```{r aggregated data}
  col <- aggregate(totalticks ~ plotID  + site + year, data=full, FUN=sum)
 
-ggplot(col, aes(x = plotID, y = totalticks, color = site))+
+ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
   geom_boxplot()+
   geom_point()+
   theme_bw() +
@@ -132,10 +130,9 @@ ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
 
 ```
 
-**Total ticks ~ Plot**
+**Total ticks ~ Plot (fill site)**
 
-+ aggregated 2016 - 2019
-+ split into years
+
 ```{r}
 col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
 
@@ -155,27 +152,33 @@ ggplot(col, aes(x = plot, y = totalticks, fill = site))+
   geom_histogram(stat = 'identity')+
   theme_bw() +
   facet_wrap(~ year, scale = 'free_y')+
+  scale_fill_manual(values =c('red4','red3','red'))+
   labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
   xtitletheme + ytitletheme
 
 ```
 
+
+**Total ticks ~ Site (fill plot)**
+
+```{r}
+
+col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
+
+ggplot(data = col,
+       aes(x = site, y = totalticks,
+           fill = plot))+
+  facet_wrap(~year)+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  theme_classic()+
+  xlab('Site') + ylab('Total ticks')+
+  ggtitle('Total tick abundance by site and plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+```
+
+
 **Total ticks ~ Temperature**
-
-+ Total ticks ~ Mean maximum temperature (F)
-  
-  + aggregated 2016 - 2019
-  + split into individual years
-
-+ Total ticks ~ Mean minimum temperature (F)
-
-  + aggregated 2016 - 2019
-  + split into individual years
-  
-+ Total ticks ~ magnitude of difference between min/max temperature (F)
-
-  + aggregated 2016 - 2019
-  + split into individual years
   
 ```{r}
  col <- aggregate(totalticks ~ plot  + site + year + maxF + minF, data=full, FUN=sum)
@@ -208,6 +211,22 @@ ggplot(col, aes(x = minF, y = totalticks, color = site))+
   theme_bw() +
   labs(x = 'Mean minimum temperature (F)', y = 'Total ticks', color = 'Site')
 
+# no color by site
+ggplot(col, aes(x = maxF, y = totalticks))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Max  temperature (F)', y = 'Total ticks', color = 'Site')+
+  ylim(0, 125)
+
+
+ggplot(col, aes(x = minF, y = totalticks))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Min  temperature (F)', y = 'Total ticks', color = 'Site')+
+  ylim(0, 125)
+
 
 
 col <- aggregate(totalticks ~ plot  + site + year + diff, data=full, FUN=sum)
@@ -227,11 +246,24 @@ ggplot(col, aes(x = diff, y = totalticks, color = site))+
   labs(x = 'Difference between min/max  temperature (F)', y = 'Total ticks', color = 'Site')+
   ylim(0, 125)
 
+
+ggplot(col, aes(x = diff, y = totalticks))+
+  geom_point()+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Difference between min/max  temperature (F)', y = 'Total ticks', color = 'Site')+
+  ylim(0, 125)
+
+
+
 ```
+
 
 **Total ticks ~ Precipitation**
 
 ```{r}
+
+# milimeters
 col <- aggregate(totalticks ~ plot  + site + year + precip_mm, data=full, FUN=sum)
 
 
@@ -256,12 +288,211 @@ ggplot(col, aes(x = log(precip_mm), y = totalticks))+
   ylim(0, 175) +
   xtitletheme + ytitletheme
 
+# not log
 
+ggplot(col, aes(x = precip_mm, y = totalticks))+
+  geom_jitter(size = 3, alpha = .5, aes(color = site))+
+  theme_bw() +
+  geom_smooth(method = 'lm',  alpha = .7, aes(weight = totalticks, ymin = ifelse(..ymin.. < 0, 0, ..ymin..)))+
+  labs(x = 'Total precipitation (mm)', y = 'Total ticks', color = 'Site')+
+  ylim(0, 175) +
+  xtitletheme + ytitletheme
+
+
+# inches
+col <- aggregate(totalticks ~ plot  + site + year + precip_in, data=full, FUN=sum)
+ggplot(col, aes(x = log(precip_in), y = totalticks))+
+  geom_jitter(size = 3, alpha = .5, aes(color = site))+
+  theme_bw() +
+  geom_smooth(method = 'lm',  alpha = .7, aes(weight = totalticks, ymin = ifelse(..ymin.. < 0, 0, ..ymin..)))+
+  labs(x = 'log(Total precipitation (in))', y = 'Total ticks', color = 'Site')+
+  ylim(0, 175) +
+  xtitletheme + ytitletheme
+
+# not log
+col <- aggregate(totalticks ~ plot  + site + year + precip_in, data=full, FUN=sum)
+ggplot(col, aes(x = precip_in, y = totalticks))+
+  geom_jitter(size = 3, alpha = .5, aes(color = site))+
+  theme_bw() +
+  geom_smooth(method = 'lm',  alpha = .7, aes(weight = totalticks, ymin = ifelse(..ymin.. < 0, 0, ..ymin..)))+
+  labs(x = 'Total precipitation (in)', y = 'Total ticks', color = 'Site')+
+  ylim(0, 175) +
+  xtitletheme + ytitletheme
 
 
 ```
 
 
+
+# Mammals
+
+Full mammal dataset
+
+```{r}
+# full dataset
+mammals <- read.csv("~/Desktop/tejon_tickmammal_09032020.csv")
+
+
+mammals <- subset(mammals, select = -c(16:28))
+
+
+names(mammals)[12] <- "totalmammals"
+
+```
+
+
+
+Numeric dataset to calculate shannon diversity and species richness 
+
+```{r}
+
+# numeric dataframe for community analysis
+Count <- read.csv("~/Desktop/tejon_mammalcount_09032020.csv", header = TRUE)
+
+# remove the arid with NAs, this will be the full dataset with species richenss and diversity added
+count <- Count[-4,]
+
+# keep only numeric data to run community analyses
+numeric <- count[,c(-1,-2,-9,-10)]
+
+# organize data into right forms
+count$plot <- factor(count$plot, 
+                        levels = c('open','partial','total'))
+
+
+# calculate mammal species richness
+sppr <- specnumber(numeric)
+
+# calculate mamal shannon diversity
+shannondiv <- diversity(numeric)
+
+# add species richness to count
+count$sppr<-specnumber(numeric)
+
+# add shannon diversity to count
+count$shannondiv <- diversity(numeric)
+
+pal <- c('darkseagreen1','darkseagreen3','darkseagreen4')
+plotcolor <- pal
+
+#View(count)
+```
+
+
+**Total mammals ~ Plot ID**
+
+```{r}
+col <- aggregate(totalmammals ~ plotID  + site + year, data=mammals, FUN=sum)
+
+ggplot(col, aes(x = plotID, y = totalmammals, fill = site))+
+  geom_boxplot()+
+  geom_point()+
+  theme_bw() +
+  rotatexaxistheme+
+  labs(x = 'Plot ID', y = 'Total mammals (2018-9)', fill = 'Site') +
+  xtitletheme + ytitletheme
+
+  
+
+ col <- aggregate(totalmammals ~ plotID  + site + year, data=mammals, FUN=sum)
+
+ggplot(col, aes(x = plotID, y = totalmammals, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ year, scale = 'free_y')+
+  rotatexaxistheme+
+  labs(x = 'Plot ID', y = 'Total mammals', fill = 'Site')+
+  xtitletheme + ytitletheme
+```
+
+
+**Total mammals ~ Plot**
+```{r}
+
+col <- aggregate(totalmammals ~ plot  + site, data=mammals, FUN=sum)
+
+ggplot(col, aes(x = plot, y = totalmammals), group = site)+
+  geom_histogram(stat = 'identity', aes(fill = site))+
+  theme_bw() +
+  labs(x = 'Plot', y = 'Total mammals (2018-9)', fill = 'Site') +
+    scale_fill_manual(values =c('red4','red3','red'))+
+  xtitletheme + ytitletheme
+```
+
+
+**Total mammals ~ Site**
+```{r}
+col <- aggregate(totalmammals ~ plot  + site, data=mammals, FUN=sum)
+
+ggplot(col, aes(x = site, y = totalmammals, fill = plot))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  labs(x = 'Site', y = 'Total mammals (2018-9)', fill = 'Plot') +
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  xtitletheme + ytitletheme 
+
+```
+
+
+**Mammal richness ~ Plot**
+
+```{r}
+
+ col <- aggregate(sppr ~ plot  + site, data=count, FUN=sum)
+
+ggplot(col, aes(x = plot, y = sppr, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  labs(x = 'Plot', y = 'Mammal richness (2018-9)', fill = 'Site') +
+  scale_fill_manual(values =c('red4','red3','red'))+
+  xtitletheme + ytitletheme
+```
+
+**Mammal richness ~ Site**
+```{r}
+
+ col <- aggregate(sppr ~ plot  + site, data=count, FUN=sum)
+
+
+ggplot(col, aes(x = site, y = sppr, fill = plot))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  labs(x = 'Site', y = 'Mammal richness (2018-9)', fill = 'Plot') +
+    scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  xtitletheme + ytitletheme
+
+
+```
+
+
+**Shannon diversity ~ Plot**
+```{r}
+ col <- aggregate(shannondiv ~ plot  + site, data=count, FUN=sum)
+
+ggplot(col, aes(x = plot, y = shannondiv, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  labs(x = 'Plot', y = 'Shannon diversity (2018-9)', fill = 'Site') +
+  scale_fill_manual(values =c('red4','red3','red'))+
+  xtitletheme + ytitletheme
+```
+
+**Shannon diversity ~ Site**
+```{r}
+ col <- aggregate(shannondiv ~ plot  + site, data=count, FUN=sum)
+
+ggplot(col, aes(x = site, y = shannondiv, fill = plot))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  labs(x = 'Site', y = 'Shannon diversity (2018-9)', fill = 'Site') +
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  xtitletheme + ytitletheme
+```
+
+
+
+
+# Environmental data (rain and temperature)
 
 
 **Precipitation ~ Site (fill with Plot)**
@@ -278,7 +509,9 @@ ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
   geom_histogram(stat = 'identity')+
   theme_bw() +
   facet_wrap(~ year)+
-  labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')+
+  xtitletheme + ytitletheme
 
 
 col <- aggregate(precip_mm ~ plot  + site + month , data=full, FUN=sum)
@@ -288,9 +521,57 @@ ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
   geom_histogram(stat = 'identity')+
   theme_bw() +
   facet_wrap(~ month)+
-  rotatexaxistheme+
-  labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')
+  theme(axis.text.x = element_text(angle = 45, size = 8, vjust = .69))+
+  labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')+
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  xtitletheme + ytitletheme
+
 
 ```
 
+
+**Temperature ~ Site**
+
++ split into months
+```{r}
+
+full <- full[which(full$site != 'NA'),]
+ggplot(full, aes(x = site, y = maxF))+
+  geom_violin(aes(fill = site), trim = FALSE, scale = 'count', adjust = .7, draw_quantiles = c(0.25, 0.5, 0.75))+
+  #geom_boxplot(notch = TRUE)+
+  #geom_jitter(alpha = .5, width = .2) +
+  theme_bw() +
+  labs(x = 'Site', y = 'Max Temperature (F)', fill = 'Plot')+
+  xtitletheme + ytitletheme+
+  guides(fill  = FALSE)
+
+ggplot(full, aes(x = site, y = minF))+
+  geom_violin(aes(fill = site), trim = FALSE, scale = 'count', adjust = .7, draw_quantiles = c(0.25, 0.5, 0.75))+
+  #geom_boxplot(notch = TRUE)+
+  #geom_jitter(alpha = .5, width = .2) +
+  theme_bw() +
+  labs(x = 'Site', y = 'Min Temperature (F)', fill = 'Plot')+
+  xtitletheme + ytitletheme+
+  guides(fill  = FALSE)
+
+ggplot(full, aes(x = site, y = diff))+
+  geom_violin(aes(fill = site), trim = FALSE, scale = 'count', adjust = .7, draw_quantiles = c(0.25, 0.5, 0.75))+
+  #geom_jitter(alpha = .5, width = .2) +
+  theme_bw() +
+  labs(x = 'Site', y = 'Difference in min/max temperature (F)', fill = 'Plot')+
+  xtitletheme + ytitletheme+
+  guides(fill  = FALSE)
+
+ggplot(full, aes(x = site, y = diff))+
+  #geom_violin(aes(fill = site), trim = FALSE, scale = 'count', adjust = .5, draw_quantiles = c(0.25, 0.5, 0.75))+
+  geom_boxplot(aes(fill = site))+
+  #geom_jitter(alpha = .5, width = .2) +
+  theme_bw() +
+  facet_wrap(~ month)+
+  labs(x = 'Site', y = 'Difference in min/max temperature (F)', fill = 'Plot')+
+  xtitletheme + ytitletheme+
+  guides(fill  = FALSE)
+
+
+```
 
