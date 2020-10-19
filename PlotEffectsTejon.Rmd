@@ -337,12 +337,5 @@ plot(allEffects(tickley))
 
 ```
 
-```{r}
-library(effects)
-
-fit <- lm(Total_ticks ~ poly(mean_max_F,3) + dist, data = tick_climate,na.action=na.omit)
-effect_plot(fit, pred = mag, interval = TRUE,
-  int.type = "confidence", int.width = .8, data = attenu)
-```
 
 

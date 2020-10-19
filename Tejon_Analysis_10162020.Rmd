@@ -96,11 +96,17 @@ str(full)
 
 ##EDA
 
+# Ticks
+
 **Total ticks ~ Plot ID**
 
 
 + O = Open , P = Partial , T = Total
 + 1 = Block 1 , 2 = Block 2 , 3 = Block 3
+
+
++ Intermediate plots best sampled plots
++ Block 2 best sampled plots across plotIDs
 
 ```{r aggregated data}
  col <- aggregate(totalticks ~ plotID  + site + year, data=full, FUN=sum)
@@ -117,6 +123,18 @@ ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
   # annotate(geom = "text", x = 3, y = 210, label = "T = Total", size = 4, color = 'red',hjust = "left justified")
   
 
+ col <- aggregate(totalticks ~ plotID  + site + rain_year, data=full, FUN=sum)
+col <- col[which(col$rain_year != '2019/2020'),]
+
+ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ rain_year, scale = 'free_y')+
+  rotatexaxistheme+
+  labs(x = 'Plot ID', y = 'Total ticks', fill = 'Site')+
+  xtitletheme + ytitletheme
+
+
  col <- aggregate(totalticks ~ plotID  + site + year, data=full, FUN=sum)
 
 ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
@@ -130,10 +148,16 @@ ggplot(col, aes(x = plotID, y = totalticks, fill = site))+
 
 ```
 
-**Total ticks ~ Plot (fill site)**
+**Total ticks ~ Plot**
 
++ Total ticks were most abundant at Total > Partial > Open
++ Total and Partial are more similar than Open
++ 2016/2017 and 2017/2018 rain years are the best sampled (highest frequency of ticks)
 
 ```{r}
+
+
+
 col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
 
 ggplot(col, aes(x = plot, y = totalticks, fill = site))+
@@ -145,6 +169,17 @@ ggplot(col, aes(x = plot, y = totalticks, fill = site))+
   
 
   
+ col <- aggregate(totalticks ~ plot  + site + rain_year, data=full, FUN=sum)
+col <- col[which(col$rain_year != '2019/2020'),]
+
+ggplot(col, aes(x = plot, y = totalticks, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ rain_year, scale = 'free_y')+
+  scale_fill_manual(values =c('red4','red3','red'))+
+  labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
+  xtitletheme + ytitletheme
+
 
  col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
 
@@ -156,14 +191,46 @@ ggplot(col, aes(x = plot, y = totalticks, fill = site))+
   labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
   xtitletheme + ytitletheme
 
+# # no fill
+#  col <- aggregate(totalticks ~ plot  + year, data=full, FUN=sum)
+# 
+# ggplot(col, aes(x = plot, y = totalticks))+
+#   geom_histogram(stat = 'identity')+
+#   theme_bw() +
+#   facet_wrap(~ year, scale = 'free_y')+
+#   labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
+#   xtitletheme + ytitletheme
+
 ```
 
 
-**Total ticks ~ Site (fill plot)**
+**Total ticks ~ Site**
+
++ Most ticks collected in 2017 and 2018
++ Most ticks found at Intermediate site
++ Mesic fluctuated the most
 
 ```{r}
 
+col <- aggregate(totalticks ~ plot  + site + rain_year, data=full, FUN=sum)
+
+col <- col[which(col$rain_year != '2019/2020'),]
+
+ggplot(data = col,
+       aes(x = site, y = totalticks,
+           fill = plot))+
+  facet_wrap(~rain_year)+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  theme_classic()+
+  xlab('Site') + ylab('Total ticks')+
+  ggtitle('Total tick abundance by site and plot')+
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+
 col <- aggregate(totalticks ~ plot  + site + year, data=full, FUN=sum)
+
+#col <- col[which(col$rain_year != '2019/2020'),]
 
 ggplot(data = col,
        aes(x = site, y = totalticks,
@@ -175,11 +242,26 @@ ggplot(data = col,
   xlab('Site') + ylab('Total ticks')+
   ggtitle('Total tick abundance by site and plot')+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+# # no fill
+# col <- aggregate(totalticks ~ site + year, data=full, FUN=sum)
+# 
+# ggplot(data = col,
+#        aes(x = site, y = totalticks))+
+#   facet_wrap(~year)+
+#   geom_bar(stat = 'summary', fun.y = 'mean')+
+#   theme_classic()+
+#   xlab('Site') + ylab('Total ticks')+
+#   ggtitle('Total tick abundance by site and plot')+
+#   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
 ```
 
 
 **Total ticks ~ Temperature**
-  
+
++ Total ticks highest around *max* of 68F, probably driven by Intermediate 
++ Total ticks highest around *min* of ~42F
+
 ```{r}
  col <- aggregate(totalticks ~ plot  + site + year + maxF + minF, data=full, FUN=sum)
 
@@ -228,7 +310,15 @@ ggplot(col, aes(x = minF, y = totalticks))+
   ylim(0, 125)
 
 
+```
 
+
+**Total ticks ~ Difference in min/max temperature**
+
++ Mesic has greater difference in min/max temperature
++ More ticks occur ~28 F difference overall, but driven by Intermediate site
+
+```{r}
 col <- aggregate(totalticks ~ plot  + site + year + diff, data=full, FUN=sum)
 
 ggplot(col, aes(x = diff, y = totalticks, color = site))+
@@ -236,7 +326,8 @@ ggplot(col, aes(x = diff, y = totalticks, color = site))+
   stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
   theme_bw() +
   facet_wrap(~ year, scale = 'free_y')+
-  labs(x = 'Difference between min/max temperature (F)', y = 'Total ticks')
+  labs(x = 'Difference between min/max temperature (F)', y = 'Total ticks')+
+  ylim(0, 125)
 
 # no facet wrap
 ggplot(col, aes(x = diff, y = totalticks, color = site))+
@@ -260,6 +351,9 @@ ggplot(col, aes(x = diff, y = totalticks))+
 
 
 **Total ticks ~ Precipitation**
+
++ log transformed precipitation data fit best
++ increase precipitation predicted to have decreased tick totals
 
 ```{r}
 
@@ -381,6 +475,11 @@ plotcolor <- pal
 
 **Total mammals ~ Plot ID**
 
++ 2018 is better sampled year, overall.
++ partial and total plots appear to have more mammals
++ Block 1 (O,P,T) for Mesic are high abundance plotIDs
++ Partial for Arid high abundance plotIDs
+
 ```{r}
 col <- aggregate(totalmammals ~ plotID  + site + year, data=mammals, FUN=sum)
 
@@ -407,6 +506,10 @@ ggplot(col, aes(x = plotID, y = totalmammals, fill = site))+
 
 
 **Total mammals ~ Plot**
+
++ Open and Partial are more similar plot types 
++ Total has lower mammal abundance
+
 ```{r}
 
 col <- aggregate(totalmammals ~ plot  + site, data=mammals, FUN=sum)
@@ -417,10 +520,22 @@ ggplot(col, aes(x = plot, y = totalmammals), group = site)+
   labs(x = 'Plot', y = 'Total mammals (2018-9)', fill = 'Site') +
     scale_fill_manual(values =c('red4','red3','red'))+
   xtitletheme + ytitletheme
+
+# no fill
+col <- aggregate(totalmammals ~ plot, data=mammals, FUN=sum)
+
+ggplot(col, aes(x = plot, y = totalmammals))+
+  geom_histogram(stat = 'identity', fill =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  theme_bw() +
+  labs(x = 'Plot', y = 'Total mammals (2018-9)', fill = 'Site') +
+  xtitletheme + ytitletheme
 ```
 
 
 **Total mammals ~ Site**
+
++ Mesic has higher abundance counts but probably due to 2019 year
+
 ```{r}
 col <- aggregate(totalmammals ~ plot  + site, data=mammals, FUN=sum)
 
@@ -431,10 +546,21 @@ ggplot(col, aes(x = site, y = totalmammals, fill = plot))+
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
   xtitletheme + ytitletheme 
 
+# no fill
+col <- aggregate(totalmammals ~ site, data=mammals, FUN=sum)
+
+ggplot(col, aes(x = site, y = totalmammals))+
+  geom_histogram(stat = 'identity', fill = c('red4','red3','red'))+
+  theme_bw() +
+  labs(x = 'Site', y = 'Total mammals (2018-9)') +
+  xtitletheme + ytitletheme 
+
 ```
 
 
 **Mammal richness ~ Plot**
+
++ Partial and Total have higher species richness
 
 ```{r}
 
@@ -446,9 +572,22 @@ ggplot(col, aes(x = plot, y = sppr, fill = site))+
   labs(x = 'Plot', y = 'Mammal richness (2018-9)', fill = 'Site') +
   scale_fill_manual(values =c('red4','red3','red'))+
   xtitletheme + ytitletheme
+
+# no fill
+col <- aggregate(sppr ~ plot, data=count, FUN=sum)
+
+
+ggplot(col, aes(x = plot, y = sppr))+
+  geom_histogram(stat = 'identity', fill = c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  theme_bw() +
+  labs(x = 'Site', y = 'Mammal richness (2018-9)', fill = 'Plot') +
+  xtitletheme + ytitletheme
 ```
 
 **Mammal richness ~ Site**
+
++ Arid and Mesic have similar species richness, interestingly 
+
 ```{r}
 
  col <- aggregate(sppr ~ plot  + site, data=count, FUN=sum)
@@ -462,10 +601,22 @@ ggplot(col, aes(x = site, y = sppr, fill = plot))+
   xtitletheme + ytitletheme
 
 
+# no fill
+col <- aggregate(sppr ~ site, data=count, FUN=sum)
+
+
+ggplot(col, aes(x = site, y = sppr))+
+  geom_histogram(stat = 'identity', fill = c('red4','red3','red'))+
+  theme_bw() +
+  labs(x = 'Site', y = 'Mammal richness (2018-9)', fill = 'Plot') +
+  xtitletheme + ytitletheme
 ```
 
 
 **Shannon diversity ~ Plot**
+
++ Shannon diversity higher in Partial and Total plot types
+
 ```{r}
  col <- aggregate(shannondiv ~ plot  + site, data=count, FUN=sum)
 
@@ -475,9 +626,20 @@ ggplot(col, aes(x = plot, y = shannondiv, fill = site))+
   labs(x = 'Plot', y = 'Shannon diversity (2018-9)', fill = 'Site') +
   scale_fill_manual(values =c('red4','red3','red'))+
   xtitletheme + ytitletheme
+
+# no fill
+ col <- aggregate(shannondiv ~ plot, data=count, FUN=sum)
+
+ggplot(col, aes(x = plot, y = shannondiv))+
+  geom_histogram(stat = 'identity', fill =c('darkseagreen1', 'darkseagreen3','darkseagreen4') )+
+  theme_bw() +
+  labs(x = 'Site', y = 'Shannon diversity (2018-9)') +
+  xtitletheme + ytitletheme
 ```
 
 **Shannon diversity ~ Site**
+
++ shannon diversity Mesic > Arid > Intermediate
 ```{r}
  col <- aggregate(shannondiv ~ plot  + site, data=count, FUN=sum)
 
@@ -486,6 +648,15 @@ ggplot(col, aes(x = site, y = shannondiv, fill = plot))+
   theme_bw() +
   labs(x = 'Site', y = 'Shannon diversity (2018-9)', fill = 'Site') +
   scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  xtitletheme + ytitletheme
+
+# no fill
+ col <- aggregate(shannondiv ~ site, data=count, FUN=sum)
+
+ggplot(col, aes(x = site, y = shannondiv))+
+  geom_histogram(stat = 'identity', fill = c('red4','red3','red'))+
+  theme_bw() +
+  labs(x = 'Site', y = 'Shannon diversity (2018-9)') +
   xtitletheme + ytitletheme
 ```
 
@@ -497,11 +668,28 @@ ggplot(col, aes(x = site, y = shannondiv, fill = plot))+
 
 **Precipitation ~ Site (fill with Plot)**
 
-+ split into individual years
-+ split into months
 
++ wet months typically December - March
+
++ 2017 particularly wet year (winter 2016 - spring 2017)
++ 2018/2019 rain year also wet
 ```{r}
-# histograms
+
+
+# rain year
+ col <- aggregate(precip_mm ~ plot  + site + rain_year , data=full, FUN=sum)
+
+
+ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ rain_year)+
+  scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  labs(x = 'Site', y = 'Precipitation (mm)', fill = 'Plot')+
+  xtitletheme + ytitletheme
+
+
+# calendar year
  col <- aggregate(precip_mm ~ plot  + site + year , data=full, FUN=sum)
 
 
@@ -527,12 +715,16 @@ ggplot(col, aes(x = site, y = precip_mm, fill = plot))+
   xtitletheme + ytitletheme
 
 
+
 ```
 
 
 **Temperature ~ Site**
 
-+ split into months
++ all sites have similar max
++ mesic has lowest mins
++ mesic has greatest difference between min/max
+
 ```{r}
 
 full <- full[which(full$site != 'NA'),]
@@ -572,6 +764,604 @@ ggplot(full, aes(x = site, y = diff))+
   xtitletheme + ytitletheme+
   guides(fill  = FALSE)
 
+
+```
+
+
+# Negative binomial models
+
+Tried to fit poisson but was too overdispersed, this is just here to remind myself I did try to quasi possion fits and those still didn't work
+```{r}
+full <- full[which(full$totalticks != 'NA'),]
+
+hist(full$totalticks)
+
+hist(log(full$totalticks))
+
+# poisson fit
+glmfit = glm(totalticks~site, data = full, 
+             family = poisson)
+summary(glmfit)
+
+# parameter estimates
+# intercept
+summary(glmfit)$coefficients[1,1]
+# slope of site
+summary(glmfit)$coefficients[2,1]
+
+# model validation
+summary(glmfit) # residual deviance = 8790, 1392 d of freedom > overdispersed by 8 times
+
+mean(full$totalticks) # 2.53
+var(full$totalticks) # 30.64
+
+# psi = residual deviance / residual degree of freedom
+# psq > indivates overdispersion
+
+# fix this with quasi-poisson or negative binomial
+
+# quasipoisson for overdispersion
+# build from the previous model and update it:
+glm.quasipoisson = update(glmfit,family=quasipoisson)
+# output
+summary(glm.quasipoisson) # still too high of overdispersion (over 15)
+
+# negative binomial GLMS
+
+library(MASS)
+glm.negbin = glm.nb(totalticks ~ site, data=full) 
+summary(glm.negbin)
+
+# plot the observed data
+plot(y = full$totalticks, x = full$site)
+ 
+# pull values for intercept and beta from the summary and put them in the exponential equation
+curve(exp(summary(glm.negbin)$coefficients[1,1]+summary(glm.negbin)$coefficients[2,1]*x),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T, lwd=2, col="orangered")
+ 
+# pull the standard error as well to plot the equations for confidence envelope
+curve(exp(summary(glm.negbin)$coefficients[1,1]+1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x+1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+curve(exp(summary(glm.negbin)$coefficients[1,1]-1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x-1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+
+```
+
+Total ticks ~ precipitation (glm.nb)
+```{r}
+glmfit = glm(totalticks~precip_in, data = full, 
+             family = poisson)
+summary(glmfit)
+
+# parameter estimates
+# intercept
+summary(glmfit)$coefficients[1,1]
+# slope of site
+summary(glmfit)$coefficients[2,1]
+
+# model validation
+summary(glmfit) # residual deviance = 8790, 1392 d of freedom > overdispersed by 8 times
+
+mean(full$totalticks) # 2.53
+var(full$totalticks) # 30.64
+
+# psi = residual deviance / residual degree of freedom
+# psq > indivates overdispersion
+
+# fix this with quasi-poisson or negative binomial
+
+# quasipoisson for overdispersion
+# build from the previous model and update it:
+glm.quasipoisson = update(glmfit,family=quasipoisson)
+# output
+summary(glm.quasipoisson) # still too high of overdispersion (over 15)
+
+# negative binomial GLMS
+
+library(MASS)
+glm.negbin = glm.nb(totalticks ~ precip_in, data=full) 
+summary(glm.negbin)
+
+# plot the observed data
+plot(y = full$totalticks, x = full$precip_in)
+ 
+# pull values for intercept and beta from the summary and put them in the exponential equation
+curve(exp(summary(glm.negbin)$coefficients[1,1]+summary(glm.negbin)$coefficients[2,1]*x),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T, lwd=2, col="orangered")
+ 
+# pull the standard error as well to plot the equations for confidence envelope
+curve(exp(summary(glm.negbin)$coefficients[1,1]+1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x+1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+curve(exp(summary(glm.negbin)$coefficients[1,1]-1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x-1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+```
+
+Total ticks ~ difference in temperature (glm.nb)
+
+```{r}
+glmfit = glm(totalticks~diff, data = full, 
+             family = poisson)
+summary(glmfit)
+
+# parameter estimates
+# intercept
+summary(glmfit)$coefficients[1,1]
+# slope of site
+summary(glmfit)$coefficients[2,1]
+
+# model validation
+summary(glmfit) # residual deviance = 8790, 1392 d of freedom > overdispersed by 8 times
+
+mean(full$totalticks) # 2.53
+var(full$totalticks) # 30.64
+
+# psi = residual deviance / residual degree of freedom
+# psq > indivates overdispersion
+
+# fix this with quasi-poisson or negative binomial
+
+# quasipoisson for overdispersion
+# build from the previous model and update it:
+glm.quasipoisson = update(glmfit,family=quasipoisson)
+# output
+summary(glm.quasipoisson) # still too high of overdispersion (over 15)
+
+# negative binomial GLMS
+
+library(MASS)
+glm.negbin = glm.nb(totalticks ~ diff, data=full) 
+summary(glm.negbin)
+
+# plot the observed data
+plot(y = full$totalticks, x = full$diff)
+ 
+# pull values for intercept and beta from the summary and put them in the exponential equation
+curve(exp(summary(glm.negbin)$coefficients[1,1]+summary(glm.negbin)$coefficients[2,1]*x),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T, lwd=2, col="orangered")
+ 
+# pull the standard error as well to plot the equations for confidence envelope
+curve(exp(summary(glm.negbin)$coefficients[1,1]+1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x+1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+curve(exp(summary(glm.negbin)$coefficients[1,1]-1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x-1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+```
+
+Total ticks ~ min F in temperature (glm.nb)
+
+```{r}
+glmfit = glm(totalticks~minF, data = full, 
+             family = poisson)
+summary(glmfit)
+
+# parameter estimates
+# intercept
+summary(glmfit)$coefficients[1,1]
+# slope of site
+summary(glmfit)$coefficients[2,1]
+
+# model validation
+summary(glmfit) # residual deviance = 8790, 1392 d of freedom > overdispersed by 8 times
+
+mean(full$totalticks) # 2.53
+var(full$totalticks) # 30.64
+
+# psi = residual deviance / residual degree of freedom
+# psq > indivates overdispersion
+
+# fix this with quasi-poisson or negative binomial
+
+# quasipoisson for overdispersion
+# build from the previous model and update it:
+glm.quasipoisson = update(glmfit,family=quasipoisson)
+# output
+summary(glm.quasipoisson) # still too high of overdispersion (over 15)
+
+# negative binomial GLMS
+
+library(MASS)
+glm.negbin = glm.nb(totalticks ~ minF, data=full) 
+summary(glm.negbin)
+
+# plot the observed data
+plot(y = full$totalticks, x = full$minF)
+ 
+# pull values for intercept and beta from the summary and put them in the exponential equation
+curve(exp(summary(glm.negbin)$coefficients[1,1]+summary(glm.negbin)$coefficients[2,1]*x),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T, lwd=2, col="orangered")
+ 
+# pull the standard error as well to plot the equations for confidence envelope
+curve(exp(summary(glm.negbin)$coefficients[1,1]+1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x+1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+curve(exp(summary(glm.negbin)$coefficients[1,1]-1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x-1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+```
+
+Total ticks ~ max F (glm.nb)
+
+```{r}
+glmfit = glm(totalticks~maxF, data = full, 
+             family = poisson)
+summary(glmfit)
+
+# parameter estimates
+# intercept
+summary(glmfit)$coefficients[1,1]
+# slope of site
+summary(glmfit)$coefficients[2,1]
+
+# model validation
+summary(glmfit) # residual deviance = 8790, 1392 d of freedom > overdispersed by 8 times
+
+mean(full$totalticks) # 2.53
+var(full$totalticks) # 30.64
+
+# psi = residual deviance / residual degree of freedom
+# psq > indivates overdispersion
+
+# fix this with quasi-poisson or negative binomial
+
+# quasipoisson for overdispersion
+# build from the previous model and update it:
+glm.quasipoisson = update(glmfit,family=quasipoisson)
+# output
+summary(glm.quasipoisson) # still too high of overdispersion (over 15)
+
+# negative binomial GLMS
+
+library(MASS)
+glm.negbin = glm.nb(totalticks ~ maxF, data=full) 
+summary(glm.negbin)
+
+# plot the observed data
+plot(y = full$totalticks, x = full$maxF)
+ 
+# pull values for intercept and beta from the summary and put them in the exponential equation
+curve(exp(summary(glm.negbin)$coefficients[1,1]+summary(glm.negbin)$coefficients[2,1]*x),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T, lwd=2, col="orangered")
+ 
+# pull the standard error as well to plot the equations for confidence envelope
+curve(exp(summary(glm.negbin)$coefficients[1,1]+1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x+1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+curve(exp(summary(glm.negbin)$coefficients[1,1]-1.96*summary(glm.negbin)$coefficients[1,2]+summary(glm.negbin)$coefficients[2,1]*x-1.96*summary(glm.negbin)$coefficients[2,2]),from=range(full$totalticks)[1],to=range(full$totalticks)[2],add=T,lty=2, col="orangered")
+```
+
+# GLMMs
+
+random intercepts plots
+```{r}
+library(lme4)
+library(reshape)
+library(emdbook)
+library(plyr)
+library(gridExtra)
+
+
+ggplot(full,aes(x=site,y=log(totalticks+1),colour=plot)) +
+  geom_point() + 
+  stat_summary(aes(x= as.numeric(site)),fun.y=mean,geom="line") +
+  theme_bw() + theme(panel.margin=unit(0,"lines")) +
+  facet_wrap(~year)
+
+# seems some positive slopes between arid and intermediate
+
+
+# negative binomial (poisson-gamma) GLMM
+
+# random intercept plots
+mnb1 <- glmer.nb(totalticks ~ site + precip_mm +
+               (1|plotID)+
+               (1|rain_year),
+             data=full)
+# Although beyond the scope of this workshop, the new "control" argument specifies the way we
+# optimize the parameter values (i.e. by taking the derivative of a function or proceeding by iteration). 
+
+ 
+
+
+pp <- list(layout.widths=list(left.padding=0, right.padding=0),
+           layout.heights=list(top.padding=0, bottom.padding=0))
+r2 <- ranef(mnb1,condVar=TRUE)
+d2 <- dotplot(r2, par.settings=pp)
+grid.arrange(d2$plotID,d2$rain_year, nrow=1)
+
+```
+
+Hilary's suggestion
+```{r}
+library(lme4)
+# Hilary's suggestion
+#Tick_abundance ~ climate + treatment + climate*treatment + 1|plotID + 1|month+ 1|rainfall year
+
+glm1 <- glmer(totalticks ~ minF + plot +  minF*plot + ( 1 | plotID) + (1 | month) + (1 |rain_year),
+              data = full, family = poisson)
+summary(glm1)
+anova(glm1)
+plot(predictorEffects(glm1),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+```
+
+
+
+Evaluate final model with *AICc approach*
+
++ min temperature seems(?) to be the best climate predictor
+```{r}
+library(bbmle)
+# base model, climate variable = minF
+mpl1 <- glmer(totalticks ~ minF + plot +  minF*plot + ( 1 | plotID) + (1 | month) + (1 |rain_year),
+              data = full, family = poisson)
+
+mpl2 <- update(mpl1, . ~ . - plot)
+mpl3 <- update(mpl1, . ~ . - minF)
+mpl4 <- update(mpl1, . ~ . - minF:plot)
+
+ICtab(mpl1,mpl2, mpl3, mpl4,type = c("AICc") )
+anova(mpl1,mpl2,mpl3,mpl4 )
+
+# base model, climate variable = maxF
+mpl1 <- glmer(totalticks ~ maxF + plot +  minF*plot + ( 1 | plotID) + (1 | month) + (1 |rain_year),
+              data = full, family = poisson)
+
+mpl2 <- update(mpl1, . ~ . - plot)
+mpl3 <- update(mpl1, . ~ . - maxF)
+mpl4 <- update(mpl1, . ~ . - maxF:plot)
+
+ICtab(mpl1,mpl2, mpl3, mpl4,type = c("AICc") )
+
+anova(mpl1,mpl2,mpl3,mpl4 )
+
+# base model, climate variable = diff in min.max
+mpl1 <- glmer(totalticks ~ diff + plot +  minF*plot + ( 1 | plotID) + (1 | month) + (1 |rain_year),
+              data = full, family = poisson)
+
+mpl2 <- update(mpl1, . ~ . - plot)
+mpl3 <- update(mpl1, . ~ . - maxF)
+mpl4 <- update(mpl1, . ~ . - maxF:plot)
+
+ICtab(mpl1,mpl2, mpl3, mpl4,type = c("AICc") )
+
+anova(mpl1,mpl2,mpl3,mpl4 )
+```
+
+
+Full models
+
+climate = diff
+```{r}
+tick_climate.full <- glm.nb(totalticks~site*plot*diff, data=full)
+tick_climate.full_nointeraction <- glm.nb(totalticks~site+plot+diff, data=full)
+
+tick_climate.S <- glm.nb(totalticks~site, data=full)
+tick_climate.M <- glm.nb(totalticks~plot, data=full)
+tick_climate.D <- glm.nb(totalticks~diff, data=full)
+tick_climate.SplusM <- glm.nb(totalticks~site+plot, data=full)
+tick_climate.StimesM <- glm.nb(totalticks~site*plot, data=full)
+tick_climate.SplusD <- glm.nb(totalticks~site+diff, data=full)
+tick_climate.StimesD <- glm.nb(totalticks~site*diff, data=full)
+tick_climate.MplusD <- glm.nb(totalticks~plot+diff , data=full)
+tick_climate.MtimesD <- glm.nb(totalticks~plot*diff, data=full)
+tick_climate.SplusMD <- glm.nb(totalticks~site+plot*diff, data=full)
+tick_climate.MplusSD <- glm.nb(totalticks~plot+site*diff, data=full)
+tick_climate.DplusSM <- glm.nb(totalticks~site*plot+diff, data=full)
+
+AIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+
+BIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+diff <- BIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+min_dif <-min(diff$BIC)
+
+plot(predictorEffects(tick_climate.full, ~ plot),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(tick_climate.full, ~ site),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(tick_climate.full, ~ diff),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+```
+
+climate = minF
+```{r}
+tick_climate.full <- glm.nb(totalticks~site*plot*minF, data=full)
+tick_climate.full_nointeraction <- glm.nb(totalticks~site+plot+minF, data=full)
+
+tick_climate.S <- glm.nb(totalticks~site, data=full)
+tick_climate.M <- glm.nb(totalticks~plot, data=full)
+tick_climate.D <- glm.nb(totalticks~minF, data=full)
+tick_climate.SplusM <- glm.nb(totalticks~site+plot, data=full)
+tick_climate.StimesM <- glm.nb(totalticks~site*plot, data=full)
+tick_climate.SplusD <- glm.nb(totalticks~site+minF, data=full)
+tick_climate.StimesD <- glm.nb(totalticks~site*minF, data=full)
+tick_climate.MplusD <- glm.nb(totalticks~plot+minF , data=full)
+tick_climate.MtimesD <- glm.nb(totalticks~plot*minF, data=full)
+tick_climate.SplusMD <- glm.nb(totalticks~site+plot*minF, data=full)
+tick_climate.MplusSD <- glm.nb(totalticks~plot+site*minF, data=full)
+tick_climate.DplusSM <- glm.nb(totalticks~site*plot+minF, data=full)
+
+AIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+
+BIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+min <- BIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+min_min <- min(min$BIC)
+
+plot(predictorEffects(tick_climate.full, ~ plot),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(tick_climate.full, ~ site),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(tick_climate.full, ~ minF),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+```
+
+
+climate = maxF
+```{r}
+tick_climate.full <- glm.nb(totalticks~site*plot*maxF, data=full)
+tick_climate.full_nointeraction <- glm.nb(totalticks~site+plot+maxF, data=full)
+
+tick_climate.S <- glm.nb(totalticks~site, data=full)
+tick_climate.P <- glm.nb(totalticks~plot, data=full)
+tick_climate.D <- glm.nb(totalticks~maxF, data=full)
+tick_climate.SplusM <- glm.nb(totalticks~site+plot, data=full)
+tick_climate.StimesM <- glm.nb(totalticks~site*plot, data=full)
+tick_climate.SplusD <- glm.nb(totalticks~site+maxF, data=full)
+tick_climate.StimesD <- glm.nb(totalticks~site*maxF, data=full)
+tick_climate.MplusD <- glm.nb(totalticks~plot+maxF , data=full)
+tick_climate.MtimesD <- glm.nb(totalticks~plot*maxF, data=full)
+tick_climate.SplusMD <- glm.nb(totalticks~site+plot*maxF, data=full)
+tick_climate.MplusSD <- glm.nb(totalticks~plot+site*maxF, data=full)
+tick_climate.DplusSM <- glm.nb(totalticks~site*plot+maxF, data=full)
+
+AIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+
+BIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+max <- BIC(tick_climate.full,tick_climate.full_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+
+min_max <- min(max$BIC)
+
+plot(predictorEffects(tick_climate.full, ~ plot),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(tick_climate.full, ~ site),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+plot(predictorEffects(tick_climate.full, ~ maxF),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+```
+
+
+compare AIC
+
+To know the relative support for each model, use the *Akaike weight*, which approximates the likelihood of the model
+
+Comparing a set of models allows us to know the probability that a model is the best model in the set. 
+
+To get an Akaike weight, we can standardize the likelihood of the model:
+```{r}
+library(tidyverse) # to make your life easier
+library(gt) # to render a table
+library(patchwork) # to put plots together
+library(effects) #install.packages("effects")
+library(jtools)
+
+
+# calculate deltai2
+delta1 <- exp(-0.5*(AIC(tick_climate.full) - AIC(tick_climate.full))) # totalticks~site*plot*minF
+delta2 <- exp(-0.5*(AIC(tick_climate.full_nointeraction) - AIC(tick_climate.full))) #totalticks~site+plot+minF
+delta3 <- exp(-0.5*(AIC(tick_climate.StimesD) - AIC(tick_climate.full))) # totalticks~site*minF
+
+# sum likelihoods
+sum_likes <- sum(c(delta1, delta2, delta3))
+
+# calculate weights
+weight1 <- delta1/sum_likes
+weight2 <- delta2/sum_likes
+weight3 <- delta3/sum_likes
+
+
+weights <- tribble(
+  ~Model,   ~Delta,           ~Weights,
+  "full", round(delta1, 2), round(weight1, 2),
+  "full no interaction", round(delta2, 2), round(weight2, 2),
+  "site*minF", round(delta3, 2), round(weight3, 2),
+) %>% 
+  gt() %>% 
+  tab_style(
+    style = cell_text(size = "small"),
+    locations = cells_body())
+
+weights
+```
+
+compare BIC
+
++ minimum temperature lowest BIC scores
+```{r}
+
+min_max
+min_min
+min_dif
+```
+
+
+Evaluate with *Hurdle models*
+
+```{r}
+library(pscl)
+library(lmtest)
+## part 1 of 0s
+# zero inflated poisson (ZIP)
+fldown <- formula(totalticks ~ site + plot | site + plot) # what explains the load that's not 0 | explanatory variables if something is present or not
+ZIP_round_down <- zeroinfl(fldown, dist = 'poisson',
+                           link = 'logit',
+                           data = full)
+summary(ZIP_round_down) # site and plot are signficant!
+
+# zero inflated negative binomial (ZINB)
+fldown <- formula(totalticks ~ site + plot | site)
+ZINB_round_down <- zeroinfl(fldown, dist = 'negbin', # changed distribution
+                            link = 'logit',
+                            data = full)
+summary(ZINB_round_down) # site and plot are significant!
+
+
+# likeligood ratio test to compare ZIP and ZINB
+# test the two models
+lrtest(ZIP_round_down, ZINB_round_down) # ZINB p < 2.2e-16, so go with negative binomial
+
+
+## part two non-0s
+# Hurdle Models
+# ZIP
+H1downA <- hurdle(fldown, dist = "poisson", link = "logit",data = full)
+# ZINB
+H1downB <- hurdle(fldown, dist = "negbin", link = "logit",data = full)
+lrtest(H1downA,H1downB) # Negative binomial version much more significant, p < 2.2e-16
+
+summary(H1downB)
 
 ```
 
