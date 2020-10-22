@@ -48,6 +48,19 @@ ggplot(nozeros, aes(diff,Total_ticks, group = Site, color = Site))+
   ylim(0,300)
 ggsave("TemperatureDiffTick_v1.pdf", dpi = 320)
 
+
+nozeros = tots[which(tots$Total_ticks != 0),]
+ggplot(nozeros, aes(diff,Total_ticks, group = Site, color = Site))+
+  geom_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)),lwd = 2)+
+  geom_point()+
+  theme_bw()+
+  labs(x = 'Difference in min/max (F)', y = 'Total ticks')+
+  xtitletheme + ytitletheme+
+  ylim(0,300)
+ggsave("TemperatureDiffTick_v2.pdf", dpi = 320)
+
+
+
 ggplot(nozeros, aes(diff,Total_ticks, group = Site, color = Site))+
   geom_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)),lwd = 2)+
   geom_point()+

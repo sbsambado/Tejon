@@ -245,8 +245,15 @@ ggplot(data = climate, aes(x = diff, y = Total_ticks, group = Site, color = Site
   clean_background
 
 
-ggplot(data = climate, aes(y = diff, x = Site))+
+ggplot(data = climate, aes(y = diff, x = Site), color = rain_year)+
   geom_boxplot()+
+  geom_point(aes(fill = rain_year))+
+  clean_background
+
+
+ggplot(data = climate, aes(y = mean_max_F, x = Site), color = rain_year)+
+  geom_boxplot()+
+  geom_point(aes(color = rain_year))+
   clean_background
 
 
