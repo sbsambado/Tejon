@@ -1,0 +1,276 @@
+---
+title: "Tejon_Analysis_11242020"
+author: "sbsambado"
+date: "11/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Import libraries and variables
+```{r libraries and saved variables}
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+devtools::install_github('gavinsimpson/ggvegan')
+
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('red4','red2','red')
+
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+```
+
+```{r}
+
+updated <-  read.csv("~/Desktop/Total_Ticks_2016_to_2018.csv")
+View(updated)
+
+names(updated)[1] <- "year"
+names(updated)[2] <- "month"
+names(updated)[4] <- "site"
+names(updated)[5] <- "block"
+names(updated)[6] <- "plot"
+names(updated)[7] <- "totalticks"
+
+updated$totalticks <- as.numeric(updated$totalticks)
+
+str(updated)
+
+
+
+updated$month <- factor(updated$month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+updated$site <- factor(updated$site, 
+                    levels = c('Arid', 'Intermediate', 'Mesic'))
+```
+
+```{r}
+col <- aggregate(totalticks ~ plot  + site + year, data=updated, FUN=sum)
+
+ggplot(col, aes(x = plot, y = totalticks, fill = site))+
+  geom_boxplot()+
+  geom_point()+
+  theme_bw() +
+  rotatexaxistheme+
+  labs(x = 'Plot  (2016 - 2018)', y = 'Total ticks', color = 'Site') +
+  xtitletheme + ytitletheme
+  # annotate(geom = "text", x = 3, y = 230, label = "O = Open", size = 4, color = 'red',hjust = "left justified")+
+  # annotate(geom = "text", x = 3, y = 220, label = "P = Patial", size = 4, color = 'red',hjust = "left justified")+
+  # annotate(geom = "text", x = 3, y = 210, label = "T = Total", size = 4, color = 'red',hjust = "left justified")
+##ggsave("TickAbundancePlotID_v1.pdf", dpi = 320)
+  
+
+ col <- aggregate(totalticks ~ plot  + site , data=updated, FUN=sum)
+#col <- col[which(col$rain_year != '2019/2020'),]
+
+ggplot(col, aes(x = plot, y = totalticks, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  #facet_wrap(~ rain_year, scale = 'free_y')+
+  #rotatexaxistheme+
+  labs(x = 'Plot ID', y = 'Total ticks', fill = 'Site')+
+  xtitletheme + ytitletheme
+#ggsave("TickAbundancePlotIDRainYear_v1.pdf", dpi = 320)
+
+
+ col <- aggregate(totalticks ~ plot  + site + year, data=updated, FUN=sum)
+  
+ ggplot(col, aes(x = site, y = totalticks, fill = plot))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  #facet_wrap(~ year)#, scale = 'free_y')+
+  #rotatexaxistheme+
+  labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
+  xtitletheme + ytitletheme
+    
+ggplot(col, aes(x = plot, y = totalticks, fill = site))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ year)#, scale = 'free_y')+
+  #rotatexaxistheme+
+  labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
+  xtitletheme + ytitletheme
+#ggsave("TickAbundancePlotIDYear_v1.pdf", dpi = 320)
+  
+  ggplot(col, aes(x = site, y = totalticks, fill = plot))+
+  geom_histogram(stat = 'identity')+
+  theme_bw() +
+  facet_wrap(~ year)#, scale = 'free_y')+
+  #rotatexaxistheme+
+  labs(x = 'Plot', y = 'Total ticks', fill = 'Site')+
+  xtitletheme + ytitletheme
+  
+
+```
+
+
+
+```{r}
+ col <- aggregate(totalticks ~ plot  + site + month, data=updated, FUN=sum)
+
+ggplot(col, aes(x = month, y = totalticks))+
+  geom_boxplot(fill = 'grey89')+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Plot', y = 'Total ticks', color = 'Site')
+
+
+```
+
+```{r}
+newtick1 <-aov(totalticks ~ site, data = updated)
+anova(newtick1) # p value < 2.2e-16 [SIGNIFICANT]
+
+newtick2 <-aov(totalticks ~ plot, data = updated)
+anova(newtick2) # p value = 1.657e-09 [SIGNIFICANT]
+
+newtick3 <-aov(totalticks ~ year, data = updated)
+anova(newtick3) # p value = 2.125e-05 [SIGNIFICANT]
+
+newtick4 <-aov(totalticks ~ month, data = updated)
+anova(newtick4) # p value < 2.2e-16 [SIGNIFICANT]
+
+```
+
+```{r}
+res1 = newtick1$residuals
+shapiro.test(res1) # p < 2.2e-16 (p < 0.05) so data is not normal
+#hist(res4)
+leveneTest(totalticks ~ site, data = updated) # p = 0.781, (p < 0.05) so variances are not equal
+
+summary(newtick1)
+# Fvalue = 60.52
+# p = < 2.2e-16 (p < 0.05), reject H0 and conclude that 1 site is significantly different
+
+## ANOVA told us 1 mean is significantly different from the other
+# Run a Tukey Kramer to avoid Type 1 error (running a bunch of t-tests)
+
+# Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(newtick1)
+
+# let's do this in a visual way
+Post_hoc1 <-glht(newtick1, linfct = mcp(site = 'Tukey'))
+summary(Post_hoc1)
+
+confint(Post_hoc1) # pairwise test
+cld(Post_hoc1) # arid & intermediate = a ; mesic = b , so intermediate is different than arid & mesic
+
+```
+
+
+```{r}
+library(lme4)
+tick20 <- glm(totalticks ~ year, 
+               data = updated,
+              family = 'poisson')
+
+tick21 <- glm(totalticks ~ site, 
+               data = updated,
+              family = 'poisson')
+
+tick22 <- glm(totalticks ~ plot, 
+               data = updated,
+              family = 'poisson')
+
+tick23 <- glm(totalticks ~ site + year, 
+               data = updated,
+              family = 'poisson')
+
+tick24  <- glm(totalticks ~ site + year + plot, 
+               data = updated,
+              family = 'poisson')
+
+tick25 <- glm(totalticks ~ site + year + plot + month, 
+               data = updated,
+              family = 'poisson')
+
+
+# calculate AIC of each model
+
+result_glm_tick <- AIC(tick20, tick21, tick22,
+                        tick23, tick24, tick25)
+
+# add other metrics to table
+model_glm_tick <- list(tick20, tick21, tick22,
+                        tick23, tick24, tick25) # keep models in the same order as they were created
+
+# BIC places higher penalty on extra parameter
+result_glm_tick$BIC <- sapply(model_glm_tick, BIC) # add column for BIC
+
+model_glm_tick_summary <- lapply(model_glm_tick, summary)
+
+
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(model_glm_tick)) {
+  result_glm_tick$rsq[i] <- model_glm_tick_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result_glm_tick$adj_rsq[i] <- model_glm_tick_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+# add column with variables used in model
+result_glm_tick$variables <- c('Year','Site', 'Plot', 'Site + Year', 'Site + Year + Plot', 'Site + Year + Plot + Month')
+
+tickmodel_glm <-kable(result_glm_tick, digits = 2, align = 'c',
+                        caption = '<b>Generalized linear regression models for total tick abundance</b>', 
+                        format = 'html') %>%
+  kable_styling()
+
+tickmodel_glm 
+```
+
+
+```{r}
+col
+glm1 <- glm(totalticks ~ site + plot,
+              data = col, family = poisson)
+summary(glm1)
+anova(glm1)
+
+plot(predictorEffects(glm1),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+```
+

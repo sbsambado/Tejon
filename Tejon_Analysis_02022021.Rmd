@@ -1,0 +1,654 @@
+---
+title: "TejonAnalysis_02022021"
+author: "sbsambado"
+date: "2/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+devtools::install_github('gavinsimpson/ggvegan')
+
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('red4','red2','red')
+
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+```
+
+
+Using data Steph sent on 11/16/2020
+"Total_Ticks_2016_to_2018.csv"
+"Tick_19.csv"
+
+Merge 2 tick data sheets into 1 tick data sheet
+```{r}
+
+threeyrs <- read_csv("Total_Ticks_2016_to_2018.csv")
+dim(threeyrs)
+oneyr <- read_csv("Tick_19.csv")
+dim(oneyr)
+# get rid of survery column in threeyr since it wasn't completed in oneyrs 
+## Maybe double check survey number doesn't matter
+threeyrs <- subset(threeyrs, select = -c(3))
+
+# make sure names are the same
+## 2016 - 2018
+names(threeyrs) <- tolower(names(threeyrs))
+
+# change column names
+names(threeyrs)[6] <- "total"
+names(threeyrs)[7] <- "deoc"
+names(threeyrs)[8] <- "ipac"
+names(threeyrs)[9] <- "deva"
+names(threeyrs)[10] <- "other"
+
+## 2019
+# make sure names are the same
+names(oneyr) <- tolower(names(oneyr))
+
+# change column names
+names(oneyr)[6] <- "total"
+names(oneyr)[7] <- "deoc"
+names(oneyr)[8] <- "ipac"
+names(oneyr)[9] <- "deva"
+names(oneyr)[10] <- "other"
+
+
+full <- rbind(threeyrs, oneyr)
+dim(full) # 1449 10
+```
+
+Merge temp to tick data
+```{r}
+# merge temp data to full
+temp <- read_csv("Tejon_temperature_02022021.csv")
+Partial1 <- merge(full, temp)
+dim(Partial1) # 1449 13
+#View(Full)
+```
+
+Merge precip data to tick data
++ subset data came from tejon_tick_climate_10162020
+```{r}
+# precip <- read_csv("Tejon_precipitation_02022021.csv")
+# Partial2 <- merge(Partial1, precip)
+# dim(Partial2)
+```
+
+Merge mammal data to tick data
+```{r}
+# I calculated shannon diversity, species richness for each site/plot and assigned it a value
+# mammal <- read_csv("tejon_mammal_02022021.csv")
+# Partial3 <- merge(Partial2, mammal)
+# dim(Partial3) 
+
+```
+
+Add metadata
+```{r}
+Full <- Partial1
+
+##add station ID column
+Full$station <- Full$site
+
+  # assign station ID
+  Full$station[Full$site == "Arid"] <- "Lebec"
+  Full$station[Full$site == "Intermediate"] <- "Loraine"
+  Full$station[Full$site == "Mesic"] <- "Chuchupate"
+  
+## add elevation
+  Full$elevation <- Full$station
+  Full$elevation[Full$station == "Lebec"] <- 1089.7
+  Full$elevation[Full$station == "Loraine"] <- 1290.8
+  Full$elevation[Full$station == "Chuchupate"] <- 1493.5
+
+## add rain year
+  # this is a dumb way but it is what it is
+  Full$rain_year <- as.numeric(Full$year)
+  Full$rain_year[Full$year == 2016 & Full$month == 'April'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'May'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'June'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'July'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'August'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'September'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'October'] <- "2015/2016"
+  
+  Full$rain_year[Full$year == 2016 & Full$month == 'November'] <- "2016/2017"
+  Full$rain_year[Full$year == 2016 & Full$month == 'December'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'January'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'February'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'March'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'April'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'May'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'June'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'July'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'August'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'September'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'October'] <- "2016/2017"
+  
+  Full$rain_year[Full$year == 2017 & Full$month == 'November'] <- "2017/2018"
+  Full$rain_year[Full$year == 2017 & Full$month == 'December'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'January'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'February'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'March'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'April'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'May'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'June'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'July'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'August'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'September'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'October'] <- "2017/2018"
+  
+  Full$rain_year[Full$year == 2018 & Full$month == 'November'] <- "2018/2019"
+  Full$rain_year[Full$year == 2018 & Full$month == 'December'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'January'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'February'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'March'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'April'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'May'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'June'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'July'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'August'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'September'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'October'] <- "2018/2019"
+  
+  Full$rain_year[Full$year == 2019 & Full$month == 'November'] <- "2019/2020"
+  Full$rain_year[Full$year == 2019 & Full$month == 'December'] <- "2019/2020"
+
+## give plotID
+Full <- transform(Full, plotID = as.numeric(interaction(block, plot, site, drop = TRUE)))
+## create temp difference
+
+Full$temp_diff <- Full$mean_maxF - Full$mean_minF
+View(Full)
+
+dim(Full) # 1449   17
+```
+
+give factor levels 
+```{r}
+
+Full$month <- factor(Full$month, 
+                        levels = c("January", "February", "March",
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+Full$site <- factor(Full$site, 
+                    levels = c('Arid', 'Intermediate', 'Mesic'))
+```
+
+
+aggregated tick counts + plots
+```{r}
+tick_month <- aggregate(total ~ month, data = Full, FUN = sum)
+tick_plot <- aggregate(total ~ plot, data = Full, FUN = sum)
+tick_site <- aggregate(total ~ site, data = Full, FUN = sum)
+
+ggplot(tick_month, aes(x = month, y = total))+
+  geom_histogram(stat = "identity")+
+  theme_bw()+
+  rotate_x_text() +
+  labs(x = "Month", y = "Aggregated tick counts\n (2016-2019)")
+  
+
+ggplot(tick_plot, aes(x = plot, y = total, fill = plot))+
+  geom_histogram(stat = "identity")+
+  theme_bw() +
+  labs(x = "Month", y = "Aggregated tick counts\n (2016-2019)")+
+  scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))
+
+ggplot(tick_site, aes(x = site, y = total, fill = site))+
+  geom_histogram(stat = "identity")+
+  theme_bw() +
+  labs(x = "Month", y = "Aggregated tick counts\n (2016-2019)")+
+  scale_fill_manual(values =c('red4','red3','red'))
+```
+
+basic plots with non-zero data (don't show these)
+```{r}
+Full_no0 <- Full[which(Full$total > 0),]
+ggplot(Full_no0, aes(x = month, y = log(total)))+
+  geom_boxplot()+
+  geom_jitter(alpha = .4)+
+  facet_wrap(~site, nrow = 3)+
+  theme_minimal()+
+  rotate_x_text()
+
+
+ggplot(Full_no0, aes(x = site, y = log(total)))+
+  geom_boxplot()+
+  geom_jitter(alpha = .4, aes(color = site))+
+  theme_minimal()+
+  rotate_x_text()
+
+ggplot(Full_no0, aes(x = plot, y = log(total)))+
+  geom_boxplot()+
+  facet_wrap(~site)+
+  #geom_jitter(alpha = .4, aes(color = site))+
+  theme_minimal()+
+  rotate_x_text()
+  
+ggplot(Full_no0, aes(x = rain_year, y = log(total)))+
+  geom_boxplot()+
+  facet_wrap(~site)+
+  #geom_jitter(alpha = .4, aes(color = site))+
+  theme_minimal()+
+  rotate_x_text()
+
+ggplot(Full_no0, aes(x = rain_year, y = log(total), color = site))+
+  geom_boxplot()+
+  #geom_jitter(alpha = .4, aes(color = site))+
+  theme_minimal()
+
+```
+
+
+Total ticks ~ site + plot
+```{r}
+ggplot(Full_no0, aes(x = plot, y = log(total), fill = plot))+
+  geom_boxplot()+
+  geom_jitter(alpha = .15, width = .2)+
+  theme_bw() +
+  labs(x = 'Plot', y = 'log(Total ticks)\n2016 - 2019',
+       title = "Total ticks by plot") +
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  guides(fill = FALSE)
+
+ggplot(Full_no0, aes(x = site, y = log(total), fill = site))+
+  geom_boxplot()+
+  geom_jitter(alpha = .15, width = .2)+
+  theme_bw() +
+  labs(x = 'Plot', y = 'log(Total ticks)\n2016 - 2019',
+       title = "Total ticks by site") +
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('red4','red3','red'))+
+  guides(fill = FALSE)
+
+
+ggplot(Full_no0, aes(x = plot, y = log(total), fill = site))+
+  geom_boxplot()+
+  geom_point(alpha = .15)+
+  theme_bw() +
+  labs(x = 'Plot', y = 'log(Total ticks)\n2016 - 2019', fill = 'Site',
+       title = "Total ticks by site and plot") +
+  xtitletheme + ytitletheme+
+  scale_fill_manual(values =c('red4','red3','red'))+
+  theme(legend.position = 'bottom', legend.box = 'horizontal')
+
+ggplot(Full_no0, aes(x = site, y = log(total), fill = plot))+
+  geom_boxplot()+
+  geom_point(alpha = .15)+
+  theme_bw() +
+  labs(x = 'Plot', y = 'log(Total ticks)\n2016 - 2019', fill = 'Plot',
+       title = "Total ticks by site and plot") +
+  xtitletheme + ytitletheme+
+  scale_fill_manual(values =c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  theme(legend.position = 'bottom', legend.box = 'horizontal')
+```
+
+Total ticks ~ year
+```{r}
+ggplot(Full_no0, aes(x = rain_year, y = log(total), group = rain_year))+
+  geom_boxplot(fill = "grey95")+
+  geom_jitter(alpha = .15, width = .2)+
+  theme_bw() +
+  labs(x = 'Rain Year', y = 'log(Total ticks)\n2016 - 2019',
+       title = "Total ticks by rain year") +
+  xtitletheme + ytitletheme 
+
+ggplot(Full_no0, aes(x = rain_year, y = log(total), group = rain_year, fill = site))+
+  facet_wrap(~site)+
+  scale_fill_manual(values=c('red4','red3','red'))+
+  geom_boxplot()+
+  theme_bw() +
+  labs(x = 'Rain Year', y = 'log(Total ticks)\n2016 - 2019',
+       title = "Total ticks by rain year") +
+  xtitletheme + ytitletheme + rotate_x_text() +
+  theme(legend.position = 'bottom', legend.box = 'horizontal')
+```
+
+Total ticks ~ temp
+```{r}
+max <- ggplot(Full_no0, aes(x = mean_maxF, y = log(total)))+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw()+
+  labs(x = 'Mean Max F', y = 'log(Total ticks)\n2016 - 2019')
+
+min <-ggplot(Full_no0, aes(x = mean_minF, y = log(total)))+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Mean Min F', y = 'log(Total ticks)\n2016 - 2019')
+
+
+diff <-ggplot(Full_no0, aes(x = temp_diff, y = log(total)))+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Mean Difference in F', y = 'log(Total ticks)\n2016 - 2019')
+
+
+ggarrange(max, diff + rremove('ylab'), min)
+
+(overlap <- ggplot(Full_no0, aes(x = mean_minF, y = log(total)))+
+  stat_smooth(data = Full_no0,aes(x = mean_maxF,ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3, color = 'darkblue')+
+  stat_smooth(data = Full_no0,aes(x = mean_minF,ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3, color = 'blue')+
+  theme_bw()+
+  labs(x = 'Mean Min/Max in F', y = 'log(Total ticks)\n2016 - 2019'))
+
+#### look at site
+
+(max_site <- ggplot(Full_no0, aes(x = mean_maxF, y = log(total)))+
+  facet_wrap(~site)+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw()+
+  labs(x = 'Mean Max F', y = 'log(Total ticks)\n2016 - 2019'))
+
+(min_site <-ggplot(Full_no0, aes(x = mean_minF, y = log(total)))+
+    facet_wrap(~site)+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Mean Min F', y = 'log(Total ticks)\n2016 - 2019'))
+
+
+(diff_site <-ggplot(Full_no0, aes(x = temp_diff, y = log(total)))+
+    facet_wrap(~site)+
+  stat_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)), alpha = .3)+
+  theme_bw() +
+  labs(x = 'Mean Difference in F', y = 'log(Total ticks)\n2016 - 2019'))
+
+ggarrange(max_site, diff_site + rremove('ylab'), min_site)
+
+
+```
+
+
+Total ticks ~ precipitation
+```{r}
+# ggplot(Full_no0, aes(y = log(precip_mm), x = site))+
+#   geom_histogram(stat = "identity")+
+#   geom_jitter(alpha = .3)+
+#   theme_bw()+
+#   facet_wrap(~year)+
+#   labs(y = 'Precipiation (mm)', x = 'Site')+
+#   scale_fill_manual(values =c('red4','red3','red'))
+```
+
+## Stats
+
+ANOVA
+```{r}
+site1 <- aov(log(total)~ site, data = Full_no0)
+plot(site1)
+
+# check residuals
+res = site1$residuals
+shapiro.test(res) # p << 0.05 so data not normal
+#hist(res)
+leveneTest(total ~ site, 
+        data = Full_no0) # p << 0.05 so variances are not equal
+summary(site1)
+# Fvalue = 39.52
+# p < 2e-16 , reject H0 and conclude that 1 site is significantly different
+
+#Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(site1)
+# let's do this in a visual way
+Post_hoc <-glht(site1, linfct = mcp(site = 'Tukey'))
+summary(Post_hoc)
+
+confint(Post_hoc) # pairwise test
+cld(Post_hoc) # arid & mesic = a ; intermediate = b , so intermediate is different than arid & mesic
+plot(Post_hoc) # plot 95% CIs
+
+#### ^^ means ot total tick is significantly different in intermediate than mesic and arid
+
+ggplot(data = Full_no0,
+       aes(x = site, y = total,
+           fill = site))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('red4','red2','red'))+
+  theme_classic()+
+  labs(x = 'Site', y = 'log(Total Ticks)', title = 'Total ticks by site')+
+  #theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = 3.7,
+           size = 9) +
+  annotate('text', label = 'b', 
+           x = 2, y = 8.5,
+           size = 9) +
+    annotate('text', label = 'a', 
+           x = 3, y = 4.1,
+           size = 9)
+
+
+
+## plot 
+
+Full_no0$plot <- as.factor(Full_no0$plot)
+plot1 <- aov(log(total)~ plot, data = Full_no0)
+plot(site1)
+
+# check residuals
+res = plot1$residuals
+shapiro.test(res) # p << 0.05 so data not normal
+#hist(res)
+leveneTest(total ~ plot, 
+        data = Full_no0) # p << 0.05 so variances are not equal
+summary(site1)
+# Fvalue = 39.52
+# p < 2e-16 , reject H0 and conclude that 1 site is significantly different
+
+#Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
+TukeyHSD(site1)
+# let's do this in a visual way
+Post_hoc <-glht(plot1, linfct = mcp(plot = 'Tukey'))
+summary(Post_hoc)
+
+confint(Post_hoc) # pairwise test
+cld(Post_hoc) # arid & mesic = a ; intermediate = b , so intermediate is different than arid & mesic
+plot(Post_hoc) # plot 95% CIs
+
+#### ^^ means ot total tick is significantly different in intermediate than mesic and arid
+
+ggplot(data = Full_no0,
+       aes(x = plot, y = total,
+           fill = plot))+
+  geom_bar(stat = 'summary', fun.y = 'mean')+
+  stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
+  scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  theme_classic()+
+  labs(x = 'Site', y = 'log(Total Ticks)', title = 'Total ticks by plot')+
+  #theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
+  annotate('text', label = 'a', 
+           x = 1, y = 4.3,
+           size = 9) +
+  annotate('text', label = 'b', 
+           x = 2, y = 5.9,
+           size = 9) +
+    annotate('text', label = 'b', 
+           x = 3, y = 7.1,
+           size = 9)
+
+
+
+
+```
+
+GLMS
+
+ #**Generalized Linear Models**
+#What are good predictors (X) of total tick abundance (Y)?
+**Ran *generalized linear models* because data breaks assumptions of normality. Used family poisson because of count data.**
+*Object **'tickmodels'** is table of df, AIC, BIC, variables used in glm models*
++ *lowest AIC: all 4 variables (Site, Year, Plot, Month)*
++ *lowest AIC for a single predictor = Year*
+  + **Year AIC = 10496**
+  + **Site AIC = 10665**
+  + **Plot AIC = 10871**
+models : tick1 - tick7 
+
+```{r GLM for tick data}
+tick1 <- glm(total ~ rain_year, 
+               data = Full_no0,
+             family = 'poisson')
+tick2 <- glm(total ~ site, 
+               data = Full_no0,
+              family = 'poisson')
+tick3 <- glm(total ~ plot, 
+               data = Full_no0,
+              family = 'poisson')
+tick4 <- glm(total ~ month, 
+               data = Full_no0,
+              family = 'poisson')
+tick5 <- glm(total ~ site + rain_year, 
+               data = Full_no0,
+              family = 'poisson')
+tick6 <- glm(total ~ site + rain_year + plot, 
+               data = Full_no0,
+              family = 'poisson')
+tick7 <- glm(total ~ site + rain_year + plot + month, 
+               data = Full_no0,
+              family = 'poisson')
+# calculate AIC of each model
+tickresults <- AIC(tick1, tick2, tick3,
+                    tick4, tick5, tick6,
+                   tick7)
+# add other metrics to table
+tickmodels <- list(tick1, tick2, tick3,
+                    tick4, tick5, tick6,
+                   tick7) # keep models in the same order as they were created
+# BIC places higher penalty on extra parameter
+tickresults$BIC <- sapply(tickmodels, BIC) # add column for BIC
+tick_model_summary <- lapply(tickmodels, summary)
+# make for loop to extract r^2 and r^adj from each model
+for(i in 1:length(tickmodels)) {
+  tickresults$rsq[i] <- tick_model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  tickresults$adj_rsq[i] <- tick_model_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+# add column with variables used in model
+tickresults$variables <- c('rain_year','site', 'plot', 'month', 'site + rain_year', 'site + rain_year + plot', 'site + rain_year + plot + month')
+# make a nice table!
+tickmodels <-kable(tickresults, digits = 2, align = 'c') %>%
+  kable_styling()
+eighteen <-tickmodels
+eighteen
+#nineteen <- export_summs(tick1, tick2, tick3, scale = TRUE)
+#nineteen
+#min(tickresults$AIC)
+
+```
+
+
+Negative binomial glms
+
+```{r}
+# not normal
+hist(log(Full_no0$total + 1))
+hist(log(Full$total+ 1))
+
+glm.negbin = glm.nb(log(total) ~ site,data = Full_no0)
+summary(glm.negbin)
+
+glm.fit = glm(log(total)~site, data = Full_no0,
+              family = "poisson")
+summary(glm.fit)
+
+glm.quasipoisson = update(glm.fit, family = quasipoisson)
+summary(glm.quasipoisson)
+
+# hillary's suggestions
+glm1 <- glmer(total ~ mean_minF + plot +  mean_minF*plot + ( 1 | plotID) + (1 | month) + (1 |rain_year),
+              data = Full_no0, family = poisson)
+summary(glm1)
+anova(glm1)
+plot(predictorEffects(glm1),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+
+```
+
+Full models
+```{r}
+tick_climate.Full_no0 <- glm.nb(total~site*plot*temp_diff, data=Full_no0)
+tick_climate.Full_no0_nointeraction <- glm.nb(total~site+plot+temp_diff, data=Full_no0) # lowest BIC score
+tick_climate.S <- glm.nb(total~site, data=Full_no0)
+tick_climate.M <- glm.nb(total~plot, data=Full_no0)
+tick_climate.D <- glm.nb(total~temp_diff, data=Full_no0)
+tick_climate.SplusM <- glm.nb(total~site+plot, data=Full_no0)
+tick_climate.StimesM <- glm.nb(total~site*plot, data=Full_no0)
+tick_climate.SplusD <- glm.nb(total~site+temp_diff, data=Full_no0)
+tick_climate.StimesD <- glm.nb(total~site*temp_diff, data=Full_no0)
+tick_climate.MplusD <- glm.nb(total~plot+temp_diff , data=Full_no0)
+tick_climate.MtimesD <- glm.nb(total~plot*temp_diff, data=Full_no0)
+tick_climate.SplusMD <- glm.nb(total~site+plot*temp_diff, data=Full_no0)
+tick_climate.MplusSD <- glm.nb(total~plot+site*temp_diff, data=Full_no0)
+tick_climate.DplusSM <- glm.nb(total~site*plot+temp_diff, data=Full_no0)
+AIC(tick_climate.Full_no0,tick_climate.Full_no0_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+BIC(tick_climate.Full_no0,tick_climate.Full_no0_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+temp_diff <- BIC(tick_climate.Full_no0,tick_climate.Full_no0_nointeraction,tick_climate.S,tick_climate.M,tick_climate.D,
+    tick_climate.SplusM,tick_climate.StimesM, tick_climate.SplusD, tick_climate.StimesD, 
+    tick_climate.MplusD, tick_climate.MtimesD, tick_climate.SplusMD, tick_climate.MplusSD,
+    tick_climate.DplusSM)
+min_dif <-min(temp_diff$BIC)
+plot(predictorEffects(tick_climate.Full_no0, ~ plot),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+plot(predictorEffects(tick_climate.Full_no0, ~ site),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+plot(predictorEffects(tick_climate.Full_no0, ~ temp_diff),
+     lines=list(multiline=TRUE),
+     lattice=list(key.args=list(columns=2)),
+     confint=list(style="bars"))
+```
+

@@ -92,6 +92,9 @@ full$stationID_elevation <- factor(full$stationID_elevation)
 
 str(full)
 
+Full <- full[which(full$maxF != "NA"),]
+
+max(Full$maxF)
 ```
 
 ##EDA
@@ -848,6 +851,15 @@ ggplot(full, aes(x = site, y = log(precip_mm+ 1)), group = rain_year, fill = rai
 ggsave("PrecipmmSiteRainYear_v1.pdf", dpi = 320)
 
 
+ggplot(full, aes(x = site, y = precip_mm), group = rain_year, fill = rain_year)+
+  #geom_violin(fill = 'grey85',trim = TRUE, scale = 'count', adjust = .7, draw_quantiles = c(0.25, 0.5, 0.75))+
+  geom_boxplot(notch = TRUE, fill = 'grey89')+
+  geom_jitter(width = .25, aes(color = rain_year), size = 2, alpha = .5)+
+  theme_bw() +
+  labs(x = 'Site', y = 'Precipitation (mm)', color = 'Rain Year')+
+  #scale_fill_manual(values =c('darkseagreen1', 'darkseagreen3','darkseagreen4'))+
+  xtitletheme + ytitletheme +
+  theme(legend.position = 'bottom', legend.box = 'horizontal')
 ```
 
 

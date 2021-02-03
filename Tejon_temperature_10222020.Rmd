@@ -1,0 +1,196 @@
+---
+title: "Tejon_temperature_10222020"
+author: "sbsambado"
+date: "10/22/2020"
+output: html_document
+---
+
+
+Import libraries and variables
+```{r libraries and saved variables}
+library(lubridate)
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+devtools::install_github('gavinsimpson/ggvegan')
+
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('red4','red3','red')
+
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+```
+
+
+Import data
+
+```{r}
+# full data set with just climate variables using hobo logger
+hobo <- read.csv("~/Desktop/tejon_hobologger.csv")
+
+hobo <- hobo[which(hobo$temp_F != "NA"),]
+hobo <- hobo[which(hobo$rh_. != "NA"),]
+hobo <- hobo[which(hobo$dewpt_F != "NA"),]
+
+str(hobo)
+
+# lubricated data set
+hobo$date <-ymd(hobo$date)
+str(hobo)
+
+# creating new variable that incorporates date-time
+Hobo <- mutate(hobo, fulldate = paste(date, time, sep = '-'))
+
+Hobo$fulldate <- ymd_hms(Hobo$fulldate)
+str(Hobo)
+
+Hobo <- Hobo[which(Hobo$temp_F != "NA"),]
+Hobo <- Hobo[which(Hobo$rh_. != "NA"),]
+Hobo <- Hobo[which(Hobo$dewpt_F != "NA"),]
+
+
+#### full data with climate and biotic using hobo logger
+
+full <- read.csv("~/Desktop/tejon_tick_climate_10162020.csv")
+#View(full)
+
+full <- subset(full, select = -c(21:29))
+full$Month <- factor(full$Month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+full$Site <- factor(full$Site, 
+                    levels = c('Arid', 'Intermediate', 'Mesic'))
+names(full)
+names(full)[1] <- "year"
+names(full)[2] <- "month"
+names(full)[3] <- "site"
+names(full)[4] <- "block"
+names(full)[5] <- "plot"
+names(full)[6] <- "plotID"
+names(full)[7] <- "totalticks"
+
+names(full)[15] <- "maxF"
+names(full)[16] <- "minF"
+names(full)[19] <- "precip_in"
+names(full)[20] <- "precip_mm"
+
+
+full$year <- factor(full$year)
+full$stationID_elevation <- factor(full$stationID_elevation)
+
+str(full)
+
+Full <- full[which(full$maxF != "NA"),]
+FULL <- full[which(full$rh_. != "NA"),]
+FULL <- full[which(full$dewpt_F != "NA"),]
+
+max(Full$maxF)
+
+# make date column in Full
+FULL <- mutate(Full, fulldate = paste(month, year, sep = '-'))
+
+```
+
+
+some plots
+```{r}
+
+HOBO <- hobo[which(hobo$temp_F < 95.0),]
+ggplot(HOBO, aes(x = date, y = temp_F))+
+  geom_line(aes(color = climate))+
+  facet_wrap(~climate)+
+  theme_bw() +
+    geom_smooth(color = 'black')+
+  theme(legend.position = 'bottom', legend.box = 'horizontal')+
+  labs(x = 'Date', y = 'Temperature (F)', color = 'Site') +
+  theme(strip.background = element_rect(fill = 'gray95')) +
+  guides(color = FALSE)+
+  geom_vline(xintercept= max(HOBO$temp_F),color='red')
+
+
+ggplot(hobo, aes(x = date, y = dewpt_F))+
+  geom_line(aes(color = climate))+
+  facet_wrap(~climate)+
+  theme_bw() +
+  geom_smooth(color = 'black')+
+  theme(legend.position = 'bottom', legend.box = 'horizontal')+
+    labs(x = 'Date', y = 'Dewpoint', color = 'Site')+
+  theme(strip.background = element_rect(fill = 'gray95')) +
+  guides(color = FALSE)+
+  geom_vline(xintercept= max(hobo$dewpt_F),color='red')
+
+
+
+ggplot(hobo, aes(x = date, y = rh_.))+
+  geom_line(aes(color = climate))+
+  facet_wrap(~climate)+
+  theme_bw() +
+    geom_smooth(color = 'black')+
+  theme(legend.position = 'bottom', legend.box = 'horizontal') +
+  labs(x = 'Date', y = 'Relative Humidity', color = 'Site')+
+  theme(strip.background = element_rect(fill = 'gray95')) +
+  guides(color = FALSE)+
+  geom_vline(xintercept= max(hobo$rh_.),color='red', size = 5)
+
+
+# max(unique(Hobo$temp_F))
+# ggplot(Hobo, aes(x = as.Date(fulldate), y = temp_F), group = climate, color = climate)+
+#   geom_point(aes(color = climate), alpha = .5)+
+#   facet_wrap(~climate)+
+#   geom_line(aes(color = climate))+
+#   theme(legend.position = 'bottom', legend.box = 'horizontal')+
+#   scale_x_date(date_minor_breaks = "1 day")
+
+
+ggplot(FULL, aes(x = month, y = maxF))+
+  geom_point()+
+  geom_line(aes(color = site))+
+  facet_wrap(~site, ncol = 1)+
+  theme_bw() +
+    geom_smooth(color = 'black')+
+  theme(legend.position = 'bottom', legend.box = 'horizontal')+
+  labs(x = 'Date', y = 'Max Temperature (F)', color = 'Site') +
+  theme(strip.background = element_rect(fill = 'gray95')) +
+  guides(color = FALSE)+
+  rotatexaxistheme
+
+
+```
+
