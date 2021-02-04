@@ -1,0 +1,258 @@
+---
+title: "Tejon figure code"
+author: "sbsambado"
+date: "2/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('brown1','tan1','lightgoldenrod1')
+
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+
+
+```
+
+
+Full code clean up
+```{r full code clean up}
+
+# Merge 2 tick data sheets into 1 tick data sheet
+
+threeyrs <- read_csv("Total_Ticks_2016_to_2018.csv")
+dim(threeyrs)
+oneyr <- read_csv("Tick_19.csv")
+dim(oneyr)
+# get rid of survery column in threeyr since it wasn't completed in oneyrs 
+## Maybe double check survey number doesn't matter
+threeyrs <- subset(threeyrs, select = -c(3))
+
+# make sure names are the same
+## 2016 - 2018
+names(threeyrs) <- tolower(names(threeyrs))
+
+# change column names
+names(threeyrs)[6] <- "total"
+names(threeyrs)[7] <- "deoc"
+names(threeyrs)[8] <- "ipac"
+names(threeyrs)[9] <- "deva"
+names(threeyrs)[10] <- "other"
+
+## 2019
+# make sure names are the same
+names(oneyr) <- tolower(names(oneyr))
+
+# change column names
+names(oneyr)[6] <- "total"
+names(oneyr)[7] <- "deoc"
+names(oneyr)[8] <- "ipac"
+names(oneyr)[9] <- "deva"
+names(oneyr)[10] <- "other"
+
+
+full <- rbind(threeyrs, oneyr)
+dim(full) # 1449 10
+
+# Merge temp to tick data
+
+# merge temp data to full
+temp <- read_csv("Tejon_temperature_02022021.csv")
+Partial1 <- merge(full, temp)
+dim(Partial1) # 1449 13
+#View(Full)
+
+#Merge precip data to tick data
+# + subset data came from tejon_tick_climate_10162020
+
+# precip <- read_csv("Tejon_precipitation_02022021.csv")
+# Partial2 <- merge(Partial1, precip)
+# dim(Partial2)
+
+
+
+
+
+
+#Merge mammal data to tick data
+
+# I calculated shannon diversity, species richness for each site/plot and assigned it a value
+# mammal <- read_csv("tejon_mammal_02022021.csv")
+# Partial3 <- merge(Partial2, mammal)
+# dim(Partial3) 
+
+
+
+
+
+
+# Add metadata
+
+Full <- Partial1
+
+##add station ID column
+Full$station <- Full$site
+
+  # assign station ID
+  Full$station[Full$site == "Arid"] <- "Lebec"
+  Full$station[Full$site == "Intermediate"] <- "Loraine"
+  Full$station[Full$site == "Mesic"] <- "Chuchupate"
+  
+## add elevation
+  Full$elevation <- Full$station
+  Full$elevation[Full$station == "Lebec"] <- 1089.7
+  Full$elevation[Full$station == "Loraine"] <- 1290.8
+  Full$elevation[Full$station == "Chuchupate"] <- 1493.5
+
+## add rain year
+  # this is a dumb way but it is what it is
+  Full$rain_year <- as.numeric(Full$year)
+  Full$rain_year[Full$year == 2016 & Full$month == 'April'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'May'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'June'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'July'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'August'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'September'] <- "2015/2016"
+  Full$rain_year[Full$year == 2016 & Full$month == 'October'] <- "2015/2016"
+  
+  Full$rain_year[Full$year == 2016 & Full$month == 'November'] <- "2016/2017"
+  Full$rain_year[Full$year == 2016 & Full$month == 'December'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'January'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'February'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'March'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'April'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'May'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'June'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'July'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'August'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'September'] <- "2016/2017"
+  Full$rain_year[Full$year == 2017 & Full$month == 'October'] <- "2016/2017"
+  
+  Full$rain_year[Full$year == 2017 & Full$month == 'November'] <- "2017/2018"
+  Full$rain_year[Full$year == 2017 & Full$month == 'December'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'January'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'February'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'March'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'April'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'May'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'June'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'July'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'August'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'September'] <- "2017/2018"
+  Full$rain_year[Full$year == 2018 & Full$month == 'October'] <- "2017/2018"
+  
+  Full$rain_year[Full$year == 2018 & Full$month == 'November'] <- "2018/2019"
+  Full$rain_year[Full$year == 2018 & Full$month == 'December'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'January'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'February'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'March'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'April'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'May'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'June'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'July'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'August'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'September'] <- "2018/2019"
+  Full$rain_year[Full$year == 2019 & Full$month == 'October'] <- "2018/2019"
+  
+  Full$rain_year[Full$year == 2019 & Full$month == 'November'] <- "2019/2020"
+  Full$rain_year[Full$year == 2019 & Full$month == 'December'] <- "2019/2020"
+
+## give plotID
+Full <- transform(Full, plotID = as.numeric(interaction(block, plot, site, drop = TRUE)))
+## create temp difference
+
+Full$temp_diff <- Full$mean_maxF - Full$mean_minF
+View(Full)
+
+dim(Full) # 1449   17
+```
+
+**Fig 1. one var plots**
+```{r}
+
+
+plot1 <- ggplot(Full_no0, aes(x = plot, y = log(total), fill = plot))+
+  geom_boxplot()+
+  geom_jitter(alpha = .15, width = .2)+
+  theme_bw() +
+  labs(x = 'Plot', y = 'log(Total ticks) 2016 - 2019') +
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  guides(fill = FALSE)+
+  annotate('text', label='A', x=-Inf, y=Inf, hjust=-.5, vjust=2,size = 7)
+
+site1 <-ggplot(Full_no0, aes(x = site, y = log(total), fill = site))+
+  geom_boxplot()+
+  geom_jitter(alpha = .15, width = .2)+
+  theme_bw() +
+  labs(x = 'Site', y = 'log(Total ticks) 2016 - 2019') +
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('brown1','tan1','lightgoldenrod1'))+
+  guides(fill = FALSE)+
+  annotate('text', label='B', x=-Inf, y=Inf, hjust=-.5, vjust=2,size = 7)
+
+var_plot <-ggarrange(plot1 + rremove('ylab'), site1 + rremove('ylab'),
+          ncol = 2)
+annotate_figure(var_plot,
+          left = text_grob("Log of total ticks (2016 - 2019)", rot = 90, face = "bold"))
+ggsave("Fig1_onevargraph.jpeg", dpi = 320)          
+          
+
+```
+
+
+**Fig 2. two var plots**
+```{r}
+
+ggplot(Full_no0, aes(x = site, y = log(total), fill = plot))+
+  geom_boxplot()+
+  geom_point(alpha = .15)+
+  theme_bw() +
+  labs(x = 'Site', y = "Log of total ticks (2016 - 2019)", fill = 'Plot') +
+  xtitletheme + ytitletheme+
+  scale_fill_manual(values =c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  theme(legend.position = c(.068, .85), # horizontal, verticle
+        legend.box.background = element_rect(color = 'black', fill =NA))
+ggsave("Fig2_twovargraph.jpeg", dpi = 320)  
+```
+
+
+**Fig 3. diff in monthly temp**
+```{r}
+# convert to C
+Full_no0$mean_maxC <- (Full_no0$mean_maxF - 32)*(5/9)
+Full_no0$mean_minC <- (Full_no0$mean_minF - 32)*(5/9)
+
+Full_no0$temp_diffC <- Full_no0$mean_maxC  - Full_no0$mean_minC 
+
+ggplot(Full_no0, aes(y = temp_diffC, x = site, fill = site))+
+  geom_violin(scale = 'count',trim = TRUE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_jitter(alpha = .15, width = .2)+
+  theme_bw()+
+  labs(x = 'Site', y = 'Difference in monthly mean temperature (°C)', fill = "Site")+
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values =c('brown1','tan1','lightgoldenrod1'))+
+  guides(fill = FALSE)
+  #theme(legend.position = c(.093, .85),
+        #legend.box.background = element_rect(color = 'black', fill =NA))
+ggsave("Fig3_difftempCsite.jpeg", dpi = 320)
+
+```

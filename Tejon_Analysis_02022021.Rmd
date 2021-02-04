@@ -5,6 +5,64 @@ date: "2/2/2021"
 output: html_document
 ---
 
+Fig 1: 2 plots (1 variable plot, 1 variable site)
+Fig 2: 1 plot (2 variables of boxplot, maybe do x = site, plot = fill)
+Fig 3: 1 plot (3 lines for site for difference in temp of mean)
+Table 1: model outputs
+
+Supplemental
+-mammal
+-lizard
+-precip
+-predict
+
+
+Analyses
+1. wilcox rank test for treatment vs control [medians total ticks]
+  a. site (arid vs mesic)
+  b. plote (open vs total)
+  
+2. ONEANOVA [means total ticks]
+  a. 3 sites
+  b. 3 plots
+
+2b. TWO WAY ANOVA
+```{r}
+site_subset <- Full[which(Full$site == "Arid" | Full$site == "Mesic"),]
+plot_subset <- Full[which(Full$plot == "Open" | Full$plot == "Total"),]
+
+
+aov_subset <- site_subset[which(site_subset$plot == "Open" |site_subset$plot == "Total"), ]
+av_model <- aov(total ~ plot + site, data = aov_subset)
+summary(av_model) # both sig, plot more sig
+
+qqPlot(av_model$residuals)
+# plot 38.30 1.11e-09 ***
+# site 24.45 9.90e-07 ***
+
+## interaction term
+av_model2 <- aov(total ~ plot + site + (plot*site), data = aov_subset)
+summary(av_model2) # interaction not significant
+
+
+TukeyHSD(av_model)
+
+# statisitcal inference
+
+## one way two way ANOVA check whether a numeric variable varies accdoring to the levels of 1 to 2 cateforical variables
+
+# berfore prediction
+```
+
+3. Mixed models
+- site, plot
+- site, plot, rain year
+- site, plot, mammal, precip, lizard, humidity
+
+emmeans 
+plot
+fits
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -48,7 +106,7 @@ clean_background <- theme(plot.background = element_rect("white"),
         legend.key = element_rect("white"))
 
 plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
-sitecolor = c('red4','red2','red')
+sitecolor = c('brown1','tan1','lightgoldenrod1')
 
 rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
 ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
@@ -205,6 +263,49 @@ View(Full)
 dim(Full) # 1449   17
 ```
 
+Basic data stats
+```{r}
+summary(Full)
+dim(Full) # 1449 observations, 17 variables
+
+totalcount <- Full %>% 
+  tally(total) # 2692 ticks
+
+ipaccount <- Full %>% 
+  tally(ipac) # 206 ticks 
+
+
+
+deoccount <- Full %>% 
+  tally(deoc) # 2420 ticks
+
+devacount <- Full %>% 
+  tally(deva) # 68 ticks
+
+Full %>% 
+  tally(other) # 2 ticks
+
+plotcount <- Full %>% 
+  group_by(plot) %>% 
+  tally(total) # open = 488, partial = 976, total = 1228
+
+sitecount <- Full %>% 
+  group_by(site) %>% 
+  tally(total) # arid = 340, intermediate = 1764, mesic = 588
+
+# calculate % of each species
+
+ipaccount/totalcount * 100 # 7.652303% of tick pop is ipac
+
+deoccount/totalcount*100 # 89.89599%
+devacount/totalcount*100 # 2.526003
+
+(deoccount + devacount)/totalcount *100 # 92.42199% of tick pop is derm
+
+
+```
+
+
 give factor levels 
 ```{r}
 
@@ -216,7 +317,6 @@ Full$month <- factor(Full$month,
 Full$site <- factor(Full$site, 
                     levels = c('Arid', 'Intermediate', 'Mesic'))
 ```
-
 
 aggregated tick counts + plots
 ```{r}
@@ -241,7 +341,7 @@ ggplot(tick_site, aes(x = site, y = total, fill = site))+
   geom_histogram(stat = "identity")+
   theme_bw() +
   labs(x = "Month", y = "Aggregated tick counts\n (2016-2019)")+
-  scale_fill_manual(values =c('red4','red3','red'))
+  scale_fill_manual(values =c('brown1','tan1','lightgoldenrod1'))
 ```
 
 basic plots with non-zero data (don't show these)
@@ -284,28 +384,43 @@ ggplot(Full_no0, aes(x = rain_year, y = log(total), color = site))+
 
 
 Total ticks ~ site + plot
+
+Fig 1. one var plots
 ```{r}
-ggplot(Full_no0, aes(x = plot, y = log(total), fill = plot))+
+
+
+plot1 <- ggplot(Full_no0, aes(x = plot, y = log(total), fill = plot))+
   geom_boxplot()+
   geom_jitter(alpha = .15, width = .2)+
   theme_bw() +
-  labs(x = 'Plot', y = 'log(Total ticks)\n2016 - 2019',
-       title = "Total ticks by plot") +
+  labs(x = 'Plot', y = 'log(Total ticks) 2016 - 2019') +
   xtitletheme + ytitletheme +
   scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
-  guides(fill = FALSE)
+  guides(fill = FALSE)+
+  annotate('text', label='A', x=-Inf, y=Inf, hjust=-.5, vjust=2,size = 7)
 
-ggplot(Full_no0, aes(x = site, y = log(total), fill = site))+
+site1 <-ggplot(Full_no0, aes(x = site, y = log(total), fill = site))+
   geom_boxplot()+
   geom_jitter(alpha = .15, width = .2)+
   theme_bw() +
-  labs(x = 'Plot', y = 'log(Total ticks)\n2016 - 2019',
-       title = "Total ticks by site") +
+  labs(x = 'Site', y = 'log(Total ticks) 2016 - 2019') +
   xtitletheme + ytitletheme +
-  scale_fill_manual(values=c('red4','red3','red'))+
-  guides(fill = FALSE)
+  scale_fill_manual(values=c('brown1','tan1','lightgoldenrod1'))+
+  guides(fill = FALSE)+
+  annotate('text', label='B', x=-Inf, y=Inf, hjust=-.5, vjust=2,size = 7)
+
+var_plot <-ggarrange(plot1 + rremove('ylab'), site1 + rremove('ylab'),
+          ncol = 2)
+annotate_figure(var_plot,
+          left = text_grob("Log of total ticks (2016 - 2019)", rot = 90, face = "bold"))
+ggsave("Fig1_onevargraph.jpeg", dpi = 320)          
+          
+
+```
 
 
+Fig 2. two var plots
+```{r}
 ggplot(Full_no0, aes(x = plot, y = log(total), fill = site))+
   geom_boxplot()+
   geom_point(alpha = .15)+
@@ -313,18 +428,63 @@ ggplot(Full_no0, aes(x = plot, y = log(total), fill = site))+
   labs(x = 'Plot', y = 'log(Total ticks)\n2016 - 2019', fill = 'Site',
        title = "Total ticks by site and plot") +
   xtitletheme + ytitletheme+
-  scale_fill_manual(values =c('red4','red3','red'))+
+  scale_fill_manual(values =c('brown1','tan1','lightgoldenrod1'))+
   theme(legend.position = 'bottom', legend.box = 'horizontal')
+
+
 
 ggplot(Full_no0, aes(x = site, y = log(total), fill = plot))+
   geom_boxplot()+
   geom_point(alpha = .15)+
   theme_bw() +
-  labs(x = 'Plot', y = 'log(Total ticks)\n2016 - 2019', fill = 'Plot',
-       title = "Total ticks by site and plot") +
+  labs(x = 'Site', y = "Log of total ticks (2016 - 2019)", fill = 'Plot') +
   xtitletheme + ytitletheme+
   scale_fill_manual(values =c('darkseagreen1','darkseagreen3','darkseagreen4'))+
-  theme(legend.position = 'bottom', legend.box = 'horizontal')
+  theme(legend.position = c(.068, .85), # horizontal, verticle
+        legend.box.background = element_rect(color = 'black', fill =NA))
+ggsave("Fig2_twovargraph.jpeg", dpi = 320)  
+```
+
+Fig 3. temp diff by site
+```{r}
+ggplot(Full_no0, aes(x = temp_diff, y = total, group = site, color = site))+
+  geom_smooth(aes(ymin = ifelse(..ymin.. < 0, 0, ..ymin..)),lwd = 2)+
+  theme_bw()+
+  labs(x = 'Difference in min/max (F)', y = 'Total ticks')+
+  xtitletheme + ytitletheme +
+  scale_color_manual(values =c('brown1','tan1','lightgoldenrod1'))
+#ggsave("TemperatureDiffTick_v2.pdf", dpi = 320)
+
+ggplot(Full_no0, aes(y = temp_diff, x = site, fill = site))+
+  geom_violin(scale = 'count',trim = TRUE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_jitter(alpha = .15, width = .2)+
+  theme_bw()+
+  labs(x = 'Site', y = 'Difference in monthly mean temperature (F)', fill = "Site")+
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values =c('brown1','tan1','lightgoldenrod1'))+
+  theme(legend.position = c(.1, .85),
+        legend.box.background = element_rect(color = 'black', fill =NA)) # horizontal, verticle
+ggsave("Fig3_difftempFsite.jpeg", dpi = 320)
+
+
+# convert to C
+Full_no0$mean_maxC <- (Full_no0$mean_maxF - 32)*(5/9)
+Full_no0$mean_minC <- (Full_no0$mean_minF - 32)*(5/9)
+
+Full_no0$temp_diffC <- Full_no0$mean_maxC  - Full_no0$mean_minC 
+
+ggplot(Full_no0, aes(y = temp_diffC, x = site, fill = site))+
+  geom_violin(scale = 'count',trim = TRUE, draw_quantiles = c(0.25, 0.5, 0.75)) +
+  geom_jitter(alpha = .15, width = .2)+
+  theme_bw()+
+  labs(x = 'Site', y = 'Difference in monthly mean temperature (°C)', fill = "Site")+
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values =c('brown1','tan1','lightgoldenrod1'))+
+  guides(fill = FALSE)
+  #theme(legend.position = c(.093, .85),
+        #legend.box.background = element_rect(color = 'black', fill =NA))
+ggsave("Fig3_difftempCsite.jpeg", dpi = 320)
+
 ```
 
 Total ticks ~ year
@@ -339,7 +499,7 @@ ggplot(Full_no0, aes(x = rain_year, y = log(total), group = rain_year))+
 
 ggplot(Full_no0, aes(x = rain_year, y = log(total), group = rain_year, fill = site))+
   facet_wrap(~site)+
-  scale_fill_manual(values=c('red4','red3','red'))+
+  scale_fill_manual(values=c('brown1','tan1','lightgoldenrod1'))+
   geom_boxplot()+
   theme_bw() +
   labs(x = 'Rain Year', y = 'log(Total ticks)\n2016 - 2019',
@@ -347,6 +507,8 @@ ggplot(Full_no0, aes(x = rain_year, y = log(total), group = rain_year, fill = si
   xtitletheme + ytitletheme + rotate_x_text() +
   theme(legend.position = 'bottom', legend.box = 'horizontal')
 ```
+
+
 
 Total ticks ~ temp
 ```{r}
@@ -398,6 +560,8 @@ ggarrange(max, diff + rremove('ylab'), min)
 
 ggarrange(max_site, diff_site + rremove('ylab'), min_site)
 
+# overlap 3 sites in 1 plot for DIFF temp
+
 
 ```
 
@@ -410,12 +574,69 @@ Total ticks ~ precipitation
 #   theme_bw()+
 #   facet_wrap(~year)+
 #   labs(y = 'Precipiation (mm)', x = 'Site')+
-#   scale_fill_manual(values =c('red4','red3','red'))
+#   scale_fill_manual(values =c('brown1','tan1','lightgoldenrod1'))
 ```
 
 ## Stats
 
+Mann-Whitney U/Wilcoxon Rank Sum
+- compare medians of arid/mesic (site)
+ **wilcox  p = 4.898e-05**
+- compare medians of open/total (plot)
+  **wilcox p = 5.649e-07**
+  
+### Median tick counts vary by treatment type for plot and site
++ plot may have a larger difference of tick medians than site
+```{r}
+site_subset <- Full[which(Full$site == "Arid" | Full$site == "Mesic"),]
+plot_subset <- Full[which(Full$plot == "Open" | Full$plot == "Total"),]
+
+ggplot(site_subset, aes(x = total)) + # dataset = hearing, variable of interest = hearing
+  geom_histogram() + # geom to make histogram
+  facet_wrap(~ site) + # make separate "facets" or grids of your group data by mammal type
+  theme_bw()
+
+ggplot(plot_subset, aes(x = total)) + # dataset = hearing, variable of interest = hearing
+  geom_histogram() + # geom to make histogram
+  facet_wrap(~ plot) + # make separate "facets" or grids of your group data by mammal type
+  theme_bw()
+
+
+ggplot(site_subset, aes(x = site, y = total)) +
+  geom_boxplot(fill = "grey89") + # geom to make boxplot, fill the boxplot with the color "grey89"
+  theme_classic()
+
+ggplot(plot_subset, aes(x = plot, y = total)) +
+  geom_boxplot(fill = "grey89") + # geom to make boxplot, fill the boxplot with the color "grey89"
+  theme_classic()
+
+leveneTest(site_subset$total ~ site_subset$site) # df 1, F value = 9.3163, p = 0.002337, < 0.05, variances are different
+leveneTest(plot_subset$total ~ plot_subset$plot) # df 1, F value = 26.924, p = 2.599e-07, < 0.05, variances are different
+
+
+## wilcox (but may data may not meet these assumptions)
+
+wilcox.test(total ~ site, data = site_subset) # p = 4.898e-05
+wilcox.test(total ~ plot, data = plot_subset) # p = 5.649e-07
+```
+
+
 ANOVA
+- site
+  Fvalue = 41.62 
+  p < 2e-16 *one site type mean is significantly different*
+  
+- Plot
+  Fvalue = 11.27 
+  p = 1.61e-05 *one plot type mean is significantly different*
+  
+  
+Tukey
+- site
+  Arid, Mesic, Intermediate are all different
+
+-plot
+  Open is different than Partial and Total
 ```{r}
 site1 <- aov(log(total)~ site, data = Full_no0)
 plot(site1)
@@ -427,7 +648,7 @@ shapiro.test(res) # p << 0.05 so data not normal
 leveneTest(total ~ site, 
         data = Full_no0) # p << 0.05 so variances are not equal
 summary(site1)
-# Fvalue = 39.52
+# Fvalue = 41.62 
 # p < 2e-16 , reject H0 and conclude that 1 site is significantly different
 
 #Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
@@ -447,7 +668,7 @@ ggplot(data = Full_no0,
            fill = site))+
   geom_bar(stat = 'summary', fun.y = 'mean')+
   stat_summary(geom = 'errorbar', fun.data = mean_se, width = .4)+
-  scale_fill_manual(values = c('red4','red2','red'))+
+  scale_fill_manual(values = c('brown1','tan1','lightgoldenrod1'))+
   theme_classic()+
   labs(x = 'Site', y = 'log(Total Ticks)', title = 'Total ticks by site')+
   #theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
@@ -467,7 +688,7 @@ ggplot(data = Full_no0,
 
 Full_no0$plot <- as.factor(Full_no0$plot)
 plot1 <- aov(log(total)~ plot, data = Full_no0)
-plot(site1)
+plot(plot1)
 
 # check residuals
 res = plot1$residuals
@@ -475,12 +696,12 @@ shapiro.test(res) # p << 0.05 so data not normal
 #hist(res)
 leveneTest(total ~ plot, 
         data = Full_no0) # p << 0.05 so variances are not equal
-summary(site1)
-# Fvalue = 39.52
-# p < 2e-16 , reject H0 and conclude that 1 site is significantly different
+summary(plot1)
+# Fvalue = 11.27 
+# p = 1.61e-05 , reject H0 and conclude that 1 site is significantly different
 
 #Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
-TukeyHSD(site1)
+TukeyHSD(plot1)
 # let's do this in a visual way
 Post_hoc <-glht(plot1, linfct = mcp(plot = 'Tukey'))
 summary(Post_hoc)
@@ -509,8 +730,6 @@ ggplot(data = Full_no0,
     annotate('text', label = 'b', 
            x = 3, y = 7.1,
            size = 9)
-
-
 
 
 ```
@@ -652,3 +871,143 @@ plot(predictorEffects(tick_climate.Full_no0, ~ temp_diff),
      confint=list(style="bars"))
 ```
 
+
+Hurdle model
+```{r}
+## part 1 of 0s
+# zero inflated poisson (ZIP)
+fldown <- formula(total ~ site + plot | site + plot) # what explains the load that's not 0 | explanatory variables if something is present or not
+ZIP_round_down <- zeroinfl(fldown, dist = 'poisson',
+                           link = 'logit',
+                           data = Full)
+summary(ZIP_round_down) # site and plot are signficant!
+# zero inflated negative binomial (ZINB)
+fldown <- formula(total ~ site + plot | site)
+ZINB_round_down <- zeroinfl(fldown, dist = 'negbin', # changed distribution
+                            link = 'logit',
+                            data = Full)
+summary(ZINB_round_down) # site and plot are significant!
+# likeligood ratio test to compare ZIP and ZINB
+# test the two models
+lrtest(ZIP_round_down, ZINB_round_down) # ZINB p < 2.2e-16, so go with negative binomial
+## part two non-0s
+# Hurdle Models
+# ZIP
+H1downA <- hurdle(fldown, dist = "poisson", link = "logit",data = Full)
+# ZINB
+H1downB <- hurdle(fldown, dist = "negbin", link = "logit",data = Full)
+lrtest(H1downA,H1downB) # Negative binomial version much more significant, p < 2.2e-16
+summary(H1downB)
+```
+
+Nonlinear least squares (logistic growth fitting)
+```{r}
+library(tidyverse)
+library(Ecdat)
+library(plm)
+library(lmtest)
+library(car) #for plotting
+```
+
+###Part 1. Nonlinear least squares (logistic growth fitting)
+
+a. Load dataset Full.csv. Create a scatterplot.
+
+```{r get_data}
+Full <- read_csv("Full.csv")
+```
+
+b. Look at it
+
+```{r cell_graph} 
+ggplot(Full_no0, aes(x = temp_diff, y = total)) + geom_point()
+```
+
+Recall logistic growth equation: 
+
+N(t) = A/(1+Be^-rt)
+
+# Estimate for K/A: ~ 3700
+# Estimate for N0: ~ 2000
+# Estimate for B: ~ 0.85
+
+BEstimate <- (3700 - 2000)/2000 # BEstimate = 0.85
+
+c. Create a subset of the data that you think is just in the 'exponential growth phase.' Take the natural log of the count and create a basic scatterplot of temp_diff v ln(counts). 
+
+```{r}
+Graph2 <- plot(Full_no0$temp_diff,log(Full_no0$total))
+# Create a basic scatterplot of temp_diff versus ln(totals)
+
+fit <- lm(log(total + 1) ~ temp_diff, data = Full_no0)
+
+hist(fit$residuals)
+```
+
+Then find the slope of that line to get 'r' (growth rate constant)
+
+```{r}
+r_est <- lm(log(Full_no0$total) ~ Full_no0$temp_diff) # R ~ 0.1035
+```
+
+
+d. Nonlinear least squares 
+
+e. Model fitting 
+
+```{r}
+cell_fit <- nls(total ~ A/(1+B*exp(-r*temp_diff)), 
+                start = list(A = 2000, B = 0.02088, r = 0.44187), 
+                data = Full_no0, trace = TRUE) 
+```
+
+
+Uses the estimates as a start to find the best estimated values (by convergence) for A, B and r
+
+8 iterations for convergence
+Estimates, St. Errors and p-values
+
+Parameters:
+Estimate Std. Error t value Pr(>|t|)    
+A 3.806e+03  5.029e+01   75.67  < 2e-16 ***
+B 9.233e-01  5.887e-02   15.68 2.33e-09 ***
+r 3.443e-01  3.219e-02   10.70 1.73e-07 ***
+
+f. Create new variables for A, B and r
+
+```{r}
+A <- coef(cell_fit)[1]
+B <- coef(cell_fit)[2]
+r <- coef(cell_fit)[3]
+```
+
+g. Create a new sequence containing a series of temp_diffs over which you'll predict the cell count
+
+```{r}
+temp_diff_seq <- seq(0,20, length = 100)
+```
+
+h. Using the parameters (A, B, and r) and the temp_diff sequence, predict the cell counts for the logistic growth model
+
+```{r}
+cell_pred <- A/(1+B*exp(-r*temp_diff_seq)) # Logistic growth model
+```
+
+i. Bind together the temp_diff sequence data and the predictions data into a new data frame
+
+```{r}
+pred_df <- data.frame(temp_diff_seq, cell_pred)
+```
+
+
+j. Create a single graph in which you show the original data (as scatterplot points) and the predicted data (as a line graph)
+
+```{r}
+ggplot(Full_no0, aes(x = temp_diff, y = total)) + 
+  geom_point(colour = "blue", size = 3) + 
+  theme_bw() +
+  geom_line(data = pred_df, aes(x = temp_diff_seq, y = cell_pred), colour = "orange", size = 1) + 
+  xlab("temp_diff (h)") +
+  ylab("Cell Count") +
+  ggtitle("Bacterial Growth")
+```
