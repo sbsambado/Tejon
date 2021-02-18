@@ -17,42 +17,6 @@ Supplemental
 -predict
 
 
-Analyses
-1. wilcox rank test for treatment vs control [medians total ticks]
-  a. site (arid vs mesic)
-  b. plote (open vs total)
-  
-2. ONEANOVA [means total ticks]
-  a. 3 sites
-  b. 3 plots
-
-2b. TWO WAY ANOVA
-```{r}
-site_subset <- Full[which(Full$site == "Arid" | Full$site == "Mesic"),]
-plot_subset <- Full[which(Full$plot == "Open" | Full$plot == "Total"),]
-
-
-aov_subset <- site_subset[which(site_subset$plot == "Open" |site_subset$plot == "Total"), ]
-av_model <- aov(total ~ plot + site, data = aov_subset)
-summary(av_model) # both sig, plot more sig
-
-qqPlot(av_model$residuals)
-# plot 38.30 1.11e-09 ***
-# site 24.45 9.90e-07 ***
-
-## interaction term
-av_model2 <- aov(total ~ plot + site + (plot*site), data = aov_subset)
-summary(av_model2) # interaction not significant
-
-
-TukeyHSD(av_model)
-
-# statisitcal inference
-
-## one way two way ANOVA check whether a numeric variable varies accdoring to the levels of 1 to 2 cateforical variables
-
-# berfore prediction
-```
 
 3. Mixed models
 - site, plot
@@ -62,6 +26,7 @@ TukeyHSD(av_model)
 emmeans 
 plot
 fits
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -114,12 +79,13 @@ xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust
 ```
 
 
+## Dataset for means of ticks
 Using data Steph sent on 11/16/2020
 "Total_Ticks_2016_to_2018.csv"
 "Tick_19.csv"
 
 Merge 2 tick data sheets into 1 tick data sheet
-```{r}
+```{r message = FALSE}
 
 threeyrs <- read_csv("Total_Ticks_2016_to_2018.csv")
 dim(threeyrs)
@@ -156,14 +122,7 @@ full <- rbind(threeyrs, oneyr)
 dim(full) # 1449 10
 ```
 
-Merge temp to tick data
-```{r}
-# merge temp data to full
-temp <- read_csv("Tejon_temperature_02022021.csv")
-Partial1 <- merge(full, temp)
-dim(Partial1) # 1449 13
-#View(Full)
-```
+
 
 Merge precip data to tick data
 + subset data came from tejon_tick_climate_10162020
@@ -266,7 +225,7 @@ dim(Full) # 1449   17
 Basic data stats
 ```{r}
 summary(Full)
-dim(Full) # 1449 observations, 17 variables
+dim(Full) # 1449 observations, 11 variables
 
 totalcount <- Full %>% 
   tally(total) # 2692 ticks
@@ -316,6 +275,82 @@ Full$month <- factor(Full$month,
                                    'November', 'December'))
 Full$site <- factor(Full$site, 
                     levels = c('Arid', 'Intermediate', 'Mesic'))
+```
+
+Tick Means Analyses
+1. wilcox rank test for treatment vs control [medians total ticks]
+  a. site (arid vs mesic)
+  b. plote (open vs total)
+```{r}
+# log transform data
+Full$log_total <- log(Full$total + 1)
+site_subset <- Full[which(Full$site == "Arid" | Full$site == "Mesic"),]
+plot_subset <- Full[which(Full$plot == "Open" | Full$plot == "Total"),]
+leveneTest(site_subset$log_total ~ site_subset$site) # df 1, F value = 21.401, p = 4.263e-06, < 0.05, variances are different
+leveneTest(plot_subset$log_total ~ plot_subset$plot) # df 1, F value = 34.118, p = 7.171e-09, < 0.05, variances are different
+
+
+## wilcox (non-equal variances)
+
+wilcox.test(log_total ~ site, data = site_subset) # W = 91628, p-value = 4.898e-05
+wilcox.test(log_total ~ plot, data = plot_subset) # W = 90379, p-value = 5.649e-07
+```
+  
+
+2. TWO WAY ANOVA [log means of total ticks]
+```{r}
+# log transform data
+Full$log_total <- log(Full$total + 1)
+# look at data
+boxplot(log_total ~ site, data = Full)
+boxplot(log_total ~ plot, data = Full)
+
+# two way anova with log values and interaction value
+aov_full <- aov(log_total ~ plot + site + (plot*site), data = Full)
+summary(aov_full)
+
+# check assumptions on residuals
+plot(aov_full) # both residual and qqPlot look normal
+
+# check residuals
+qqPlot(aov_full$residuals) # kinda looks normally distributed, but not perfect
+shapiro.test(aov_full$residuals) # p < 0.05, data not normal but
+dim(Full) # 1449 CTL applies
+
+## Proceed with post-hoc test
+TukeyHSD(aov_full)
+# SITE
+Post_hoc_site <-glht(aov_full, linfct = mcp(site = 'Tukey'))
+summary(Post_hoc_site)
+
+confint(Post_hoc_site) # pairwise test
+cld(Post_hoc_site) # arid = a, intermediate = b, mesic = c
+plot(Post_hoc_site) # plot 95% CIs
+
+# PLOT
+Post_hoc_plot <-glht(aov_full, linfct = mcp(plot = 'Tukey'))
+summary(Post_hoc_plot)
+
+confint(Post_hoc_plot) # pairwise test
+cld(Post_hoc_plot) # open = a, partial = b, total = b
+plot(Post_hoc_plot) # plot 95% CIs
+```
+
+
+
+
+
+
+
+
+
+Merge temp to tick data
+```{r}
+# merge temp data to full
+temp <- read_csv("Tejon_temperature_02022021.csv")
+Partial1 <- merge(full, temp)
+dim(Partial1) # 1449 13
+#View(Full)
 ```
 
 aggregated tick counts + plots
@@ -644,50 +679,9 @@ wilcox.test(total ~ site, data = site_subset) # p = 4.898e-05
 wilcox.test(total ~ plot, data = plot_subset) # p = 5.649e-07
 ```
 
-
-ANOVA
-- site
-  Fvalue = 41.62 
-  p < 2e-16 *one site type mean is significantly different*
   
-- Plot
-  Fvalue = 11.27 
-  p = 1.61e-05 *one plot type mean is significantly different*
-  
-  
-Tukey
-- site
-  Arid, Mesic, Intermediate are all different
-
--plot
-  Open is different than Partial and Total
-  
-ANOVA SITE
+SITE with Tukey
 ```{r}
-site1 <- aov(total~ site, data = Full)
-plot(site1)
-
-# check residuals
-res = site1$residuals
-shapiro.test(res) # p << 0.05 so data not normal
-#hist(res)
-leveneTest(total ~ site, 
-        data = Full) # p << 0.05 so variances are not equal
-summary(site1)
-# Fvalue = 55.96 
-# p < 2e-16 , reject H0 and conclude that 1 site is significantly different
-
-#Tukey-Kramer test assumes that I've already ran an ANOVA & rejected my H0 (all means are equal across groups)
-TukeyHSD(site1)
-# let's do this in a visual way
-Post_hoc <-glht(site1, linfct = mcp(site = 'Tukey'))
-summary(Post_hoc)
-
-confint(Post_hoc) # pairwise test
-cld(Post_hoc) # arid = a, intermediate = b, mesic = a
-plot(Post_hoc) # plot 95% CIs
-
-#### ^^ means ot total tick is significantly different in intermediate than mesic and arid
 
 ggplot(data = Full,
        aes(x = site, y = total,
@@ -765,6 +759,21 @@ ggsave("ANOVATUKEY_plot_v1.jpeg", dpi = 320)
 
 ```
 
+Datasummary
+```{r}
+install.packages("modelsummary")
+library(modelsummary)
+
+datasummary_skim(Full$site, type = "categorical")
+
+datasummary_correlation(Full)
+
+fitg <- glm(Full$log_total ~ site, data = Full, family = binomial)
+
+min(Full$log_total)
+```
+
+
 GLMS
 
  #**Generalized Linear Models**
@@ -779,6 +788,8 @@ GLMS
 models : tick1 - tick7 
 
 ```{r GLM for tick data}
+
+summ(tick1, exp = TRUE) # get exponentiated coefficients
 tick1 <- glm(total ~ rain_year, 
                data = Full_no0,
              family = 'poisson')
@@ -827,6 +838,33 @@ eighteen
 #nineteen
 #min(tickresults$AIC)
 
+effect_plot(tick2, pred = site, interval = TRUE, plot.points = TRUE)
+
+install.packages("ggstance")
+library(ggstance)
+plot_summs(tick2, scale = TRUE)
+plot_summs(tick2, scale = TRUE, inner_ci_level = .9)
+plot_summs(tick2, scale = TRUE, plot.distributions = TRUE,inner_ci_level = .9)
+
+
+plot_summs(tick2, tick3, scale = TRUE)
+plot_summs(tick2, tick3, scale = TRUE, plot.distributions = TRUE)
+
+
+plot_summs(tick2, tick2, tick2, scale = TRUE, robust = list(FALSE, "HC0", "HC3"), model.names = c("OLS", "HC0", "HC3"))
+
+library(huxtable)
+export_summs(tick2, tick3, scale = TRUE)
+
+export_summs(tick2, tick3, scale = TRUE,
+             error_format = "[{conf.low}, {conf.high}]")
+
+summ(tick5, vifs = TRUE)
+
+library(lme4)
+library(equatiomatic)
+fm1 <- lmer(total ~ Full$site,(Full$site|plot), Full)
+equatiomatic::extract_eq(fm1)
 ```
 
 

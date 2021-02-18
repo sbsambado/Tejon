@@ -1,0 +1,222 @@
+---
+title: "Tejon_Analysis_02162021"
+author: "sbsambado"
+date: "2/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+library(ggstance)
+library(huxtable)
+library(qwraps2)
+library(gtsummary)
+devtools::install_github('gavinsimpson/ggvegan')
+
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('brown1','tan1','lightgoldenrod1')
+
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+```
+
+## Dataset for means of ticks
+Using data Steph sent on 11/16/2020
+"Total_Ticks_2016_to_2018.csv"
+"Tick_19.csv"
+
+Merge 2 tick data sheets into 1 tick data sheet
+```{r message = FALSE}
+
+threeyrs <- read_csv("Total_Ticks_2016_to_2018.csv")
+dim(threeyrs)
+oneyr <- read_csv("Tick_19.csv")
+dim(oneyr)
+# get rid of survery column in threeyr since it wasn't completed in oneyrs 
+## Maybe double check survey number doesn't matter
+threeyrs <- subset(threeyrs, select = -c(3))
+
+# make sure names are the same
+## 2016 - 2018
+names(threeyrs) <- tolower(names(threeyrs))
+
+# change column names
+names(threeyrs)[6] <- "total"
+names(threeyrs)[7] <- "deoc"
+names(threeyrs)[8] <- "ipac"
+names(threeyrs)[9] <- "deva"
+names(threeyrs)[10] <- "other"
+
+## 2019
+# make sure names are the same
+names(oneyr) <- tolower(names(oneyr))
+
+# change column names
+names(oneyr)[6] <- "total"
+names(oneyr)[7] <- "deoc"
+names(oneyr)[8] <- "ipac"
+names(oneyr)[9] <- "deva"
+names(oneyr)[10] <- "other"
+
+
+full <- rbind(threeyrs, oneyr)
+
+# log transform data
+full$log_total <- log(full$total + 1)
+
+## FINAL DATASET TO COMPARE TICK MEANS
+dim(full) # 1449 11
+
+Full <- full
+```
+
+Basic stats
+```{r warning = FALSE}
+
+(plotcount <- Full %>% 
+  group_by(plot) %>% 
+  tally(total) )# open = 488, partial = 976, total = 1228
+
+(sitecount <- Full %>% 
+  group_by(site) %>% 
+  tally(total)) # arid = 340, intermediate = 1764, mesic = 588
+
+(fullcount <- Full %>% 
+  group_by(site, plot) %>% 
+  tally(total))
+
+(tickmodels <-kable(fullcount, digits = 2, align = 'c') %>%
+    pack_rows(
+      index = c("Arid" = 3, "Intermediate" = 3, "Mesic" = 3)
+    ))
+
+Plot <- c('Open','Partial', 'Total',
+          'Open','Partial', 'Total',
+          'Open','Partial', 'Total')
+n <- c('21', '195','124', '364', '554', '846', '103', '227', '258')
+
+summm <- data.frame(Plot,n)
+
+(suuuuuum <- kable(summm,digits = 2, align = 'c', booktabs = TRUE, caption = "Site") %>%
+    pack_rows(
+      index = c("Arid" = 3, "Intermediate" = 3, "Mesic" = 3)
+    ) %>%
+    kable_styling() %>%
+  kable_paper() %>%
+  save_kable(file = "table1.html", self_contained = T)
+)
+```
+
+## Tick Means Analyses
+
+#### **1. wilcox rank test for treatment vs control [medians total ticks]**
+Plot (open vs total): W = 90379, p-value = 5.649e-07
+```{r wilcox rank test}
+
+site_subset <- Full[which(Full$site == "Arid" | Full$site == "Mesic"),]
+plot_subset <- Full[which(Full$plot == "Open" | Full$plot == "Total"),]
+leveneTest(site_subset$log_total ~ site_subset$site) # df 1, F value = 21.401, p = 4.263e-06, < 0.05, variances are different
+leveneTest(plot_subset$log_total ~ plot_subset$plot) # df 1, F value = 34.118, p = 7.171e-09, < 0.05, variances are different
+
+
+## wilcox (non-equal variances)
+
+wilcox.test(log_total ~ site, data = site_subset) # W = 91628, p-value = 4.898e-05
+wilcox.test(log_total ~ plot, data = plot_subset) # W = 90379, p-value = 5.649e-07
+```
+  
+#### **2. TWO WAY ANOVA [log means of total ticks]**
+Plot: 3 levels, within-subjects factor? (F value = 20.298, df = 2, p= 2.05e-09)
+Site: 3 levels, within-subjects factor?  (F value = 61.154, df = 2,  p < 2e-16)
+plot*site interaction (F value = 0.847, df = 4, p = 0.496)
+
+**Post-hoc Test: Tukey Kramer**
+**Site**
+  Arid (a)
+  Intermediate (b)
+  Mesic (c )
+**Plot**
+  Open (a)
+  Partial (b)
+  Total (b)
+
+```{r two-way anova}
+# log transform data
+Full$log_total <- log(Full$total + 1)
+# look at data
+boxplot(log_total ~ site, data = Full)
+boxplot(log_total ~ plot, data = Full)
+
+# two way anova with log values and interaction value
+aov_full <- aov(log_total ~ plot + site + (plot*site), data = Full)
+summary(aov_full)
+
+# check assumptions on residuals
+plot(aov_full) # both residual and qqPlot look normal
+
+# check residuals
+qqPlot(aov_full$residuals) # kinda looks normally distributed, but not perfect
+shapiro.test(aov_full$residuals) # p < 0.05, data not normal but
+dim(Full) # 1449 CTL applies
+
+## Proceed with post-hoc test
+TukeyHSD(aov_full)
+# SITE
+Post_hoc_site <-glht(aov_full, linfct = mcp(site = 'Tukey'))
+summary(Post_hoc_site)
+
+confint(Post_hoc_site) # pairwise test
+cld(Post_hoc_site) # arid = a, intermediate = b, mesic = c
+plot(Post_hoc_site) # plot 95% CIs
+
+# PLOT
+Post_hoc_plot <-glht(aov_full, linfct = mcp(plot = 'Tukey'))
+summary(Post_hoc_plot)
+
+confint(Post_hoc_plot) # pairwise test
+cld(Post_hoc_plot) # open = a, partial = b, total = b
+plot(Post_hoc_plot) # plot 95% CIs
+```
+
+
+## Dataset for linear models
+

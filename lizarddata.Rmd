@@ -1,0 +1,135 @@
+---
+title: "lizard data"
+author: "sbsambado"
+date: "2/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+library(ggstance)
+library(huxtable)
+library(qwraps2)
+library(gtsummary)
+devtools::install_github('gavinsimpson/ggvegan')
+
+
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('brown1','tan1','lightgoldenrod1')
+
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+```
+
+upload data
+```{r message=FALSE}
+
+lizcounts <- read_csv("lizardcounts_02172021.csv")
+dim(lizcounts) # 1745 , 10
+names(lizcounts) <- tolower(names(lizcounts))
+
+
+lizburdens <- read_csv("lizardburdens_02172021.csv")
+dim(lizburdens) # 230, 27
+names(lizburdens) <- tolower(names(lizburdens))
+
+```
+
+```{r lizard burdens}
+
+# , !is.na(plotID)
+ggplot(lizburdens, aes(x = site,y = log(total.ticks +1), fill = site))+
+  geom_boxplot()+
+  geom_jitter(alph = .5) +
+  clean_background
+
+lizburdens %>% 
+  tally(total.ticks) # 89
+
+summary(lizburdens$total.ticks) # mean = 0.9175, max = 10
+
+lizburdens %>% 
+  group_by(site)%>%
+  tally(total.ticks) # arid = 18, intermediate = 69, mesic = 2
+
+
+ggplot(lizburdens, aes(x = sex, y = log(total.ticks +1 ), fill = sex)) +
+  facet_wrap(~site)+
+  geom_boxplot()
+
+ggplot(lizburdens, aes(x = sex, y = log(total.ticks +1 ), fill = sex)) +
+  facet_wrap(~plot)+
+  geom_boxplot()
+```
+
+```{r lizard counts}
+
+sumz <-lizcounts %>%
+  group_by(site, plot) %>%
+  tally(day1)
+
+ggplot(sumz, aes(x = plot, y = n, fill = plot))+
+  geom_bar(stat = "identity") +
+  facet_wrap(~site) +
+  clean_background
+```
+
+```{r}
+#Abundance Data Analysis
+install.packages("Rcapture")
+library("Rcapture")
+
+lizcounts$day1 <- as.numeric(lizcounts$day1)
+lizcounts$day2 <- as.numeric(lizcounts$day2)
+lizcounts$day3 <- as.numeric(lizcounts$day3)
+
+lizcounts$Day1 <- as.numeric(lizcounts$day1)
+lizcounts$Day2 <- as.numeric(lizcounts$day2)
+lizcounts$Day3 <- as.numeric(lizcounts$day3)
+
+abundance <- subset(lizcounts, select = c(Day1, Day2, Day3), !is.na(Day3) )
+View(abundance) #just my doublecheck – script takes csv files with Day 1/Day 2/Day 3 as headers and 1s and 0s for each capture event, hmu if you have formatting questions
+
+letsseeit = closedp.t(abundance, dfreq= FALSE, dtype="hist")
+
+letsseeit
+```
+

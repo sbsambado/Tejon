@@ -1,0 +1,55 @@
+---
+title: "lizard"
+author: "sbsambado"
+date: "2/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(lubridate)
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+devtools::install_github('gavinsimpson/ggvegan')
+
+
+lizard <- read_csv("toylizard.csv")
+```
+
+
+```{r}
+(liz <- lizard %>%
+  group_by(Plot, Level, Year, Month, Block) %>%
+  tally(BLUE_PAINT_S_occidentalis))
+
+(liz <- lizard %>%
+  group_by(Plot, Level, Year) %>%
+  tally(BLUE_RED_PAINT_S_occidentalis))
+```
+
