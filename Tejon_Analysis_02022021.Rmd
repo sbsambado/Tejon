@@ -214,6 +214,8 @@ Full$station <- Full$site
 
 ## give plotID
 Full <- transform(Full, plotID = as.numeric(interaction(block, plot, site, drop = TRUE)))
+Full <- transform(Full, plotid = as.character(interaction(site, plot,block, drop = TRUE)))
+
 ## create temp difference
 
 Full$temp_diff <- Full$mean_maxF - Full$mean_minF
