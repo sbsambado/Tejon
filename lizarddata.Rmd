@@ -71,6 +71,21 @@ lizburdens <- read_csv("lizardburdens_02172021.csv")
 dim(lizburdens) # 230, 27
 names(lizburdens) <- tolower(names(lizburdens))
 
+
+```
+
+```{r}
+
+boxplot(lizburdens$total.ticks ~lizburdens$plot)
+
+na_free<-na.omit(lizburdens$site)
+na<-na.omit(na_free$sex)
+
+na <- lizburdens[which(site != "NA" | sex != "NA" ),]
+ggplot(lizburdens, aes(y = total.ticks, x =site, color = sex))+
+  geom_boxplot()
+
+pairs.panels(lizburdens)
 ```
 
 ```{r lizard burdens}

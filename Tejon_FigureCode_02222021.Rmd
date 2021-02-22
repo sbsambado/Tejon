@@ -13,7 +13,44 @@ library(readr)
 library(ggpubr)
 library(ggplot2)
 library(xlsx)
-
+library(dplyr)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(plyr)
+library(car)
+library(multcomp)
+library(multcompView)
+library(reshape2)
+library(stringr)
+library(car)
+library(psych)
+library(knitr)
+library(nlme)
+library(lme4)
+library(kableExtra)
+library(MASS)
+library(grid)
+library(vegan)
+library(devtools)
+library(ggfortify)
+library(jtools)
+library(effects)
+library(pscl)
+library(lmtest)
+library(ggstance)
+library(huxtable)
+library(qwraps2)
+library(gtsummary)
+library(Rcapture)
+library(xlsx)
+library(glmmTMB) 
+library(tidyverse) 
+library(gt) 
+library(patchwork) 
+library(effects) 
+library(jtools)
 
 clean_background <- theme(plot.background = element_rect("white"),
         panel.background = element_rect("white"),
@@ -374,38 +411,40 @@ ggsave("PopulationEstimates.jpeg", dpi = 320)
 
 
 
-### OR without individual blocks
+### OR without individual blocks (need to go back to find old version of this)
 
-site <- c("Arid","Arid","Arid","Intermediate","Intermediate","Intermediate", "Mesic","Mesic","Mesic")
-plot <- c("Open", "Partial", "Total","Open", "Partial", "Total","Open", "Partial", "Total")
-mcounts <- c(7,85,72,10,18,38,64,142,71)
-
-mcount_table <- cbind(site, plot, mcounts)
-
-mcount_table <-as.data.frame(mcount_table)
-
-mcount_table$vert <- mcount_table$mcounts
-mcount_table$vert <- "mammal"
-names(mcount_table) <- c("site", "plot", "count", "vert")
-
-count_table$vert <- count_table$lizardcounts
-count_table$vert <- "lizard"
-names(count_table) <- c("site", "plot", "count", "vert")
-
-
-estimate <- rbind(mcount_table, count_table)
-str(estimate)
-
-estimate$count <- as.numeric(estimate$count)
-
-ggplot(estimate, aes(x = plot, y = count, fill = vert, group_by(vert)))+
-  geom_boxplot()+
-  theme_bw()+
-  xtitletheme + ytitletheme +
-  scale_fill_manual(values=c('grey50', "grey90")) +
-  labs(x = "Plot", y = "Vertebrate Population Estimates", fill = "Vertebrate") +
-  theme(legend.position = "bottom")
-ggsave("PopulationEstimate_aggregated.jpeg", dpi = 320)
+# site <- c("Arid","Arid","Arid","Intermediate","Intermediate","Intermediate", "Mesic","Mesic","Mesic")
+# plot <- c("Open", "Partial", "Total","Open", "Partial", "Total","Open", "Partial", "Total")
+# mcounts <- c(7,85,72,10,18,38,64,142,71)
+# 
+# mcount_table <- cbind(site, plot, mcounts)
+# 
+# mcount_table <-as.data.frame(mcount_table)
+# 
+# mcount_table$vert <- mcount_table$mcounts
+# mcount_table$vert <- "mammal"
+# names(mcount_table) <- c("site", "plot", "count", "vert")
+# 
+# 
+# count_table <- mcount_table
+# count_table$vert <- count_table$lizardcounts
+# count_table$vert <- "lizard"
+# names(count_table) <- c("site", "plot", "count", "vert")
+# 
+# 
+# estimate <- rbind(mcount_table, count_table)
+# str(estimate)
+# 
+# estimate$count <- as.numeric(estimate$count)
+# 
+# ggplot(estimate, aes(x = plot, y = count, fill = vert, group_by(vert)))+
+#   geom_boxplot()+
+#   theme_bw()+
+#   xtitletheme + ytitletheme +
+#   scale_fill_manual(values=c('grey50', "grey90")) +
+#   labs(x = "Plot", y = "Vertebrate Population Estimates", fill = "Vertebrate") +
+#   theme(legend.position = "bottom")
+# ggsave("PopulationEstimate_aggregated.jpeg", dpi = 320)
   
 
 

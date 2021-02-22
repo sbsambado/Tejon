@@ -193,4 +193,30 @@ ggplot(FULL, aes(x = month, y = maxF))+
 
 
 ```
+```{r random code for kurskal wallis and boxplot in ggpu r}
+# Kurskal-Wallis test
+# ```{r}
+# kw1 <- kruskal.test(log_total ~ site, data = Tick)  
+# # Kruskal-Wallis chi-squared = 77.186, df = 2, p-value < 2.2e-16
+# 
+# kw2 <- kruskal.test(log_total ~ plot, data = Tick) # p = 2.601e-12
+# # Kruskal-Wallis chi-squared = 30.565, df = 2, p-value = 2.306e-07
+# 
+# library(rstatix)
+# library(GmAMisc)
+# kwPlot(Tick$log_total,Tick$site, strip = TRUE, posthoc = TRUE, adjust = "bonferroni")
+# 
+# Kw1 <- Tick %>% add_xy_position(x = 'site')
+# ggboxplot(Tick, x = 'site', y = 'log_total')+
+#   stat_pvalue_manual(Tick, hide.ns = TRUE) +
+#   labs(subtitle = get_test_label(res.kruksal, detailed = TRUE),
+#        caption = get_pwc_label(pwc))
+# 
+# library("ggpubr")
+# ggboxplot(Tick, x = "site", y = "log_total", 
+#           add = c("mean_se", "jitter"),
+#           color = "site", palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+#           order = c("Arid", "Intermediate", "Mesic"),
+#           ylab = "Weight", xlab = "Treatment")
+```
 

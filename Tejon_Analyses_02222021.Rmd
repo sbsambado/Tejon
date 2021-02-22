@@ -121,10 +121,6 @@ tick$site <- as.factor(tick$site)
 tick$plot <- as.factor(tick$plot)
 Tick <- tick
 
-# write to an excel sheet
-write.xlsx(Tick, file = "Tejon_MeanComparisons_Dataset.xlsx",
-           col.names = TRUE, row.names = TRUE)
-
 ```
 
 Basic stats
