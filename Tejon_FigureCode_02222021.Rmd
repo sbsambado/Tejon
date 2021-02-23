@@ -491,6 +491,8 @@ ggsave("TickMeans_PlotMonth.jpeg", dpi = 320)
 
 
 More graphs
+
+**Pop estimates**
 ```{r}
 # pop_estimates <-read_csv("tejon_mamliz_popestimates.csv")
 # 
@@ -517,6 +519,12 @@ More graphs
 
 ```
 
+
+**Estimates for 3 model types**
+```{r}
+plot_summs(host_gnb_mod4, climate_gnbmod5, combo_gnb_mod7,scale = TRUE,
+           model.names = c("Host", "Climate", "Combination"))
+```
 
 
 

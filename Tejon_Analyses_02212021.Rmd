@@ -542,46 +542,48 @@ gnb_mod3 <- glmer.nb(total ~ tempdifC + (1|plotID)+ (1|rain_year) + (1|month),
 
 
 str(FINAL)
-climate_gnbmod1 <- glmer.nb(total ~ mean_maxC + (1|plotID) + (1|rain_year) + (1|month), 
+climate_gnb_mod1 <- glmer.nb(total ~  mean_maxC + (1|plotID) + (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
 
-climate_gnbmod2 <- glmer.nb(total ~ mean_minC + (1|plotID)+ (1|rain_year) + (1|month), 
+climate_gnb_mod2 <- glmer.nb(total ~ mean_minC + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
-climate_gnbmod3 <- glmer.nb(total ~ tempdifC + (1|plotID)+ (1|rain_year) + (1|month), 
+climate_gnb_mod3 <- glmer.nb(total ~ tempdifC + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
-climate_gnbmod4 <- glmer.nb(total ~ precip_mm + (1|plotID)+ (1|rain_year) + (1|month), 
+climate_gnb_mod4 <- glmer.nb(total ~ precip_mm + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
-climate_gnbmod5 <- glmer.nb(total ~ mean_maxC + mean_minC + tempdifC +precip_mm + 
+climate_gnb_mod5 <- glmer.nb(total ~ mean_maxC + mean_minC + tempdifC +precip_mm + 
                        (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
-result <- AIC(climate_gnbmod1, climate_gnbmod2, climate_gnbmod3,climate_gnbmod4,climate_gnbmod5)
-models <- list(climate_gnbmod1, climate_gnbmod2, climate_gnbmod3,climate_gnbmod4,climate_gnbmod5)
+
+climate_result <- AIC(climate_gnb_mod1, climate_gnb_mod2, climate_gnb_mod3,climate_gnb_mod4,climate_gnb_mod5)
+climate_models <- list(climate_gnb_mod1, climate_gnb_mod2, climate_gnb_mod3,climate_gnb_mod4,climate_gnb_mod5)
 
 
 
-result$BIC <- sapply(models, BIC)
-model_summary <- lapply(models, summary)
-for(i in 1:(length(models)-1)){ #this creates a variable i that starts with the value i=1
-  result$rsq[i] <- model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
-  result$adj_rsq[i] <- model_summary[[i]]$adj.r.squared #same for adjusted rsq
+climate_result$BIC <- sapply(climate_models, BIC)
+climate_model_summary <- lapply(climate_models, summary)
+for(i in 1:(length(climate_models)-1)){ #this creates a variable i that starts with the value i=1
+  climate_result$rsq[i] <- climate_model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  climate_result$adj_rsq[i] <- climate_model_summary[[i]]$adj.r.squared #same for adjusted rsq
 } #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
 
-result$variables <- c("maxC", "minC", "tempdiffC", "precip_mm", "Full")
+climate_result$variables <- c("maxC", "minC", "tempdiffC", "precip_mm", "Full")
 
 climate_models <- kable(result, digits = 2, align = "c") %>%
   kable_styling()
 
 ### best fit model is gnb.mod3...difference in C based on BIC
+
 
 ```
 
@@ -597,50 +599,43 @@ gnb_mod4 <- glmer.nb(total ~ liz_estimate + (1|plotID)+ (1|rain_year) + (1|month
 
 
 str(FINAL)
-host_gnb_mod1 <- glmer.nb(total ~ cum_mammal + (1|plotID) + (1|rain_year) + (1|month), 
+
+
+host_gnb_mod1 <- glmer.nb(total ~ shan_mammal + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
-
-host_gnb_mod2 <- glmer.nb(total ~ shan_mammal + (1|plotID)+ (1|rain_year) + (1|month), 
+host_gnb_mod2 <- glmer.nb(total ~ liz_estimates + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
-host_gnb_mod3 <- glmer.nb(total ~ rich_mammal + (1|plotID)+ (1|rain_year) + (1|month), 
-                 data = na.omit(FINAL),
-                 family = "poisson")
-
-host_gnb_mod4 <- glmer.nb(total ~ liz_estimates + (1|plotID)+ (1|rain_year) + (1|month), 
-                 data = na.omit(FINAL),
-                 family = "poisson")
-
-host_gnb_mod5 <- glmer.nb(total ~ mam_estimates + (1|plotID)+ (1|rain_year) + (1|month), 
+host_gnb_mod3 <- glmer.nb(total ~ mam_estimates + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
 # there's collinearity in full
-host_gnb_mod6 <- glmer.nb(total ~ shan_mammal + rich_mammal + liz_estimates + mam_estimates + (1|plotID)+ (1|rain_year) + (1|month), 
+host_gnb_mod4 <- glmer.nb(total ~ shan_mammal + liz_estimates + mam_estimates + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
 # less collinearity in partial
 #host_gnb_mod7 <- glmer.nb(total ~ cum_mammal + shan_mammal + rich_mammal + liz_estimatess + mam_estimates + (1|plotID)+ (1|rain_year) + (1|month), data = na.omit(FINAL),family = "poisson")
 
-result <- AIC(host_gnb_mod1, host_gnb_mod2, host_gnb_mod3,host_gnb_mod4,host_gnb_mod5,host_gnb_mod6)
-models <- list(host_gnb_mod1, host_gnb_mod2, host_gnb_mod3,host_gnb_mod4,host_gnb_mod5,host_gnb_mod6)
+host_result <- AIC(host_gnb_mod1, host_gnb_mod2, host_gnb_mod3,host_gnb_mod4)
+host_models <- list(host_gnb_mod1, host_gnb_mod2, host_gnb_mod3,host_gnb_mod4)
 
 
 
-result$BIC <- sapply(models, BIC)
-model_summary <- lapply(models, summary)
-for(i in 1:(length(models)-1)){ #this creates a variable i that starts with the value i=1
-  result$rsq[i] <- model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
-  result$adj_rsq[i] <- model_summary[[i]]$adj.r.squared #same for adjusted rsq
+host_result$BIC <- sapply(host_models, BIC)
+host_model_summary <- lapply(host_models, summary)
+for(i in 1:(length(host_models)-1)){ #this creates a variable i that starts with the value i=1
+  host_result$rsq[i] <- host_model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  result$adj_rsq[i] <- host_model_summary[[i]]$adj.r.squared #same for adjusted rsq
 } #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
 
-result$variables <- c("cum_mam", "shan_mam", "rich_mam", "liz_estimatess", "mam_estimates", "Full")
+host_result$variables <- c("shan_mam","liz_estimatess", "mam_estimates", "Full")
 
-host_models <- kable(result, digits = 2, align = "c") %>%
+host_models <- kable(host_result, digits = 2, align = "c") %>%
   kable_styling()
 
 
@@ -693,19 +688,19 @@ combo_gnb_mod7 <- glmer.nb(total ~ plot + site + tempdifC + liz_estimates + temp
                  data = na.omit(FINAL),
                  family = "poisson")
 
-result <- AIC(combo_gnb_mod1, combo_gnb_mod2, combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6)
-models <- list(combo_gnb_mod1, combo_gnb_mod2, combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6)
+combo_result <- AIC(combo_gnb_mod1, combo_gnb_mod2, combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6,combo_gnb_mod7)
+combo_models <- list(combo_gnb_mod1, combo_gnb_mod2, combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6,combo_gnb_mod7)
 
 
 
-result$BIC <- sapply(models, BIC)
-model_summary <- lapply(models, summary)
-for(i in 1:(length(models)-1)){ #this creates a variable i that starts with the value i=1
-  result$rsq[i] <- model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
-  result$adj_rsq[i] <- model_summary[[i]]$adj.r.squared #same for adjusted rsq
+combo_result$BIC <- sapply(combo_models, BIC)
+combo_model_summary <- lapply(combo_models, summary)
+for(i in 1:(length(combo_models)-1)){ #this creates a variable i that starts with the value i=1
+  combo_result$rsq[i] <- combo_model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  combo_result$adj_rsq[i] <- combo_model_summary[[i]]$adj.r.squared #same for adjusted rsq
 } #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
 
-result$variables <- c("plot", "site", "tempdifC", "liz_estimates", "tempdifC*site", "liz_estimates*plot")
+combo_result$variables <- c("plot", "site", "tempdifC", "liz_estimates", "tempdifC*site", "liz_estimates*plot", "Full")
 
 combo_models <- kable(result, digits = 2, align = "c") %>%
   kable_styling()
@@ -718,38 +713,78 @@ combo_models <- kable(result, digits = 2, align = "c") %>%
 #### **7. Model comparisons**
 
 Tables of model summaries
-```{r results = 'asis'}
-# kables
+```{r kables results = 'asis'}
+## kables
 climate_models
 host_models
 combo_models
+```
 
-# best fit models within each group
-summs(climate_gnbmod3, exp = TRUE) # climate
-summ(host_gnb_mod4, exp = TRUE) # host
-summ(combo_gnb_mod5, exp = TRUE) # combo
-
-install.packages("flextable")
+```{r summ package full models results = 'asis'}
+## summ package https://cran.r-project.org/web/packages/jtools/vignettes/summ.html#Generalized_and_Mixed_models
+library(sandwich)
 library(officer)
 library(flextable)
-export_summs(climate_gnbmod3,host_gnb_mod4,combo_gnb_mod5, scale = TRUE,
-             error_format = "({statistic}, p = {p.value})")
+
+### effect plots
+  # best host
+  effect_plot(host_gnb_mod2, pred = liz_estimates, interval = FALSE, plot.points = FALSE)
+  # best climate
+  effect_plot(climate_gnb_mod3, pred = tempdifC, interval = FALSE, plot.points = FALSE)
+
+### plot summs
+  plot_summs(host_gnb_mod4, climate_gnb_mod5, combo_gnb_mod7,scale = TRUE,
+             model.names = c("Host", "Climate", "Combination"))
+  
+
+### export summs
+  ## climate
+  export_summs(climate_gnb_mod1,climate_gnb_mod2,climate_gnb_mod3,climate_gnb_mod4,climate_gnb_mod5, 
+               confint = TRUE,exp = TRUE,digits = 4,
+               error_format = "({statistic}, p = {p.value})", 
+               to.file = "docx", file.name = "Tejon_FULLClimateModels.docx") # could set to PDF and .pdf
+  ## host
+  
+  
+  export_summs(host_gnb_mod1,host_gnb_mod2,host_gnb_mod3,host_gnb_mod4, 
+               confint = TRUE,exp = TRUE,digits = 4,
+               error_format = "({statistic}, p = {p.value})",
+               to.file = "docx", 
+               file.name = "Tejon_FULLHostModels.docx")
+  
+  ## combo
+  
+  export_summs(combo_gnb_mod1,combo_gnb_mod2,combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6,combo_gnb_mod7,
+               confint = TRUE, exp = TRUE, digits = 4,
+               error_format = "({statistic}, p = {p.value})",
+               to.file = "docx", 
+               file.name = "Tejon_FULLComboModels.docx")
+  
+```
+
+```{r summs package best models results = 'asis'}
+# good standard for summ()
+# summ(climate_gnbmod1, confint = TRUE,exp = TRUE, vifs = TRUE)
+
+# best fit models within each group
+summ(climate_gnb_mod3, exp = TRUE, confint = TRUE) # climate
+summ(host_gnb_mod2, exp = TRUE, confint = TRUE) # host
+summ(combo_gnb_mod5, exp = TRUE, confint = TRUE) # combo
 
 
-export_summs(climate_gnbmod3,host_gnb_mod4,combo_gnb_mod5, scale = TRUE,
-             error_format = "({statistic}, p = {p.value})",
-             to.file = "docx", 
-             file.name = "Tejon_BestFitModels.docx")
-
-export_summs(climate_gnbmod3,host_gnb_mod4,combo_gnb_mod5, scale = TRUE,
-             error_format = "({statistic}, p = {p.value})",
-             to.file = "PDF", 
-             file.name = "Tejon_BestFitModels.pdf")
+# export best fit models within each group
+export_summs(climate_gnb_mod3,host_gnb_mod2,combo_gnb_mod5,
+              confint = TRUE,exp = TRUE,digits = 3,
+               error_format = "({statistic}, 95% CI [{conf.low}, {conf.high}], p = {p.value})", 
+               to.file = "docx", file.name = "Tejon_BestFitModels.docx")
 ```
 
 ##### **7A. Summary of best fit model
 ```{r}
 summary(combo_gnb_mod5)
+
+effect_plot(combo_gnb_mod5, pred = tempdifC, interval = FALSE, plot.points = FALSE)
+
 
 ```
 
