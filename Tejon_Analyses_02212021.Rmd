@@ -718,10 +718,33 @@ combo_models <- kable(result, digits = 2, align = "c") %>%
 #### **7. Model comparisons**
 
 Tables of model summaries
-```{r}
+```{r results = 'asis'}
+# kables
 climate_models
 host_models
 combo_models
+
+# best fit models within each group
+summs(climate_gnbmod3, exp = TRUE) # climate
+summ(host_gnb_mod4, exp = TRUE) # host
+summ(combo_gnb_mod5, exp = TRUE) # combo
+
+install.packages("flextable")
+library(officer)
+library(flextable)
+export_summs(climate_gnbmod3,host_gnb_mod4,combo_gnb_mod5, scale = TRUE,
+             error_format = "({statistic}, p = {p.value})")
+
+
+export_summs(climate_gnbmod3,host_gnb_mod4,combo_gnb_mod5, scale = TRUE,
+             error_format = "({statistic}, p = {p.value})",
+             to.file = "docx", 
+             file.name = "Tejon_BestFitModels.docx")
+
+export_summs(climate_gnbmod3,host_gnb_mod4,combo_gnb_mod5, scale = TRUE,
+             error_format = "({statistic}, p = {p.value})",
+             to.file = "PDF", 
+             file.name = "Tejon_BestFitModels.pdf")
 ```
 
 ##### **7A. Summary of best fit model
