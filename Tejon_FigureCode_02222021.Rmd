@@ -494,28 +494,29 @@ More graphs
 
 **Pop estimates**
 ```{r}
-# pop_estimates <-read_csv("tejon_mamliz_popestimates.csv")
+pop_estimates <-read_csv("tejon_mamliz_popestimates.csv")
+
+
+(liz <- ggplot(pop_estimates, aes(x = plot, y = liz_estimate, fill = plot))+
+  geom_boxplot()+
+  theme_bw()+
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  labs(x = "Plot", y = "Lizard Population Estimates")+
+  guides(fill = FALSE))
+
+(mam<- ggplot(pop_estimates, aes(x = plot, y = mam_estimates, fill = plot))+
+  geom_boxplot()+
+  theme_bw()+
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4')) +
+  labs(x = "Plot", y = "Mammal Population Estimates")+
+  guides(fill = FALSE))
+
+estimates <- ggarrange(liz, mam)
 # 
-# 
-# liz <- ggplot(pop_estimates, aes(x = plot, y = liz_estimate, fill = plot))+
-#   geom_boxplot()+
-#   theme_bw()+
-#   xtitletheme + ytitletheme +
-#   scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
-#   labs(x = "Plot", y = "Lizard Population Estimates")+
-#   guides(fill = FALSE)
-# 
-# mam<- ggplot(pop_estimates, aes(x = plot, y = mam_estimates, fill = plot))+
-#   geom_boxplot()+
-#   theme_bw()+
-#   xtitletheme + ytitletheme +
-#   scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4')) +
-#   labs(x = "Plot", y = "Mammal Population Estimates")+
-#   guides(fill = FALSE)
-# 
-# estimates <- ggarrange(liz, mam)
-# 
-# ggsave("PopulationEstimates.jpeg", dpi = 320)
+#ggsave("PopulationEstimatesBlock.jpeg", dpi = 320)
+
 
 ```
 

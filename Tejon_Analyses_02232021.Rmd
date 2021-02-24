@@ -47,7 +47,6 @@ library(gt)
 library(patchwork) 
 library(effects) 
 library(jtools)
-
 devtools::install_github('gavinsimpson/ggvegan')
 
 
@@ -122,8 +121,8 @@ tick$plot <- as.factor(tick$plot)
 Tick <- tick
 
 # write to an excel sheet
-write.xlsx(Tick, file = "Tejon_MeanComparisons_Dataset.xlsx",
-           col.names = TRUE, row.names = TRUE)
+#write.xlsx(Tick, file = "Tejon_MeanComparisons_Dataset.xlsx",
+#          col.names = TRUE, row.names = TRUE)
 
 ```
 
@@ -395,10 +394,10 @@ climate.mam.combo$tempdifC <- (climate.mam.combo$mean_maxC - climate.mam.combo$m
 # add plotID
 climate.mam.combo <- transform(climate.mam.combo, plotidname = as.character(interaction(site, plot,block, drop = TRUE)))
 climate.mam.combo <- transform(climate.mam.combo, plotID = as.numeric(interaction(site, plot,block, drop = TRUE)))
-str(climate.mam.combo) # 1395 observations, 26 variables (added plotidname, plotID)
+#str(climate.mam.combo) # 1395 observations, 26 variables (added plotidname, plotID)
 
 # put data in right format
-str(climate.mam.combo)
+#str(climate.mam.combo)
 
 climate.mam.combo$year <- as.factor(climate.mam.combo$year)
 climate.mam.combo$block <- as.factor(climate.mam.combo$block)
@@ -424,12 +423,14 @@ names(climate.mam.combo)[16] <- "precip_mm"
 
 # Finally, the final dataset for GLMMS
 FINAL <- climate.mam.combo
-str(FINAL) # 1395 observations, 29 variables
+#str(FINAL) # 1395 observations, 29 variables
 
 # write to an excel sheet
-write.xlsx(FINAL, file = "Tejon_MixedModels_Dataset.xlsx",
-           col.names = TRUE, row.names = TRUE)
+#write.xlsx(FINAL, file = "Tejon_MixedModels_Dataset.xlsx",
+#           col.names = TRUE, row.names = TRUE)
 ```
+
+
 
 #### **4.Correlation using Spearman's rank**
 Used non-parametric Spearman's rank correlation. Looking at an association between the rank of tick counts and a potential predictor variables.
@@ -464,6 +465,10 @@ cor.test(FINAL$total, FINAL$shan_mammal, method = "spearman", alternative = "two
 
 cor.test(FINAL$total, FINAL$mean_minC, method = "spearman", alternative = "two.sided")             
 # rho = - .0299
+
+
+
+
 
 ```
 
@@ -541,7 +546,7 @@ gnb_mod3 <- glmer.nb(total ~ tempdifC + (1|plotID)+ (1|rain_year) + (1|month),
 ###### mean_maxF, mean_minF, tempdifF, mean_maxC, mean_minC, tempdifC, precip_in, precip_mm ####
 
 
-str(FINAL)
+#str(FINAL)
 climate_gnb_mod1 <- glmer.nb(total ~  mean_maxC + (1|plotID) + (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
@@ -579,7 +584,7 @@ for(i in 1:(length(climate_models)-1)){ #this creates a variable i that starts w
 
 climate_result$variables <- c("maxC", "minC", "tempdiffC", "precip_mm", "Full")
 
-climate_models <- kable(result, digits = 2, align = "c") %>%
+climate_models <- kable(climate_result, digits = 2, align = "c") %>%
   kable_styling()
 
 ### best fit model is gnb.mod3...difference in C based on BIC
@@ -598,7 +603,7 @@ gnb_mod4 <- glmer.nb(total ~ liz_estimate + (1|plotID)+ (1|rain_year) + (1|month
 ###### cum_mammal shan_mammal rich_mammal liz_estimates mam_estimates ####
 
 
-str(FINAL)
+#str(FINAL)
 
 
 host_gnb_mod1 <- glmer.nb(total ~ shan_mammal + (1|plotID)+ (1|rain_year) + (1|month), 
@@ -630,7 +635,7 @@ host_result$BIC <- sapply(host_models, BIC)
 host_model_summary <- lapply(host_models, summary)
 for(i in 1:(length(host_models)-1)){ #this creates a variable i that starts with the value i=1
   host_result$rsq[i] <- host_model_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
-  result$adj_rsq[i] <- host_model_summary[[i]]$adj.r.squared #same for adjusted rsq
+  host_result$adj_rsq[i] <- host_model_summary[[i]]$adj.r.squared #same for adjusted rsq
 } #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
 
 host_result$variables <- c("shan_mam","liz_estimatess", "mam_estimates", "Full")
@@ -702,7 +707,7 @@ for(i in 1:(length(combo_models)-1)){ #this creates a variable i that starts wit
 
 combo_result$variables <- c("plot", "site", "tempdifC", "liz_estimates", "tempdifC*site", "liz_estimates*plot", "Full")
 
-combo_models <- kable(result, digits = 2, align = "c") %>%
+combo_models <- kable(combo_result, digits = 2, align = "c") %>%
   kable_styling()
 
 
@@ -713,14 +718,14 @@ combo_models <- kable(result, digits = 2, align = "c") %>%
 #### **7. Model comparisons**
 
 Tables of model summaries
-```{r kables results = 'asis'}
+```{r kables, results = "asis"}
 ## kables
 climate_models
 host_models
 combo_models
 ```
 
-```{r summ package full models results = 'asis'}
+```{r summ package full models, results = "asis"}
 ## summ package https://cran.r-project.org/web/packages/jtools/vignettes/summ.html#Generalized_and_Mixed_models
 library(sandwich)
 library(officer)
@@ -762,7 +767,7 @@ library(flextable)
   
 ```
 
-```{r summs package best models results = 'asis'}
+```{r summs package best models, results = "asis"}
 # good standard for summ()
 # summ(climate_gnbmod1, confint = TRUE,exp = TRUE, vifs = TRUE)
 
@@ -917,28 +922,28 @@ From those, I created an excel sheet called `tejon_mamliz_popestimates` that I m
 mamcounts <- read_csv("mammal_counts_02182021.csv")
 dim(mamcounts) # 229   9
 
-str(mamcounts)
+#str(mamcounts)
 mamcounts$day1 <- as.numeric(mamcounts$day1)
 mamcounts$day2 <- as.numeric(mamcounts$day2)
 mamcounts$day3 <- as.numeric(mamcounts$day3)
 mamcounts$site <- as.factor(mamcounts$site)
 mamcounts$plot <- as.factor(mamcounts$plot)
 mamcounts$block <- as.numeric(mamcounts$block)
-str(mamcounts)
+#str(mamcounts)
 
 ### lizards
 lizcounts <- read_csv("lizardcounts_02172021.csv")
 dim(lizcounts) # 1745 , 10
 names(lizcounts) <- tolower(names(lizcounts))
 
-str(lizcounts)
+#str(lizcounts)
 lizcounts$day1 <- as.numeric(lizcounts$day1)
 lizcounts$day2 <- as.numeric(lizcounts$day2)
 lizcounts$day3 <- as.numeric(lizcounts$day3)
 lizcounts$site <- as.factor(lizcounts$site)
 lizcounts$plot <- as.factor(lizcounts$plot)
 lizcounts$block <- as.numeric(lizcounts$block)
-str(lizcounts)
+#str(lizcounts)
 
 ```
 
@@ -1514,6 +1519,52 @@ models[1,1] # select total abundance # second best fit model is M0, since 1st be
 
 ```
 
+
+##### **Kruskal-Wallis test: vertebrate populations across plot and sites**
+
+**lizards only significantly different by site type (p-value = 0.09118, Kruskal-Wallis chi-squared = 6.7996)**
+  + Arid
+      + mean = 71
+      + median = 70
+      
+  + Intermediate
+      + mean = 130
+      + median = 134
+
+Could not do post-hoc test (wilcox, dunn, or conover) because I only have two groupings for site. Lizards were only sampled at arid and intermediate. I will calculate lizard medians and means as a way to show which site has more lizards post a significant kruskal wallis test.
+  + **Intermediate has more lizards which also has higher tick counts**
+  
+```{r kruskal wallis}
+
+# mammal populations did not significantly differ across sites or plots but that may be due to low sample numbers
+kruskal.test(mam_estimates ~ plot, data = pop_estimates)
+kruskal.test(mam_estimates ~ site, data = pop_estimates)
+
+# lizard populations differed significantly by site type, but not plot
+kruskal.test(liz_estimate ~ plot, data = pop_estimates)
+kruskal.test(liz_estimate ~ site, data = pop_estimates)
+
+# could not do post-hoc test (wilcox, dunn, or conover) because I only have two groupings for site. Lizards were only sampled at arid and intermediate. I will calculate lizard medians and means as a way to show which site has more lizards post a significant kruskal wallis test.
+
+#str(pop_estimates)
+pop_estimates$site <- as.factor(pop_estimates$site)
+pop_estimates$plot <- as.factor(pop_estimates$plot)
+kruskal.test(liz_estimate ~ site, data = pop_estimates) # p-value = 0.009118 , Kruskal-Wallis chi-squared = 6.7996
+
+aggregate(mam_estimates ~ plot, data = pop_estimates, FUN = median) # O = 6, P = 16, T = 17
+aggregate(mam_estimates ~ plot, data = pop_estimates, FUN = mean) # O = 8.71, P = 50.66, T = 24.50
+aggregate(mam_estimates ~ site, data = pop_estimates, FUN = median) # A = 16, I = 6, M = 17
+aggregate(mam_estimates ~ site, data = pop_estimates, FUN = mean) # A = 18.25, I = 10.0, M = 45.62
+
+aggregate(liz_estimate ~ plot, data = pop_estimates, FUN = median) # O = 84.0, P = 73.5, T = 87.0	
+aggregate(liz_estimate ~ plot, data = pop_estimates, FUN = mean) # O = 103.16667, P = 93.66667, T = 103.00
+
+
+aggregate(liz_estimate ~ site, data = pop_estimates, FUN = median) # A = 70	, I = 134, M = NA
+aggregate(liz_estimate ~ site, data = pop_estimates, FUN = mean) # A = 70.11, I = 129.77, M = NA
+```
+
+
 #### **8B. Mammal metrics of Shannon richness and species diversity
 
 *Original datasets I was given: `2018_smammals` and `Small_mammal_captures_19`* 
@@ -1549,4 +1600,68 @@ count$shannondiv <- diversity(numeric)
 ```
 
 
+#### **8C. Tick burdens compared to drags
+
+Weak positive association between *drag ticks* and *burden ticks* (rho = 0.0229)
+Slightly strong association between *burden ticks* and *lizard weight* (rho = 0.15197) and *lizard length* (rho = 0.166)
+
+Very small tick burdens on mammals. There are 4 mammals with reported tick burdens. Max burden is 3 ticks. Intermediate had a sum of 7 burden ticks and Mesic had a sum of 1 burden ticks.
+```{r message=FALSE}
+
+burdens <- read_csv("lizardburdens_02172021.csv")
+#str(burdens)
+names(burdens) <- tolower(names(burdens))
+
+burdens$block <- as.factor(burdens$block)
+burdens$total.ticks <- as.numeric(burdens$total.ticks)
+
+burdens$site <- factor(burdens$site, 
+                    levels = c('Arid', 'Intermediate', 'Mesic'))
+
+burdens$plot <- factor(burdens$plot, 
+                    levels = c('Open', 'Partial', 'Total'))
+
+
+ggplot(burdens, aes(x = plot, y = total.ticks))+
+  geom_point()+
+  geom_boxplot()+
+  clean_background
+
+aggregate(total.ticks ~ plot, data = burdens, FUN = mean)
+aggregate(total.ticks ~ site, data = burdens, FUN = mean) # Intermediate highest mean 1.1129032, Mesic (1.00), Arid (0.545)
+aggregate(total.ticks ~ site, data = burdens, FUN = sum) # Intermediate highest summed burdens (69), Arid(18), Mesic (2)
+
+
+## format burdnes
+burdens_sub <- subset(burdens, select = c(3:5, 18:19, 24))
+names(burdens_sub)[6] <- "burden_ticks"
+Tick_sub <- subset(Tick, select = c(3:6))
+names(Tick_sub)[4] <- "quest_ticks"
+burd <- merge(burdens_sub, Tick_sub)
+#str(burd) #5205, 7
+burd_nona <-na.omit(burd)
+#str(burd_nona) #4578, 7
+
+burd_nona$log_quest_ticks <- log(burd_nona$quest_ticks + 1)
+burd_nona$log_burden_ticks <- log(burd_nona$burden_ticks + 1)
+
+Burden <- burd_nona # cmon, make this an easier name
+#str(Burden) # 4578, 9
+
+cor.test(Burden$quest_ticks, Burden$burden_ticks, method = "spearman", alternative = "two.sided") # rho = 0.0229, very weak positive association 
+
+cor.test(Burden$burden_ticks, Burden$`length(cm)`, method = "spearman", alternative = "two.sided") # rho = 0.166 slight positive association between burden and length
+
+cor.test(Burden$burden_ticks, Burden$`weight(g)`, method = "spearman", alternative = "two.sided") # rho = 0.15197 slight positive association between burden and weight
+
+#pairs.panels(Burden)
+
+
+
+mam_burden <- subset(mammals, select = c(4:6, 13:14, 16))
+#str(mam_burden) # 322, 6 
+
+mam_burden_sub <-mam_burden %>%
+  filter(ticks != "N") # lol, mammal burdens are so low, total of 8 tick burdnes across all of sampling (Interm sum = 7, Mesic sum = 1, max burden = 3)
+```
 
