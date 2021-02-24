@@ -129,6 +129,18 @@ Tick <- tick
 Basic stats
 ```{r warning = FALSE}
 
+
+aggregate(total ~ plot, data = Tick, FUN = sum)
+aggregate(total ~ site, data = Tick, FUN = sum)
+
+aggregate(total ~ month, data = Tick, FUN = sum)
+
+(1071+600)/2692 # April and May collections
+  
+
+```
+
+```{r}
 (plotcount <- Tick %>% 
   group_by(plot) %>% 
   tally(total) )# open = 488, partial = 976, total = 1228
@@ -430,6 +442,34 @@ FINAL <- climate.mam.combo
 #           col.names = TRUE, row.names = TRUE)
 ```
 
+Basic climatic stats
+```{r}
+aggregate(tempdifC ~ site, data = FINAL, FUN = mean)
+
+tempdif <- aov(tempdifC ~ site, data = FINAL)
+qqPlot(tempdif$residuals)
+summary(aov(tempdifC ~ site, data = FINAL)) # F value = 482.6, df =2, p-value = <2e-16 ***
+
+Post_hoc_tempdif <-glht(tempdif, linfct = mcp(site = 'Tukey'))
+summary(Post_hoc_tempdif)
+
+confint(Post_hoc_tempdif) # pairwise test
+cld(Post_hoc_tempdif) # arid = a, intermediate = b, mesic = c
+plot(Post_hoc_tempdif)
+
+aggregate(precip_mm ~ site, data = FINAL, FUN = mean)
+
+precip <- aov(precip_mm ~ site, data = FINAL)
+qqPlot(precip$residuals) # not so normal, but will argue CLT
+summary(precip)
+
+Post_hoc_precip_mm <-glht(precip, linfct = mcp(site = 'Tukey'))
+summary(Post_hoc_precip_mm)
+
+confint(Post_hoc_precip_mm) # pairwise test
+cld(Post_hoc_precip_mm) # arid = a, intermediate = b, mesic = c
+plot(Post_hoc_precip_mm)
+```
 
 
 #### **4.Correlation using Spearman's rank**
@@ -537,10 +577,13 @@ pairs.panels(final.plot) # makes sense that min-max, cum-shan, cum-rich are high
 ```
 
 ##### **6A. Climate models**
+
 *Best model*
-gnb_mod3 <- glmer.nb(total ~ tempdifC + (1|plotID)+ (1|rain_year) + (1|month), 
+BIC = 908.18
+climate_gnb_mod3 <- glmer.nb(total ~ tempdifC + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
+                 
 ```{r climate models, warnings =FALSE, message=FALSE}
 ######################## CLIMATE MODELS ########################
 ###### mean_maxF, mean_minF, tempdifF, mean_maxC, mean_minC, tempdifC, precip_in, precip_mm ####
@@ -594,10 +637,13 @@ climate_models <- kable(climate_result, digits = 2, align = "c") %>%
 
 
 ##### **6B.Host models**
+
 *Best model*
-gnb_mod4 <- glmer.nb(total ~ liz_estimate + (1|plotID)+ (1|rain_year) + (1|month), 
+BIC = 921.23
+host_gnb_mod2 <- glmer.nb(total ~ liz_estimate + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
+                 
 ```{r host models, warnings =FALSE, message=FALSE}
 ######################## HOST MODELS ########################
 ###### cum_mammal shan_mammal rich_mammal liz_estimates mam_estimates ####
@@ -638,7 +684,7 @@ for(i in 1:(length(host_models)-1)){ #this creates a variable i that starts with
   host_result$adj_rsq[i] <- host_model_summary[[i]]$adj.r.squared #same for adjusted rsq
 } #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
 
-host_result$variables <- c("shan_mam","liz_estimatess", "mam_estimates", "Full")
+host_result$variables <- c("shan_mam","liz_estimates", "mam_estimates", "Full")
 
 host_models <- kable(host_result, digits = 2, align = "c") %>%
   kable_styling()
@@ -649,14 +695,21 @@ host_models <- kable(host_result, digits = 2, align = "c") %>%
 ##### **6C.Combination models**
 *Best fit*
 BIC = 907.06
-gnb_mod5 <- glmer.nb(total ~ tempdifC*site + (1|plotID)+ (1|rain_year) + (1|month), 
+comb0_gnb_mod5 <- glmer.nb(total ~ tempdifC*site + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 BIC = 908.18                
-gnb_mod3 <- glmer.nb(total ~ tempdifC + (1|plotID)+ (1|rain_year) + (1|month), 
+combo_gnb_mod3 <- glmer.nb(total ~ tempdifC + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
-
+                 
+**I am choosing mod3 based on the rules of parsimony**
+*Interestingly, liz estimates was next best model*
+BIC = 921.23
+combo_gnb_mod4 <- glmer.nb(total ~ liz_estimates + (1|plotID)+ (1|rain_year) + (1|month), 
+                 data = na.omit(FINAL),
+                 family = "poisson")
+                 
 ```{r combo models, warnings =FALSE, message=FALSE}
 
 # plot predictor
@@ -688,8 +741,12 @@ combo_gnb_mod6 <- glmer.nb(total ~ liz_estimates*plot + (1|plotID)+ (1|rain_year
                  family = "poisson")
 
 
-# full
+# biased full
 combo_gnb_mod7 <- glmer.nb(total ~ plot + site + tempdifC + liz_estimates + tempdifC*site + liz_estimates*plot + (1|plotID)+ (1|rain_year) + (1|month), 
+                 data = na.omit(FINAL),
+                 family = "poisson")
+#FULLL
+combo_gnb_mod8 <- glmer.nb(total ~ plot + site + precip_mm + tempdifC + shan_mammal + liz_estimates + tempdifC*site + liz_estimates*plot + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
 
@@ -725,11 +782,21 @@ host_models
 combo_models
 ```
 
+
+```{r summ of best models}
+summ(host_gnb_mod2)
+summ(climate_gnb_mod3)
+summ(combo_gnb_mod3)
+```
+
 ```{r summ package full models, results = "asis"}
 ## summ package https://cran.r-project.org/web/packages/jtools/vignettes/summ.html#Generalized_and_Mixed_models
 library(sandwich)
 library(officer)
 library(flextable)
+
+
+
 
 ### effect plots
   # best host
@@ -738,32 +805,79 @@ library(flextable)
   effect_plot(climate_gnb_mod3, pred = tempdifC, interval = FALSE, plot.points = FALSE)
 
 ### plot summs
-  plot_summs(host_gnb_mod4, climate_gnb_mod5, combo_gnb_mod7,scale = TRUE,
-             model.names = c("Host", "Climate", "Combination"))
   
+## FULL
+plot_summs(combo_gnb_mod8,scale = TRUE,
+             #model.names = c("Treatment", "Aridity", "Combination"),
+             inner_ci_level = .8, # width of 95CI band
+             robust = TRUE)
+# not sure when i leave in the stuff that is commented  out it drops 2 of my factors
+# , # for standard error
+#              coefs = c("Partial plot" = "plotPartial",
+#                        "Total plot" = "plotTotal",
+#                        "Site" = "site",
+#                        "Precipitation (mm)" = "precip_mm",
+#                        "Monthly temp difference (C)" = "tempdifC",
+#                        "Mammal shannon diversity" = "shan_mammal",
+#                        "Lizard population estimates" = "liz_estimates",
+#                        "Site x Monthly temp difference" = "site:tempdifC",
+#                        "Partial plot x Lizard population estimates" = "plotPartial:liz_estimate",
+#                        "Total plot x Lizard population estimates" = "plotTotal:liz_estimate"),
+#            dpi = 320) 
+#                        #"Mammal population estimates" = "mam_estimates",
+#                        #"Monthly mean max temp (C)" = "mean_maxC",
+#                        #"Monthly mean min temp (C)" = "mean_minC",
+#                        
+#                        
+#                       
+#                        #"Intermediate plot" = "plotIntermediate",
+#                        
+#                        
+#                        
+#            dpi = 320) 
 
+
+# best fit models
+plot_summs(host_gnb_mod2, climate_gnb_mod3, combo_gnb_mod5,scale = TRUE,
+             model.names = c("Treatment", "Aridity", "Combination"),
+             inner_ci_level = .8, # width of 95CI band
+             robust = TRUE)
+
+# not sure why when i add names to coefs it drops two levels
+# , # for standard error
+#              coefs = c(
+#                        "Lizard population estimates" = "liz_estimates",
+#                        "Site" = "site",
+#                        "Monthly temp difference (C)" = "tempdifC",
+#                        "Site x Monthly temp difference" = "site:tempdifC",
+#            dpi = 320) )
+#   
+  
+```
+
+```{r export summs, annotated out unless need to make updates, results = "asis"}
 ### export summs
   ## climate
-  export_summs(climate_gnb_mod1,climate_gnb_mod2,climate_gnb_mod3,climate_gnb_mod4,climate_gnb_mod5, 
-               confint = TRUE,exp = TRUE,digits = 4,
-               error_format = "({statistic}, p = {p.value})", 
-               to.file = "docx", file.name = "Tejon_FULLClimateModels.docx") # could set to PDF and .pdf
-  ## host
-  
-  
-  export_summs(host_gnb_mod1,host_gnb_mod2,host_gnb_mod3,host_gnb_mod4, 
-               confint = TRUE,exp = TRUE,digits = 4,
-               error_format = "({statistic}, p = {p.value})",
-               to.file = "docx", 
-               file.name = "Tejon_FULLHostModels.docx")
-  
-  ## combo
-  
-  export_summs(combo_gnb_mod1,combo_gnb_mod2,combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6,combo_gnb_mod7,
-               confint = TRUE, exp = TRUE, digits = 4,
-               error_format = "({statistic}, p = {p.value})",
-               to.file = "docx", 
-               file.name = "Tejon_FULLComboModels.docx")
+  # export_summs(climate_gnb_mod1,climate_gnb_mod2,climate_gnb_mod3,climate_gnb_mod4,climate_gnb_mod5, 
+  #              confint = TRUE,exp = TRUE,digits = 4,
+  #              error_format = "({statistic}, p = {p.value})", 
+  #              to.file = "docx", file.name = "Tejon_FULLClimateModels.docx") # could set to PDF and .pdf
+  # ## host
+  # 
+  # 
+  # export_summs(host_gnb_mod1,host_gnb_mod2,host_gnb_mod3,host_gnb_mod4, 
+  #              confint = TRUE,exp = TRUE,digits = 4,
+  #              error_format = "({statistic}, p = {p.value})",
+  #              to.file = "docx", 
+  #              file.name = "Tejon_FULLHostModels.docx")
+  # 
+  # ## combo
+  # 
+  # export_summs(combo_gnb_mod1,combo_gnb_mod2,combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6,combo_gnb_mod7,
+  #              confint = TRUE, exp = TRUE, digits = 4,
+  #              error_format = "({statistic}, p = {p.value})",
+  #              to.file = "docx", 
+  #              file.name = "Tejon_FULLComboModels.docx")
   
 ```
 
@@ -1522,7 +1636,11 @@ models[1,1] # select total abundance # second best fit model is M0, since 1st be
 
 ##### **Kruskal-Wallis test: vertebrate populations across plot and sites**
 
-**lizards only significantly different by site type (p-value = 0.09118, Kruskal-Wallis chi-squared = 6.7996)**
+Krusal-Wallis only applicable for mammals since they were sampled at 2+ sites, as well as plot for lizards
+
++ no significance for krusal-wallis tests
+
+**lizards only significantly different by site type (#W = 11, p-pvalue  = 0.01306)**
   + Arid
       + mean = 71
       + median = 70
@@ -1530,26 +1648,36 @@ models[1,1] # select total abundance # second best fit model is M0, since 1st be
   + Intermediate
       + mean = 130
       + median = 134
-
-Could not do post-hoc test (wilcox, dunn, or conover) because I only have two groupings for site. Lizards were only sampled at arid and intermediate. I will calculate lizard medians and means as a way to show which site has more lizards post a significant kruskal wallis test.
-  + **Intermediate has more lizards which also has higher tick counts**
+**Intermediate has more lizards which also has higher tick counts**
   
 ```{r kruskal wallis}
+#str(pop_estimates)
+pop_estimates$site <- as.factor(pop_estimates$site)
+pop_estimates$plot <- as.factor(pop_estimates$plot)
 
 # mammal populations did not significantly differ across sites or plots but that may be due to low sample numbers
 kruskal.test(mam_estimates ~ plot, data = pop_estimates)
 kruskal.test(mam_estimates ~ site, data = pop_estimates)
 
-# lizard populations differed significantly by site type, but not plot
+# lizard populations were sampled at 3 plots so a kruskal wallis test was used
 kruskal.test(liz_estimate ~ plot, data = pop_estimates)
-kruskal.test(liz_estimate ~ site, data = pop_estimates)
 
-# could not do post-hoc test (wilcox, dunn, or conover) because I only have two groupings for site. Lizards were only sampled at arid and intermediate. I will calculate lizard medians and means as a way to show which site has more lizards post a significant kruskal wallis test.
+# lizards were only sampled at two sites, so will use a two sample t-test if normal
+# check normality
+qqPlot(pop_estimates$liz_estimate[site == "Arid"])
+qqPlot(pop_estimates$liz_estimate[site == "Intermediate"])
+shapiro.test(pop_estimates$liz_estimate) # p > 0.05, so data are normal
+leveneTest(pop_estimates$liz_estimate ~ pop_estimates$site) # p p < 0.05, F = 7.4; variances are different
 
-#str(pop_estimates)
-pop_estimates$site <- as.factor(pop_estimates$site)
-pop_estimates$plot <- as.factor(pop_estimates$plot)
-kruskal.test(liz_estimate ~ site, data = pop_estimates) # p-value = 0.009118 , Kruskal-Wallis chi-squared = 6.7996
+# non-parametric Mann-Whitney U is testing the shape of the two distributions are different
+# wilcox rank sum test with continuity correction (non-equal variances)
+wilcox.test(liz_estimate ~ site, data = pop_estimates) #W = 11, p-pvalue  = 0.01306
+
+
+```
+
+Aggregate data for vertebrate populations
+```{r}
 
 aggregate(mam_estimates ~ plot, data = pop_estimates, FUN = median) # O = 6, P = 16, T = 17
 aggregate(mam_estimates ~ plot, data = pop_estimates, FUN = mean) # O = 8.71, P = 50.66, T = 24.50
@@ -1562,6 +1690,18 @@ aggregate(liz_estimate ~ plot, data = pop_estimates, FUN = mean) # O = 103.16667
 
 aggregate(liz_estimate ~ site, data = pop_estimates, FUN = median) # A = 70	, I = 134, M = NA
 aggregate(liz_estimate ~ site, data = pop_estimates, FUN = mean) # A = 70.11, I = 129.77, M = NA
+
+
+aggregate(liz_estimate ~ site, data = pop_estimates, FUN = sum)
+631+1168 # 1799 lizards
+aggregate(mam_estimates ~ site, data = pop_estimates, FUN = sum)
+146+50+365 # 561
+
+1799/561
+
+aggregate(mam_estimates ~ plot, data = pop_estimates, FUN = sum) #o = 61, p = 305, total = 196
+aggregate(liz_estimate ~ plot, data = pop_estimates, FUN = sum) #o = 619, p = 562, total = 618
+
 ```
 
 
@@ -1596,7 +1736,7 @@ count$sppr<-specnumber(numeric)
 # add shannon diversity to count
 count$shannondiv <- diversity(numeric)
 
-
+aggregate(shannondiv ~plot, data = count, FUN = mean)
 ```
 
 
