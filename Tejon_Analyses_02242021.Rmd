@@ -453,6 +453,7 @@ summary(aov(tempdifC ~ site, data = FINAL)) # F value = 482.6, df =2, p-value = 
 Post_hoc_tempdif <-glht(tempdif, linfct = mcp(site = 'Tukey'))
 summary(Post_hoc_tempdif)
 
+?glht
 confint(Post_hoc_tempdif) # pairwise test
 cld(Post_hoc_tempdif) # arid = a, intermediate = b, mesic = c
 plot(Post_hoc_tempdif)
@@ -465,10 +466,11 @@ summary(precip)
 
 Post_hoc_precip_mm <-glht(precip, linfct = mcp(site = 'Tukey'))
 summary(Post_hoc_precip_mm)
-
 confint(Post_hoc_precip_mm) # pairwise test
 cld(Post_hoc_precip_mm) # arid = a, intermediate = b, mesic = c
 plot(Post_hoc_precip_mm)
+
+?vegan
 ```
 
 
@@ -745,10 +747,17 @@ combo_gnb_mod6 <- glmer.nb(total ~ liz_estimates*plot + (1|plotID)+ (1|rain_year
 combo_gnb_mod7 <- glmer.nb(total ~ plot + site + tempdifC + liz_estimates + tempdifC*site + liz_estimates*plot + (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
-#FULL - all parameters.
-combo_gnb_mod8 <- glmer.nb(total ~ plot + site + precip_mm + tempdifC + shan_mammal + liz_estimates + tempdifC*site + liz_estimates*plot + (1|plotID)+ (1|rain_year) + (1|month), 
+#FULL - all parameters.this was the old 8, the new 8 has interaction
+# combo_gnb_mod8 <- glmer.nb(total ~ plot + site + precip_mm + tempdifC + shan_mammal + liz_estimates + tempdifC*site + liz_estimates*plot + (1|plotID)+ (1|rain_year) + (1|month), 
+#                  data = na.omit(FINAL),
+#                  family = "poisson")
+
+# BIG KAHUNA
+combo_gnb_mod8 <- glmer.nb(total ~ plot + site + precip_mm + tempdifC + shan_mammal + liz_estimates + tempdifC*site + liz_estimates*plot + plot*site+ (1|plotID)+ (1|rain_year) + (1|month), 
                  data = na.omit(FINAL),
                  family = "poisson")
+# putting the 9 as 8
+combo_gnb_mod8 <- combo_gnb_mod9
 
 combo_result <- AIC(combo_gnb_mod1, combo_gnb_mod2, combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6,combo_gnb_mod7,combo_gnb_mod8)
 combo_models <- list(combo_gnb_mod1, combo_gnb_mod2, combo_gnb_mod3,combo_gnb_mod4,combo_gnb_mod5,combo_gnb_mod6,combo_gnb_mod7,combo_gnb_mod8)
@@ -1675,8 +1684,8 @@ kruskal.test(liz_estimate ~ plot, data = pop_estimates)
 
 # lizards were only sampled at two sites, so will use a two sample t-test if normal
 # check normality
-qqPlot(pop_estimates$liz_estimate[site == "Arid"])
-qqPlot(pop_estimates$liz_estimate[site == "Intermediate"])
+#qqPlot(pop_estimates$liz_estimate[site == "Arid"])
+#qqPlot(pop_estimates$liz_estimate[site == "Intermediate"])
 shapiro.test(pop_estimates$liz_estimate) # p > 0.05, so data are normal
 leveneTest(pop_estimates$liz_estimate ~ pop_estimates$site) # p p < 0.05, F = 7.4; variances are different
 
