@@ -867,17 +867,17 @@ plot_summs(host_gnb_mod2, climate_gnb_mod3, combo_gnb_mod5,scale = TRUE,
 ```{r export summs, annotated out unless need to make updates, results = "asis"}
 ### export summs
   ## climate
-  # export_summs(climate_gnb_mod1,climate_gnb_mod2,climate_gnb_mod3,climate_gnb_mod4,climate_gnb_mod5, 
+  # export_summs(climate_gnb_mod1,climate_gnb_mod2,climate_gnb_mod3,climate_gnb_mod4,climate_gnb_mod5,
   #              confint = TRUE,exp = TRUE,digits = 4,
-  #              error_format = "({statistic}, p = {p.value})", 
+  #              error_format = "({statistic}, p = {p.value})",
   #              to.file = "docx", file.name = "Tejon_FULLClimateModels.docx") # could set to PDF and .pdf
   # ## host
   # 
   # 
-  # export_summs(host_gnb_mod1,host_gnb_mod2,host_gnb_mod3,host_gnb_mod4, 
+  # export_summs(host_gnb_mod1,host_gnb_mod2,host_gnb_mod3,host_gnb_mod4,
   #              confint = TRUE,exp = TRUE,digits = 4,
   #              error_format = "({statistic}, p = {p.value})",
-  #              to.file = "docx", 
+  #              to.file = "docx",
   #              file.name = "Tejon_FULLHostModels.docx")
   # 
   # ## combo
@@ -899,11 +899,10 @@ summ(climate_gnb_mod3, exp = TRUE, confint = TRUE) # climate
 summ(host_gnb_mod2, exp = TRUE, confint = TRUE) # host
 summ(combo_gnb_mod5, exp = TRUE, confint = TRUE) # combo
 
-
 # export best fit models within each group
-#export_summs(climate_gnb_mod3,host_gnb_mod2,combo_gnb_mod5,
+# export_summs(climate_gnb_mod3,host_gnb_mod2,combo_gnb_mod5,
 #              confint = TRUE,exp = TRUE,digits = 3,
-#               error_format = "({statistic}, 95% CI [{conf.low}, {conf.high}], p = {p.value})", 
+#               error_format = "({statistic}, 95% CI [{conf.low}, {conf.high}], p = {p.value})",
 #               to.file = "docx", file.name = "Tejon_BestFitModels.docx")
 ```
 
